@@ -27,7 +27,7 @@ export async function uploadDocument(formData: FormData) {
     if (extractedText) {
       if (extractedText.length > 50000) {
         // Save to adjacent file
-        const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+        const UPLOADS_DIR = path.join(process.cwd(), "data", "uploads");
         textFilePath = `${filename}.extracted.txt`;
         await fs.writeFile(path.join(UPLOADS_DIR, textFilePath), extractedText);
         metadataObj.extractedTextFile = textFilePath;
@@ -44,7 +44,7 @@ export async function uploadDocument(formData: FormData) {
         originalName: file.name,
         mimeType: file.type,
         size: file.size,
-        path: `/api/files/${filename}`,
+        path: `data/uploads/${filename}`,
         status: "needs_review",
         notes,
         aiSummary: "[Pending AI Summary]",
@@ -109,7 +109,7 @@ export async function mockSummarizeDocument(documentId: string) {
       const meta = JSON.parse(card.metadata);
       if (meta.extractedText) extractedText = meta.extractedText;
       else if (meta.extractedTextFile) {
-        const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+        const UPLOADS_DIR = path.join(process.cwd(), "data", "uploads");
         try {
           extractedText = await fs.readFile(path.join(UPLOADS_DIR, meta.extractedTextFile), "utf-8");
         } catch(e) {}

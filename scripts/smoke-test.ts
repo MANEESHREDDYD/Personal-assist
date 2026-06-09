@@ -38,19 +38,18 @@ async function runSmokeTest() {
   }
 
   try {
-     console.log("Checking Upload Directory...");
-     const fs = require("fs");
-     const path = require("path");
-     const uploadDir = path.join(process.cwd(), "public", "uploads");
-     if (!fs.existsSync(uploadDir)) {
-        console.log("⚠️ Upload directory missing, creating...");
-        fs.mkdirSync(uploadDir, { recursive: true });
-     }
-     fs.accessSync(uploadDir, fs.constants.W_OK);
-     console.log("✅ Upload directory writable.");
-  } catch (e) {
-     console.error("❌ Upload directory check failed:", e);
-     errors++;
+    console.log("Checking Upload Directory...");
+    const fs = require("fs");
+    const path = require("path");
+    const uploadDir = path.join(process.cwd(), "data", "uploads");
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    fs.accessSync(uploadDir, fs.constants.W_OK);
+    console.log("✅ Uploads directory is writable:", uploadDir);
+  } catch (error) {
+    console.error("❌ Cannot write to uploads directory:", error);
+    errors++;
   }
 
   if (errors > 0) {

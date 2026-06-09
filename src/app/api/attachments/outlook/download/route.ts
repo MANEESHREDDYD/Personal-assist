@@ -128,7 +128,7 @@ export async function POST(req: Request) {
 
     if (extractedText) {
       if (extractedText.length > 50000) {
-        const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+        const UPLOADS_DIR = path.join(process.cwd(), "data", "uploads");
         textFilePath = `${localFilename}.extracted.txt`;
         await fs.writeFile(path.join(UPLOADS_DIR, textFilePath), extractedText);
         docMetadata.extractedTextFile = textFilePath;
@@ -148,7 +148,7 @@ export async function POST(req: Request) {
         originalName: attachmentMeta.filename || "attachment.bin",
         mimeType: attachmentMeta.contentType || "application/octet-stream",
         size: buffer.length,
-        path: `/api/files/${localFilename}`,
+        path: `data/uploads/${localFilename}`,
         status: "imported",
         notes: `Imported from Outlook Mail email: ${inboxItem.subject}\n\nMETADATA_JSON:${JSON.stringify(docMetadata)}`,
         aiSummary: "[Pending AI Summary]",
@@ -170,7 +170,11 @@ export async function POST(req: Request) {
       data: {
         title: "Attachment imported to Documents",
         message: attachmentMeta.filename || "attachment.bin",
-        type: "success"
+        type: "document_review",
+        severity: "success",
+        status: "unread",
+        relatedEntityType: "Document",
+        relatedEntityId: doc.id
       }
     });
 

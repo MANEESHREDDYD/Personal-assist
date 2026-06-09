@@ -108,7 +108,26 @@ export function DocumentWorkspaceClient({ document, versions, signers, fields }:
         {activeTab === "overview" && (
           <div className="space-y-6">
             <div className="glass-card rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Document Details</h3>
+              <div className="flex justify-between items-start mb-4">
+                 <h3 className="text-lg font-bold text-white">Document Details</h3>
+                 <div className="flex gap-2">
+                    <a 
+                      href={`/api/documents/${document.id}/file`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Open File
+                    </a>
+                    <a 
+                      href={`/api/documents/${document.id}/file`} 
+                      download={document.originalName}
+                      className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Download File
+                    </a>
+                 </div>
+              </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><span className="text-zinc-500">File Name:</span> <span className="text-white">{document.originalName}</span></div>
                 <div><span className="text-zinc-500">Status:</span> <span className="text-white">{document.status}</span></div>

@@ -1,7 +1,8 @@
 import fs from "fs/promises";
 import path from "path";
 
-const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+const UPLOADS_DIR = path.join(process.cwd(), "data", "uploads");
+const LEGACY_UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
 
 // Ensure the directory exists
 async function ensureDir() {
@@ -43,10 +44,24 @@ export async function getFile(filename: string): Promise<Buffer | null> {
     const filepath = path.join(UPLOADS_DIR, filename);
     return await fs.readFile(filepath);
   } catch {
-    return null;
+    // Fallback to legacy public/uploads for old demo files
+    try {
+      const legacyPath = path.join(LEGACY_UPLOADS_DIR, filename);
+      return await fs.readFile(legacyPath);
+    } catch {
+      return null;
+    }
   }
 }
 
 export async function getFilePath(filename: string): Promise<string> {
-  return path.join(UPLOADS_DIR, filename);
+  // Try data/uploads first
+  try {
+    const filepath = path.join(UPLOADS_DIR, filename);
+    await fs.access(filepath);
+    return filepath;
+  } catch {
+    // Fallback to legacy path
+    return path.join(LEGACY_UPLOADS_DIR, filename);
+  }
 }

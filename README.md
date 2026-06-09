@@ -152,19 +152,21 @@ MICROSOFT_OUTLOOK_MAIL_REDIRECT_URI="http://localhost:3000/api/integrations/outl
 - **Read-Only:** The app requests `Mail.Read`. It cannot send emails, delete emails, move folders, mark as read, or modify drafts.
 - **Storage:** OAuth tokens are encrypted using `ENCRYPTION_KEY` and stored locally in your SQLite database.
 
-## Phase 3E: Attachment Download on Demand
-Personal Assist allows you to explicitly download attachments from your imported Gmail and Outlook emails into the local document vault.
+## Phase 3E.1: Attachment Storage Hardening (Complete)
+Personal Assist implements explicit, secure, private attachment downloading for Gmail and Outlook emails.
 
 ### How it works
 - **Explicit Action Required:** Attachments are never downloaded automatically. You must explicitly click "Download" on an attachment.
-- **Local Storage:** Decoded attachments are saved to the local `uploads` directory. Cloud storage is not used.
+- **Private Storage:** Decoded attachments are saved to a private, non-public directory `data/uploads`. They are not accessible directly as static web assets. **Do not commit this folder.**
+- **Controlled API Serving:** Files are only readable through a secure, authenticated-capable API route (`GET /api/documents/[id]/file`) which enforces strict MIME type sniffing constraints (`nosniff`).
 - **Size Limit:** A hardcoded maximum size of 25 MB is enforced.
 - **Blocked Extensions:** Unsafe executable and script files (`.exe`, `.sh`, `.js`, etc.) are blocked.
-- **Document Creation:** Once downloaded, attachments are converted into local `Document` records and will automatically undergo text extraction if supported (`txt`, `md`, `pdf`, `docx`).
+- **Document Creation:** Once downloaded, attachments are converted into local `Document` records. The system falls back to supporting older demo files temporarily located in `public/uploads` to maintain backward compatibility without crashing.
 
 ### Limitations & Security
 - **No Malware Scanning:** Personal Assist does not perform antivirus scanning on downloaded files.
 - **No Bulk Download:** Attachments must be downloaded individually for safety.
+- **No Cloud Backup:** Files saved to `data/uploads` stay completely local.
 
 ## Future Integrations Planned
 - **Apple Mail:** Planned as a local macOS helper/native workflow later. Not active yet.

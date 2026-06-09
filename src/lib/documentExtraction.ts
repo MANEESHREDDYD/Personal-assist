@@ -1,5 +1,4 @@
 import { getFile } from "@/lib/storage";
-const pdfParse = require("pdf-parse");
 import * as mammoth from "mammoth";
 
 export async function extractTextFromBuffer(buffer: Buffer, mimeType: string, originalName: string): Promise<string | null> {
@@ -7,6 +6,7 @@ export async function extractTextFromBuffer(buffer: Buffer, mimeType: string, or
     const ext = originalName.split('.').pop()?.toLowerCase();
     
     if (mimeType === "application/pdf" || ext === "pdf") {
+      const pdfParse = require("pdf-parse");
       const pdfData = await pdfParse(buffer);
       return pdfData.text;
     } 

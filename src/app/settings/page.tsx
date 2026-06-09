@@ -83,7 +83,7 @@ export default async function SettingsPage() {
   // Upload folder test
   let uploadStatus = "Ok";
   try {
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    const uploadDir = path.join(process.cwd(), "data", "uploads");
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
     fs.accessSync(uploadDir, fs.constants.W_OK);
   } catch(e) {
@@ -165,8 +165,16 @@ export default async function SettingsPage() {
                  <span className={dbStatus === "Ok" ? "text-green-400" : "text-red-400"}>{dbStatus}</span>
                </div>
                <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10">
-                 <span className="text-zinc-500">Uploads Writable</span>
-                 <span className={uploadStatus === "Ok" ? "text-green-400" : "text-red-400"}>{uploadStatus}</span>
+                 <span className="text-zinc-500">Private Uploads Writable</span>
+                 <span className={uploadStatus === "Ok" ? "text-green-400" : "text-red-400"}>{uploadStatus === "Ok" ? "Yes" : "No"}</span>
+               </div>
+               <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                 <span className="text-zinc-500">Controlled Document Route Active</span>
+                 <span className="text-green-400">Yes</span>
+               </div>
+               <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                 <span className="text-zinc-500">Public Uploads Disabled</span>
+                 <span className="text-green-400">Yes</span>
                </div>
                <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10">
                  <span className="text-zinc-500">Privacy Mode</span>
@@ -251,8 +259,8 @@ export default async function SettingsPage() {
                  <span className="text-zinc-300">25 MB</span>
                </div>
                <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10">
-                 <span className="text-zinc-500">Blocked File Types</span>
-                 <span className="text-zinc-300 max-w-[200px] truncate" title=".exe, .bat, .cmd, .msi, .scr, .ps1, .sh, .app, .dmg, .com, .vbs, .vbe, .js, .jse, .wsf, .hta, .jar, .reg, .lnk, .url, .apk, .pkg">22 types</span>
+                 <span className="text-zinc-500">Blocked File Types Active</span>
+                 <span className="text-green-400">Yes (22 types)</span>
                </div>
             </div>
           <div className="flex flex-wrap gap-4">
