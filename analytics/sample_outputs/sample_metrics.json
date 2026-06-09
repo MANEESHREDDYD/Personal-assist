@@ -1,0 +1,58 @@
+{
+  "generatedAt": "2026-06-09T10:00:00.000Z",
+  "counts": {
+    "total_emails": 142,
+    "total_gmail": 85,
+    "total_outlook": 57,
+    "total_processed": 142,
+    "total_deduplicated_external_ids": 142,
+    "total_events": 45,
+    "total_google": 20,
+    "total_outlook_events": 15,
+    "total_ics": 10,
+    "total_documents": 34,
+    "completed_documents": 28,
+    "summarized_documents": 22,
+    "total_drafts": 12,
+    "approved_drafts": 8,
+    "rejected_drafts": 1,
+    "needs_changes_drafts": 3,
+    "exported_drafts": 5,
+    "manually_sent_drafts": 3,
+    "total_requests": 15,
+    "approved_requests": 12,
+    "denied_requests": 1,
+    "pending_requests": 2,
+    "total_rules": 4,
+    "total_runs": 120,
+    "failed_runs": 2,
+    "total_notifications": 45,
+    "total_follow_ups": 18,
+    "total_reminders": 25,
+    "total_audit_logs": 540,
+    "draft_audit_logs": 85,
+    "document_audit_logs": 120,
+    "total_connectors": 4,
+    "total_connector_accounts": 3,
+    "active_connections": 3,
+    "failed_connections": 0
+  },
+  "qualityChecks": {
+    "missing_calendar_external_ids": 0,
+    "documents_missing_local_path": 0,
+    "drafts_with_invalid_metadata": 0
+  },
+  "riskDistribution": {
+    "low": 7,
+    "medium": 3,
+    "high": 1,
+    "unknown": 1
+  },
+  "workflowMetrics": {
+    "workload_score": "Medium",
+    "integration_reliability_percent": 100.0
+  },
+  "recommendations": [
+    "Resolve high-risk drafts."
+  ]
+}

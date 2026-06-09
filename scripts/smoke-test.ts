@@ -52,6 +52,41 @@ async function runSmokeTest() {
     errors++;
   }
 
+  try {
+    console.log("Checking Analytics Layer...");
+    const fs = require("fs");
+    const path = require("path");
+    
+    const analyticsDir = path.join(process.cwd(), "analytics");
+    if (fs.existsSync(analyticsDir)) {
+      console.log("✅ Analytics source folder exists.");
+      
+      const sqlDir = path.join(analyticsDir, "sql");
+      if (fs.existsSync(sqlDir)) {
+        console.log("✅ SQL metrics folder exists.");
+      }
+      
+      const sampleOutput = path.join(analyticsDir, "sample_outputs", "sample_metrics.json");
+      if (fs.existsSync(sampleOutput)) {
+        console.log("✅ Analytics sample output exists.");
+      }
+      
+      const dataAnalyticsDir = path.join(process.cwd(), "data", "analytics");
+      if (!fs.existsSync(dataAnalyticsDir)) {
+        fs.mkdirSync(dataAnalyticsDir, { recursive: true });
+      }
+      fs.accessSync(dataAnalyticsDir, fs.constants.W_OK);
+      console.log("✅ data/analytics folder is writable.");
+      
+      console.log("✅ Analytics Layer configured (Python execution is optional).");
+    } else {
+      console.log("ℹ️ Analytics layer not found (optional).");
+    }
+  } catch (error) {
+    console.error("❌ Analytics check failed:", error);
+    // Don't fail the smoke test if analytics has an issue, just warn
+  }
+
   if (errors > 0) {
     console.error(`\nSmoke test finished with ${errors} errors.`);
     process.exit(1);

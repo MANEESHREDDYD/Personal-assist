@@ -1,4 +1,4 @@
-import { Settings, Database, Bot, Zap, Mail, Calendar as CalendarIcon, Server } from "lucide-react";
+import { Settings, Database, Bot, Zap, Mail, Calendar as CalendarIcon, Server, Terminal } from "lucide-react";
 import { getAIPrefs } from "../actions/settings";
 import { AISettings } from "./AISettings";
 import { DemoModePanel } from "./DemoModePanel";
@@ -90,6 +90,37 @@ export default async function SettingsPage() {
     uploadStatus = "Error";
   }
 
+  // Analytics Test
+  let pythonAnalyticsPresent = false;
+  let sqlMetricsPresent = false;
+  let analyticsGenerated = false;
+  let analyticsTimestamp = "Never";
+  let analyticsWritable = false;
+
+  try {
+    const analyticsDir = path.join(process.cwd(), "analytics");
+    if (fs.existsSync(path.join(analyticsDir, "personal_assist_analytics", "run.py"))) {
+      pythonAnalyticsPresent = true;
+    }
+    if (fs.existsSync(path.join(analyticsDir, "sql", "inbox_metrics.sql"))) {
+      sqlMetricsPresent = true;
+    }
+    
+    const dataAnalyticsDir = path.join(process.cwd(), "data", "analytics");
+    if (!fs.existsSync(dataAnalyticsDir)) {
+      fs.mkdirSync(dataAnalyticsDir, { recursive: true });
+    }
+    fs.accessSync(dataAnalyticsDir, fs.constants.W_OK);
+    analyticsWritable = true;
+    
+    const metricsFile = path.join(dataAnalyticsDir, "personal_assist_metrics.json");
+    if (fs.existsSync(metricsFile)) {
+      analyticsGenerated = true;
+      const stats = fs.statSync(metricsFile);
+      analyticsTimestamp = stats.mtime.toLocaleString();
+    }
+  } catch(e) {}
+
   return (
     <div className="p-8 max-w-5xl mx-auto w-full space-y-8">
       <div className="mb-8">
@@ -151,6 +182,37 @@ export default async function SettingsPage() {
                  <span className="text-zinc-500">Last Rule Execution</span>
                  <span>{lastRun ? lastRun.startedAt.toLocaleString() : "Never"}</span>
                </div>
+            </div>
+          </div>
+
+          <div className="glass-card rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Terminal className="text-emerald-400" />
+              Analytics Health
+            </h2>
+            <div className="space-y-4 text-sm text-zinc-300">
+               <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                 <span className="text-zinc-500">Python Layer</span>
+                 <span className={pythonAnalyticsPresent ? "text-green-400" : "text-red-400"}>{pythonAnalyticsPresent ? "Present" : "Missing"}</span>
+               </div>
+               <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                 <span className="text-zinc-500">SQL Metrics Layer</span>
+                 <span className={sqlMetricsPresent ? "text-green-400" : "text-red-400"}>{sqlMetricsPresent ? "Present" : "Missing"}</span>
+               </div>
+               <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                 <span className="text-zinc-500">Output Folder Writable</span>
+                 <span className={analyticsWritable ? "text-green-400" : "text-red-400"}>{analyticsWritable ? "Yes" : "No"}</span>
+               </div>
+               <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                 <span className="text-zinc-500">Report Generated</span>
+                 <span className={analyticsGenerated ? "text-green-400" : "text-red-400"}>{analyticsGenerated ? "Yes" : "No"}</span>
+               </div>
+               {analyticsGenerated && (
+                 <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                   <span className="text-zinc-500">Last Generated</span>
+                   <span className="text-zinc-400">{analyticsTimestamp}</span>
+                 </div>
+               )}
             </div>
           </div>
 

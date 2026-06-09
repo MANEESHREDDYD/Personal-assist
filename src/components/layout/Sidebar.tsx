@@ -22,7 +22,8 @@ import {
   Mail,
   ListTodo,
   Zap,
-  Search
+  Search,
+  Terminal
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -45,6 +46,7 @@ const NAV_ITEMS = [
   { name: "Automations", href: "/automations", icon: Zap },
   { name: "Settings", href: "/settings", icon: Settings },
   { name: "Audit Log", href: "/audit", icon: ShieldAlert },
+  { name: "Engineering Showcase", href: "/showcase", icon: Terminal },
 ];
 
 import { NotificationBell } from "./NotificationBell";

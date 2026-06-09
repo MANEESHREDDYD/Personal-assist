@@ -1,0 +1,11 @@
+# analytics/requirements.txt
+# This analytics layer is built entirely on Python standard libraries to ensure
+# zero-cost, reliable local execution without external dependencies.
+#
+# Standard libraries used:
+# - sqlite3: Database connection
+# - json: Metrics serialization
+# - pathlib: Safe path handling
+# - datetime: Timestamps
+# - statistics: Aggregations
+# - argparse: Command line interface

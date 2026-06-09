@@ -12,7 +12,9 @@
     "db:reset": "node scripts/reset-db.js && npx prisma db push && npm run db:seed",
     "worker": "tsx scripts/local-worker.ts",
     "dev:all": "concurrently \"npm run dev\" \"npm run worker\"",
-    "smoke:test": "tsx scripts/smoke-test.ts"
+    "smoke:test": "tsx scripts/smoke-test.ts",
+    "analytics:run": "python analytics/personal_assist_analytics/run.py",
+    "analytics:report": "python analytics/personal_assist_analytics/report.py"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

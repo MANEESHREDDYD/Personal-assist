@@ -46,3 +46,11 @@ exports/
 *.local-export.eml
 next-env.d.ts
 *.tsbuildinfo
+
+# analytics
+data/analytics/*.json
+data/analytics/*.md
+!data/analytics/.gitkeep
+analytics/.venv/
+analytics/**/__pycache__/
+*.pyc

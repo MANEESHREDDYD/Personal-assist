@@ -201,3 +201,16 @@ Generated email drafts are strictly local and are not sent to Gmail or Outlook. 
 ## Disclaimer
 
 This is a local-only MVP for demonstration purposes. No real external APIs (DocuSign, Plaid, Gmail, Slack) are integrated yet.
+
+## Technical Skills Demonstrated
+
+- **Data Engineering**: local ingestion pipelines, sync/deduplication, SQLite/Prisma, SQL metrics, Python analytics pipeline
+- **Data Science / AI**: risk scoring, classification, extraction, quality checks
+- **Gen AI**: document summarization, draft generation, Ollama provider, fallback rules
+- **Backend**: OAuth, encrypted tokens, API routes, secure file serving
+- **Full Stack**: Next.js, Prisma, local worker, dashboard
+- **Frontend/UI/UX**: PWA, mobile responsive app shell, command palette, approvals UI
+- **Analytics**: daily briefs, metrics, reporting, audit analysis
+- **Forward-Deployed Engineering**: local-first, zero-cost deployment, demo mode, user-ready workflows
+
+Check out the [Engineering Showcase](/showcase) to see dynamic metrics and data flow examples.
