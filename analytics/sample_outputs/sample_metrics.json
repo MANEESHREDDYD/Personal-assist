@@ -5,20 +5,12 @@
     "total_gmail": 85,
     "total_outlook": 57,
     "total_processed": 142,
-    "total_deduplicated_external_ids": 142,
     "total_events": 45,
-    "total_google": 20,
-    "total_outlook_events": 15,
-    "total_ics": 10,
     "total_documents": 34,
     "completed_documents": 28,
     "summarized_documents": 22,
     "total_drafts": 12,
     "approved_drafts": 8,
-    "rejected_drafts": 1,
-    "needs_changes_drafts": 3,
-    "exported_drafts": 5,
-    "manually_sent_drafts": 3,
     "total_requests": 15,
     "approved_requests": 12,
     "denied_requests": 1,
@@ -26,16 +18,11 @@
     "total_rules": 4,
     "total_runs": 120,
     "failed_runs": 2,
-    "total_notifications": 45,
-    "total_follow_ups": 18,
     "total_reminders": 25,
+    "total_follow_ups": 18,
     "total_audit_logs": 540,
-    "draft_audit_logs": 85,
-    "document_audit_logs": 120,
-    "total_connectors": 4,
     "total_connector_accounts": 3,
-    "active_connections": 3,
-    "failed_connections": 0
+    "active_connections": 3
   },
   "qualityChecks": {
     "missing_calendar_external_ids": 0,
@@ -52,7 +39,129 @@
     "workload_score": "Medium",
     "integration_reliability_percent": 100.0
   },
+  "agenticWorkflowMetrics": {
+    "document_pipeline": {
+      "total_documents": 34,
+      "documents_with_ai_summary": 22,
+      "extraction_rate": 64.71,
+      "drafts_generated": 12,
+      "drafts_approved": 8
+    },
+    "email_pipeline": {
+      "total_inbox_items": 142,
+      "processed": 142,
+      "categorized": 138,
+      "classification_rate": 97.18
+    },
+    "calendar_pipeline": {
+      "total_events": 45,
+      "reminders_created": 25
+    },
+    "human_approval_gate": {
+      "total_requests": 15,
+      "approved": 12,
+      "denied": 1,
+      "approval_rate": 80.0
+    },
+    "automation_metrics": {
+      "total_runs": 120,
+      "failed_runs": 2,
+      "success_rate": 98.33
+    },
+    "safety_compliance": {
+      "no_send_policy_enforced": true,
+      "provider_drafts_created": 0,
+      "emails_sent_via_api": 0,
+      "compliance_rate": 100.0
+    }
+  },
+  "aiEvaluationMetrics": {
+    "classification": {
+      "total_items": 142,
+      "classified": 138,
+      "coverage_percent": 97.18
+    },
+    "extraction": {
+      "total_documents": 34,
+      "summarized": 22,
+      "coverage_percent": 64.71
+    },
+    "draft_generation": {
+      "total_drafts": 12,
+      "ai_generated": 12,
+      "fallback_used": 4,
+      "fallback_rate": 33.33
+    },
+    "risk_flagging": {
+      "total_evaluated": 12,
+      "flagged": 4,
+      "flag_rate": 33.33
+    },
+    "ai_provider": {
+      "configured_provider": "rules",
+      "ollama_configured": false,
+      "ollama_model": null,
+      "uses_paid_api": false,
+      "rules_fallback_available": true
+    },
+    "deterministic_checks": {
+      "total": 5,
+      "passed": 5,
+      "all_passed": true
+    }
+  },
+  "mlFeatureSummary": {
+    "urgency": { "score": "Medium", "raw": 11.5 },
+    "workload": { "score": "Moderate", "raw": 14.0 },
+    "document_risk": { "total_documents": 34, "high_risk_flagged": 5, "risk_rate": 14.71 },
+    "integration_reliability": { "score": "Excellent", "healthy": 3, "unhealthy": 0, "total": 3, "percent": 100.0 },
+    "automation_failure": { "total_runs": 120, "failed": 2, "failure_rate": 1.67 },
+    "approval_complexity": { "total_requests": 15, "denied": 1, "denial_rate": 6.67, "complexity": "Medium" }
+  },
+  "dataContracts": {
+    "summary": {
+      "total_entities_checked": 7,
+      "total_violations": 0,
+      "entities_with_violations": 0
+    },
+    "contracts": {
+      "InboxItem": { "total_rows": 142, "violations": [], "violation_count": 0, "status": "PASS" },
+      "Document": { "total_rows": 34, "violations": [], "violation_count": 0, "status": "PASS" },
+      "EmailDraft": { "total_rows": 12, "violations": [], "violation_count": 0, "status": "PASS" }
+    }
+  },
+  "lineageGraphSummary": {
+    "edges": [
+      { "source": "Gmail/Outlook", "target": "InboxItem", "relationship": "ingests", "count": 142 },
+      { "source": "InboxItem", "target": "Document", "relationship": "extracts_attachment", "count": 34 },
+      { "source": "Document", "target": "EmailDraft", "relationship": "generates_draft", "count": 12 },
+      { "source": "EmailDraft", "target": "ApprovalRequest", "relationship": "requires_approval", "count": 15 },
+      { "source": "CalendarEvent", "target": "WalletCard", "relationship": "creates_card", "count": 18 }
+    ],
+    "node_counts": { "InboxItem": 142, "Document": 34, "EmailDraft": 12, "ApprovalRequest": 15 },
+    "total_nodes": 9,
+    "total_edges": 5,
+    "audit_trail_entries": 540
+  },
+  "analyticsMarts": {
+    "inbox_mart": { "total_items": 142, "by_category": { "finance": 40, "scheduling": 35, "general": 67 } },
+    "document_mart": { "total_documents": 34, "by_status": { "completed": 28, "needs_review": 6 } },
+    "draft_mart": { "total_drafts": 12, "by_status": { "approved": 8, "draft": 3, "rejected": 1 } },
+    "integration_mart": { "total_accounts": 3, "by_provider": { "gmail": "connected", "outlook": "connected" } },
+    "automation_mart": { "total_rules": 4, "total_runs": 120, "runs_by_status": { "success": 118, "failed": 2 } },
+    "risk_mart": { "low": 7, "medium": 3, "high": 1, "unknown": 1 }
+  },
+  "skillShowcaseSummary": {
+    "dataEngineering": { "demonstrated": true, "evidence": "SQL metric queries, lineage graph, data contract validation", "lineage_edges": 5, "entities_modeled": 9 },
+    "analyticsEngineering": { "demonstrated": true, "evidence": "Analytics marts built from local SQLite", "marts_built": 6 },
+    "dataScience": { "demonstrated": true, "evidence": "Deterministic feature engineering and scoring", "features_computed": 6 },
+    "mlAiEngineering": { "demonstrated": true, "evidence": "AI output evaluation with deterministic guardrails", "deterministic_checks_passed": 5 },
+    "genAi": { "demonstrated": true, "evidence": "Document summarization + draft generation via provider abstraction", "configured_provider": "rules", "uses_paid_api": false },
+    "agenticAi": { "demonstrated": true, "evidence": "Multi-step pipelines with human-in-the-loop approval gates", "approval_rate": 80.0, "no_send_compliance": 100.0 },
+    "forwardDeployedEngineering": { "demonstrated": true, "evidence": "Local-first, zero-cost, no cloud dependency, no telemetry" },
+    "dataQuality": { "demonstrated": true, "evidence": "Contract enforcement across major entities", "total_violations": 0 }
+  },
   "recommendations": [
-    "Resolve high-risk drafts."
+    "Resolve high-risk drafts before export."
   ]
 }

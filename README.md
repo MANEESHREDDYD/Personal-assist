@@ -1,8 +1,39 @@
-# Personal Assist MVP
+# Personal Assist
 
-Personal Assist is a human-like AI personal operations assistant that organizes email, documents, signing, scheduling, payments, travel, tickets, orders, reminders, messages, manual entries, and stock market summaries into one command center.
+> Local-first AI personal operations system combining email/calendar ingestion, document intelligence, agentic workflows, Python analytics, SQL metrics, and approval-based automation.
 
-This is the **Phase 1.5 Stabilization** release. It is a local-first, SQLite-backed Next.js application that does not rely on external cloud databases or paid APIs. All data is mock-generated or added manually for demonstration purposes.
+## Technical Skills Demonstrated
+
+| Domain | Implementation |
+|--------|---------------|
+| **Data Engineering** | OAuth ingestion pipelines (Gmail, Outlook), sync/deduplication, SQLite/Prisma data layer, SQL metric queries, Python analytics pipeline, data contract validation, lineage tracking |
+| **Analytics Engineering** | SQL analytics marts, automated quality checks, metric aggregation, JSON/Markdown report generation, local analytics dashboard |
+| **Data Science / AI** | Rules-based risk scoring, document classification, entity extraction, urgency/workload feature engineering, approval complexity analysis |
+| **Gen AI** | Document summarization, draft generation via local LLM (Ollama), structured schema enforcement, provider-agnostic AI abstraction |
+| **Agentic AI** | Multi-step workflow orchestration (ingest → classify → extract → draft → approve → export), human-in-the-loop approval gates, automation trigger rules |
+| **Forward-Deployed Engineering** | Local-first architecture, zero-cost deployment, no cloud dependency, demo mode, user-ready workflows, private storage enforcement |
+| **Backend Engineering** | OAuth 2.0 flows, AES-256 encrypted token storage, controlled API file serving, audit logging, automation worker |
+| **Full Stack** | Next.js App Router, Prisma ORM, React Server Components, API routes, local background worker |
+| **Frontend / UI** | PWA manifest, mobile-responsive glassmorphic design, command palette, Framer Motion animations |
+| **Product Engineering** | Approval Center, draft export packages, manual send checklists, connector health monitoring, engineering showcase |
+
+Visit [`/showcase`](/showcase) for live metrics and architecture details.
+
+---
+
+## Why This Project Is More Than a Frontend App
+
+Personal Assist is a **data engineering and AI workflow system** that happens to have a web interface. The core value is in:
+
+- **Real OAuth ingestion pipelines** — Gmail and Outlook read-only sync via Google APIs and Microsoft Graph
+- **Python analytics package** — local SQLite analytics with SQL metrics, data quality checks, ML-style feature extraction, data contracts, and lineage graphs
+- **Agentic workflow orchestration** — multi-step pipelines from email ingestion through document intelligence to approval-gated draft export
+- **Document intelligence** — AI summarization, risk detection, deadline/party/payment extraction, action item identification
+- **Human-in-the-loop automation** — approval gates, risk-level enforcement, no-send safety policy, audit trail
+- **Secure local storage** — encrypted tokens, private file vault, controlled API serving, blocked executable extensions
+- **Forward-deployed architecture** — runs entirely on one machine with zero cloud costs, zero paid APIs, zero telemetry
+
+---
 
 ## Getting Started
 
@@ -14,13 +45,9 @@ npm install
 
 ### 2. Database Setup & Seed
 
-Initialize the local SQLite database and insert mock demo data:
-
 ```bash
 npm run db:reset
 ```
-
-*This runs Prisma push and seeds the database with realistic demo data.*
 
 ### 3. Run Development Server
 
@@ -28,189 +55,152 @@ npm run db:reset
 npm run dev
 ```
 
-Visit `http://localhost:3000` to interact with Personal Assist.
+Visit `http://localhost:3000`.
 
-## Phase 2: Local MVP (Completed)
-We have successfully implemented a complete Local Intelligence layer:
-- **Rule-based & Local LLM parsing** (Ollama integration for `.eml` and text parsing)
-- **Local SQLite Action Workspace** (Calendar `.ics` import, contacts, email drafts, task follow-ups)
-- **Document workflows** (Mock redlining, native mock signing loops, signature extraction)
-- **Local Automation Engine** (Background worker, conditional trigger rules, proactive Daily Briefs)
-- **Hardened Local Experience** (First-time onboarding, global search Cmd+K, guided demo, export capabilities, settings health dashboard, smoke tests)
+### 4. Run Analytics Pipeline (Python)
 
-To run the full stack (Next.js server + Background Worker):
+```bash
+npm run analytics:run
+```
+
+Generates `data/analytics/personal_assist_metrics.json` — viewable at `/showcase`.
+
+### 5. Full Stack (Server + Worker)
+
 ```bash
 npm run dev:all
 ```
 
-To run a system smoke test:
+### 6. Smoke Test
+
 ```bash
 npm run smoke:test
 ```
 
-## Phase 3A: Gmail Local Beta
-Personal Assist now supports a read-only local integration with Gmail. It allows you to manually sync your last 10 or 25 emails, applying the local AI pipeline to organize them automatically without sending data to a cloud backend.
+### 7. Repository Language Breakdown
 
-### Setup Instructions
-You must create OAuth credentials in the Google Cloud Console.
-
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
-2. Create a new project.
-3. Enable the **Gmail API**.
-4. Configure the OAuth Consent Screen (Internal or External, add yourself as a test user).
-5. Create OAuth Credentials (Web Application).
-6. Add `http://localhost:3000/api/integrations/gmail/callback` to the **Authorized redirect URIs**.
-7. Generate a secure 32-byte encryption key for local token storage:
-   ```bash
-   openssl rand -base64 32
-   ```
-
-### Environment Variables
-Add the following to your `.env` file:
-```env
-GOOGLE_CLIENT_ID="your-client-id"
-GOOGLE_CLIENT_SECRET="your-client-secret"
-GOOGLE_REDIRECT_URI="http://localhost:3000/api/integrations/gmail/callback"
-ENCRYPTION_KEY="your-32-byte-base64-key"
+```bash
+npm run repo:languages
 ```
 
-### Limitations & Security
-- **Local Beta:** This feature is for local testing only. It is not ready for production deployment.
-- **Read-Only:** The app only requests `https://www.googleapis.com/auth/gmail.readonly` scope. It cannot send, modify, delete, or mark emails as read.
-- **Storage:** OAuth tokens are encrypted using AES-256 and stored locally in your SQLite database. Do NOT expose your `ENCRYPTION_KEY`.
+---
 
-## Phase 3B: Google Calendar Local Beta
-Personal Assist now supports a read-only local integration with Google Calendar. You can manually sync your upcoming events (7, 30, or 90 days), extracting events, attendees, and meeting links into the local Wallet.
+## Architecture
 
-### Setup Instructions
-You must create OAuth credentials in the Google Cloud Console (you can reuse the project from Gmail).
+### Data Flow
 
-1. Enable the **Google Calendar API**.
-2. Configure the OAuth Consent Screen (Internal or External, add yourself as a test user).
-3. Create OAuth Credentials (Web Application).
-4. Add `http://localhost:3000/api/integrations/google-calendar/callback` to the **Authorized redirect URIs**.
-
-### Environment Variables
-Add the following to your `.env` file:
-```env
-GOOGLE_CALENDAR_CLIENT_ID="your-client-id"
-GOOGLE_CALENDAR_CLIENT_SECRET="your-client-secret"
-GOOGLE_CALENDAR_REDIRECT_URI="http://localhost:3000/api/integrations/google-calendar/callback"
+```
+Gmail/Outlook OAuth → ConnectorAccount → InboxItem → AI Classification
+                                              ↓
+                              Attachment Download → Document → AI Extraction
+                                                                    ↓
+                                                        EmailDraft → ApprovalRequest → Export
 ```
 
-### Limitations & Security
-- **Local Beta:** This feature is for local testing only.
-- **Read-Only:** The app only requests `https://www.googleapis.com/auth/calendar.events.readonly`. It cannot create, edit, or delete events, or send invites.
-- **Storage:** OAuth tokens are encrypted using `ENCRYPTION_KEY` and stored locally in your SQLite database.
-
-## Phase 3C: Outlook Calendar Local Beta
-Personal Assist supports a read-only local integration with Outlook Calendar using the Microsoft Graph API.
-
-### Setup Instructions
-You must create an App Registration in Microsoft Entra ID (formerly Azure AD).
-
-1. Go to the [Microsoft Entra Admin Center](https://entra.microsoft.com/).
-2. Create a new App Registration.
-3. Under Supported account types, choose **Accounts in any organizational directory (Any Microsoft Entra ID tenant - Multitenant) and personal Microsoft accounts (e.g. Skype, Xbox)**.
-4. Add a Web platform redirect URI: `http://localhost:3000/api/integrations/outlook-calendar/callback`.
-5. Under **API permissions**, add the following delegated permissions for Microsoft Graph: `User.Read`, `Calendars.Read`, `offline_access`.
-6. Create a client secret.
-
-### Environment Variables
-Add the following to your `.env` file:
-```env
-MICROSOFT_CLIENT_ID="your-client-id"
-MICROSOFT_CLIENT_SECRET="your-client-secret"
-MICROSOFT_TENANT="common"
-MICROSOFT_REDIRECT_URI="http://localhost:3000/api/integrations/outlook-calendar/callback" # Legacy calendar fallback
-MICROSOFT_OUTLOOK_CALENDAR_REDIRECT_URI="http://localhost:3000/api/integrations/outlook-calendar/callback"
+```
+Google/Outlook Calendar → CalendarEvent → WalletCard → Reminder → Daily Brief → Automation
 ```
 
-### Limitations & Security
-- **Local Beta:** This feature is for local testing only.
-- **Read-Only:** The app only requests `Calendars.Read`. It cannot create, edit, or delete events, or send invites.
-- **Storage:** OAuth tokens are encrypted using `ENCRYPTION_KEY` and stored locally in your SQLite database.
+### Technology Stack
 
-## Phase 3D: Outlook Mail Local Beta
-Personal Assist supports a read-only local integration with Outlook Mail using the Microsoft Graph API.
+| Layer | Technology |
+|-------|-----------|
+| Data Pipeline | Python 3, SQLite, SQL metrics, Prisma ORM |
+| AI / Intelligence | Rules engine, Ollama LLM integration, structured extraction |
+| Backend | Next.js API routes, OAuth 2.0, AES-256 encryption |
+| Automation | Local background worker, conditional trigger rules |
+| Frontend | React, Tailwind CSS, Framer Motion, PWA |
+| Analytics | Python reporting, SQL marts, data quality contracts |
 
-### Setup Instructions
-Using the same App Registration from Phase 3C:
+---
 
-1. Add an additional Web platform redirect URI: `http://localhost:3000/api/integrations/outlook-mail/callback`.
-2. Under **API permissions**, add the `Mail.Read` delegated permission.
-3. Update your `.env` to include the distinct redirect URI for mail.
+## Integration Setup
 
-### Environment Variables
-Add the following to your `.env` file (alongside your calendar URI):
-```env
-MICROSOFT_OUTLOOK_MAIL_REDIRECT_URI="http://localhost:3000/api/integrations/outlook-mail/callback"
+### Gmail (Read-Only)
+1. Create OAuth credentials in [Google Cloud Console](https://console.cloud.google.com/)
+2. Enable Gmail API, configure consent screen
+3. Add redirect URI: `http://localhost:3000/api/integrations/gmail/callback`
+4. Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` in `.env`
+5. Generate encryption key: `openssl rand -base64 32` → set as `ENCRYPTION_KEY`
+
+### Google Calendar (Read-Only)
+1. Enable Google Calendar API (reuse project)
+2. Add redirect URI: `http://localhost:3000/api/integrations/google-calendar/callback`
+3. Set `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET` in `.env`
+
+### Outlook Calendar & Mail (Read-Only)
+1. Create App Registration in [Microsoft Entra](https://entra.microsoft.com/)
+2. Add delegated permissions: `User.Read`, `Calendars.Read`, `Mail.Read`, `offline_access`
+3. Add redirect URIs for calendar and mail callbacks
+4. Set `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` in `.env`
+
+### Security Notes
+- All connectors are **read-only** — the app cannot send, modify, or delete provider data
+- OAuth tokens are **AES-256 encrypted** in local SQLite
+- Attachments are stored in **private `data/uploads`**, served through controlled API routes
+- Dangerous file extensions are **blocked** (22 types including `.exe`, `.bat`, `.ps1`, `.js`)
+
+---
+
+## Analytics & Data Engineering
+
+The `analytics/` directory contains a Python data engineering pipeline:
+
+```
+analytics/
+├── personal_assist_analytics/   # Python package
+│   ├── agentic.py               # Agentic workflow analysis
+│   ├── ai_eval.py               # AI output evaluation
+│   ├── ml_features.py           # ML-style feature engineering
+│   ├── data_contracts.py        # Schema contract validation
+│   ├── lineage.py               # Data lineage graph
+│   ├── marts.py                 # Analytics data marts
+│   ├── metrics.py               # SQL metric aggregation
+│   ├── quality.py               # Data quality checks
+│   ├── risk.py                  # Risk distribution analysis
+│   └── ...
+├── sql/                         # SQL metric queries
+│   ├── agentic_workflow_metrics.sql
+│   ├── ai_extraction_metrics.sql
+│   ├── data_quality_contracts.sql
+│   ├── lineage_edges.sql
+│   └── ...
+└── sample_outputs/              # Sanitized example output
 ```
 
-### Local Integrations (Beta)
+All analytics run **locally** against the SQLite database. No data leaves the machine. See `analytics/README.md` for details.
 
-**Phase 3E.1: Attachment Storage Hardening**
-Downloaded attachments are stored exclusively in a private `data/uploads` folder (not public). Files are served through controlled API routes that enforce strict security policies, including MIME-type sniffing prevention.
+---
 
-**Phase 3F: Attachment Intelligence Workflow**
-Imported documents and attachments can be analyzed locally for insights. Personal Assist can extract deadlines, action items, parties, payment terms, and signature requirements. It will also flag risks based on sensitive keywords. Using the "Intelligence" tab, you can generate local email drafts (Reply, Forward, Signature Request, Clarification) directly from the document. 
+## Privacy & Safety
 
-**Phase 3G: Safe Draft Export & Manual Send**
-Generated email drafts are strictly local and are not sent to Gmail or Outlook. Attachments remain in private local storage. Drafts must go through the local **Approval Center** (if high risk) to be approved. Approved drafts can be exported as `.txt` or `.eml` files, or copied to your clipboard. A Manual Send Checklist ensures you follow safe procedures to manually attach local files and send the email yourself. There is absolutely NO background auto-sending or syncing to provider drafts.
+- **No telemetry** — zero external analytics or tracking
+- **No cloud storage** — all data stays on the local filesystem
+- **No email sending** — drafts are local-only, exported manually
+- **No paid APIs** — entire system runs at zero cost
+- **Strict no-send policy** — enforced at the API layer, verified in analytics
 
-**Available Connectors:**
-- **Gmail Read-Only:** Uses standard Google OAuth but only requests `mail.readonly`. Downloads latest messages locally.
-- **Google Calendar Read-Only:** Uses standard Google OAuth with `calendar.readonly`. Syncs upcoming events.
-- **Outlook Calendar Read-Only:** Uses Microsoft Graph API for `Calendars.Read`. Syncs upcoming events.
-- **Outlook Mail Read-Only:** Uses Microsoft Graph API for `Mail.Read`. Syncs latest inbox items.
-- **Attachment Download on Demand:** Manually download specific attachments directly into private local storage (`data/uploads`) securely. Gmail and Outlook emails.
+---
 
-### How it works
-- **Explicit Action Required:** Attachments are never downloaded automatically. You must explicitly click "Download" on an attachment.
-- **Private Storage:** Decoded attachments are saved to a private, non-public directory `data/uploads`. They are not accessible directly as static web assets. **Do not commit this folder.**
-- **Controlled API Serving:** Files are only readable through a secure, authenticated-capable API route (`GET /api/documents/[id]/file`) which enforces strict MIME type sniffing constraints (`nosniff`).
-- **Blocked Extensions:** Unsafe executable and script files (`.exe`, `.sh`, `.js`, etc.) are blocked.
-- **Document Creation:** Once downloaded, attachments are converted into local `Document` records. The system falls back to supporting older demo files temporarily located in `public/uploads` to maintain backward compatibility without crashing.
+## GitHub Language Note
 
-### Limitations & Security
-- **No Malware Scanning:** Personal Assist does not perform antivirus scanning on downloaded files.
-- **No Bulk Download:** Attachments must be downloaded individually for safety.
-- **No Cloud Backup:** Files saved to `data/uploads` stay completely local.
+GitHub language stats are generated by GitHub Linguist and may emphasize TypeScript because the web layer is built with Next.js. The product scope is better represented by the architecture, analytics pipeline, and `/showcase` page. Run `npm run repo:languages` for a local breakdown.
 
-## Future Integrations Planned
-- **Apple Mail:** Planned as a local macOS helper/native workflow later. Not active yet.
-- **Local System Calendar:** Currently supported through `.ics` import. Direct Apple/Windows system calendar access requires a future native helper.
+---
 
-## Features Included in MVP
+## Roadmap
 
-- **Unified Inbox:** Review extracted emails with mock confidence scores and correct AI mistakes.
-- **Life Wallet:** Unified view of tasks, payments, travel, tickets, orders, and stock tickers.
-- **Document Management:** Upload mock files and run demo "extract actions" algorithms.
-- **Approval Center:** Review and approve AI actions (e.g. wire transfers, email drafting).
-- **Audit Log:** Searchable and filterable history of all system actions.
-- **Local Data Export:** Export the entire local database to a JSON backup file.
-- **Manual Add:** Quickly insert new items into the Life Wallet.
+| Phase | Focus | Status |
+|-------|-------|--------|
+| 3E | Attachment download on demand + storage hardening | ✅ Complete |
+| 3G | Safe draft export + repository cleanup | ✅ Complete |
+| 3H-0.1 | Data/AI portfolio positioning + language balance hardening | ✅ Complete |
+| 3H | Provider-side draft creation (approval-gated) | 🔜 Next |
 
-## Architecture & Technology Stack
+**Phase 3H-0.1** strengthened the real Python analytics package, SQL metrics layer, agentic workflow analytics, AI evaluation with deterministic guardrails, data contracts, and lineage tracking — and repositioned the README and `/showcase` page to lead with Data Engineering, AI/ML, GenAI, Agentic AI, Analytics, and Forward-Deployed Engineering.
 
-- **Frontend:** Next.js 14 App Router, React Server Components
-- **Styling:** Tailwind CSS, Framer Motion (Glassmorphism design)
-- **Database:** Prisma with SQLite (`prisma/dev.db`)
-- **API:** Next.js Server Actions and Route Handlers
+---
 
-## Disclaimer
+## License
 
-This is a local-only MVP for demonstration purposes. No real external APIs (DocuSign, Plaid, Gmail, Slack) are integrated yet.
-
-## Technical Skills Demonstrated
-
-- **Data Engineering**: local ingestion pipelines, sync/deduplication, SQLite/Prisma, SQL metrics, Python analytics pipeline
-- **Data Science / AI**: risk scoring, classification, extraction, quality checks
-- **Gen AI**: document summarization, draft generation, Ollama provider, fallback rules
-- **Backend**: OAuth, encrypted tokens, API routes, secure file serving
-- **Full Stack**: Next.js, Prisma, local worker, dashboard
-- **Frontend/UI/UX**: PWA, mobile responsive app shell, command palette, approvals UI
-- **Analytics**: daily briefs, metrics, reporting, audit analysis
-- **Forward-Deployed Engineering**: local-first, zero-cost deployment, demo mode, user-ready workflows
-
-Check out the [Engineering Showcase](/showcase) to see dynamic metrics and data flow examples.
+Local development project. All rights reserved.

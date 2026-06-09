@@ -59,9 +59,14 @@ const PHASES = [
     items: ["Strict .gitignore", "Secret removal", "App smoke testing", "GitHub push"]
   },
   {
-    title: "Phase 3H-0: Data Engineering + Analytics Showcase (Active)",
-    status: "active",
+    title: "Phase 3H-0: Data Engineering + Analytics Showcase (Completed)",
+    status: "completed",
     items: ["Local SQLite analytics layer", "Python data engineering pipeline", "SQL metric queries", "Data Quality & Risk features", "Engineering Showcase Portfolio Page"]
+  },
+  {
+    title: "Phase 3H-0.1: Data/AI Portfolio Positioning + Language Balance Hardening (Active)",
+    status: "active",
+    items: ["Agentic workflow analytics", "AI evaluation with deterministic guardrails", "ML feature engineering & data contracts", "Data lineage graph & analytics marts", "Data/AI-first README & Showcase positioning", "Local language footprint script"]
   },
   {
     title: "Phase 3H: Provider-Side Draft Creation (Planned)",

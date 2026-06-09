@@ -1,8 +1,21 @@
 import fs from "fs";
 import path from "path";
-import { Terminal, Database, Code, ShieldCheck, Activity, BrainCircuit } from "lucide-react";
+import { Terminal, Database, Code, ShieldCheck, Activity, BrainCircuit, GitBranch, BarChart3, Bot, Workflow, Server, Lock } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+const SKILL_BADGES = [
+  { label: "Data Engineering", color: "from-blue-500 to-cyan-500" },
+  { label: "Analytics Engineering", color: "from-emerald-500 to-teal-500" },
+  { label: "Data Science", color: "from-purple-500 to-violet-500" },
+  { label: "ML / AI Engineering", color: "from-rose-500 to-pink-500" },
+  { label: "GenAI", color: "from-amber-500 to-orange-500" },
+  { label: "Agentic AI", color: "from-indigo-500 to-blue-500" },
+  { label: "Forward-Deployed Eng.", color: "from-lime-500 to-emerald-500" },
+  { label: "Product Engineering", color: "from-sky-500 to-blue-500" },
+  { label: "Software Development", color: "from-zinc-400 to-zinc-500" },
+  { label: "Full Stack", color: "from-fuchsia-500 to-purple-500" },
+];
 
 export default async function ShowcasePage() {
   const analyticsPath = path.join(process.cwd(), "data", "analytics", "personal_assist_metrics.json");
@@ -20,104 +33,254 @@ export default async function ShowcasePage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent flex items-center gap-3">
-          <Terminal className="text-blue-400" />
-          Engineering Showcase
+    <div className="p-6 max-w-6xl mx-auto space-y-10 animate-in fade-in duration-500">
+      {/* Header */}
+      <header className="space-y-4">
+        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 bg-clip-text text-transparent leading-tight">
+          Personal Assist — Data Engineering, AI, GenAI, Agentic Workflow, and Forward-Deployed Product System
         </h1>
-        <p className="text-zinc-400 max-w-3xl">
-          Personal Assist is a comprehensive portfolio system demonstrating full-stack engineering,
-          data science, AI feature extraction, and local-first data engineering.
+        <p className="text-zinc-400 max-w-4xl text-lg">
+          A local-first AI operations platform demonstrating production-grade data engineering, 
+          analytics pipelines, agentic workflow orchestration, document intelligence, and 
+          human-in-the-loop automation — built with zero cloud costs and zero paid APIs.
         </p>
       </header>
 
+      {/* Skill Badges */}
+      <div className="flex flex-wrap gap-2">
+        {SKILL_BADGES.map(b => (
+          <span key={b.label} className={`px-3 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r ${b.color} shadow-lg`}>
+            {b.label}
+          </span>
+        ))}
+      </div>
+
+      {/* Dynamic Metrics Grid */}
       {!hasMetrics ? (
         <div className="p-8 border border-blue-500/30 bg-blue-500/10 rounded-xl text-center space-y-4">
           <Database className="w-12 h-12 text-blue-400 mx-auto" />
-          <h2 className="text-xl font-bold text-white">Local Analytics Not Generated</h2>
-          <p className="text-zinc-300">Run the following command to execute the local Python analytics pipeline:</p>
+          <h2 className="text-xl font-bold text-white">Analytics Pipeline Not Run</h2>
+          <p className="text-zinc-300">Execute the Python analytics pipeline to populate live metrics:</p>
           <code className="block bg-black/50 border border-white/10 p-4 rounded-lg text-emerald-400 font-mono mt-4 mx-auto max-w-md">
             npm run analytics:run
           </code>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <MetricCard title="Imported Emails" value={metrics.counts?.total_emails} icon={<MailIcon />} />
-          <MetricCard title="Calendar Events" value={metrics.counts?.total_events} icon={<CalendarIcon />} />
-          <MetricCard title="Documents Extracted" value={metrics.counts?.total_documents} icon={<DocIcon />} />
-          <MetricCard title="Drafts Generated" value={metrics.counts?.total_drafts} icon={<DraftIcon />} />
-          <MetricCard title="Automations Run" value={metrics.counts?.total_runs} icon={<Activity />} />
-          <MetricCard title="Audit Logs" value={metrics.counts?.total_audit_logs} icon={<ShieldCheck />} />
-          <MetricCard title="Connected Integrations" value={metrics.counts?.total_connector_accounts} icon={<Database />} />
-          <MetricCard title="Workload Score" value={metrics.workflowMetrics?.workload_score} icon={<BrainCircuit />} />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <MetricCard title="Emails Ingested" value={metrics.counts?.total_emails} />
+          <MetricCard title="Calendar Events" value={metrics.counts?.total_events} />
+          <MetricCard title="Documents" value={metrics.counts?.total_documents} />
+          <MetricCard title="Drafts" value={metrics.counts?.total_drafts} />
+          <MetricCard title="Approved Drafts" value={metrics.counts?.approved_drafts} />
+          <MetricCard title="Automation Runs" value={metrics.counts?.total_runs} />
+          <MetricCard title="Audit Trail" value={metrics.counts?.total_audit_logs} />
+          <MetricCard title="Integrations" value={metrics.counts?.total_connector_accounts} />
+          <MetricCard title="Quality Issues" value={metrics.dataContracts?.summary?.total_violations ?? "-"} />
+          <MetricCard title="Lineage Edges" value={metrics.lineageGraphSummary?.total_edges ?? "-"} />
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-white border-b border-white/10 pb-2">Skills Demonstrated</h2>
-          <ul className="space-y-3 text-zinc-300">
-            <li><strong className="text-blue-400">Data Engineering:</strong> Local SQLite ingestion, sync pipelines, deduplication, SQL metric views, Python reporting.</li>
-            <li><strong className="text-purple-400">Data Science / AI:</strong> Rule-based risk scoring, sensitive data detection, feature extraction, entity mapping.</li>
-            <li><strong className="text-emerald-400">Gen AI:</strong> Document summarization, draft generation, local LLM orchestration with structured schema enforcement.</li>
-            <li><strong className="text-amber-400">Full Stack / Backend:</strong> Next.js App Router, Prisma ORM, local OAuth token encryption, secure API file serving.</li>
-            <li><strong className="text-pink-400">Frontend / UI:</strong> Glassmorphic design, Framer Motion, PWA, mobile-responsive layouts, local command palette.</li>
-          </ul>
-        </section>
+      {/* 1. Data Engineering System */}
+      <Section title="Data Engineering System" icon={<Database size={20} />}>
+        <ul className="space-y-2 text-zinc-300 text-sm">
+          <li>• <strong>OAuth Ingestion Pipelines</strong> — Gmail (Google API) and Outlook (Microsoft Graph) with encrypted token storage</li>
+          <li>• <strong>Sync & Deduplication</strong> — External ID tracking, upsert logic, cancellation handling for calendar events</li>
+          <li>• <strong>Local SQLite Data Layer</strong> — Prisma ORM with 15+ models, full migration support</li>
+          <li>• <strong>Python Analytics Pipeline</strong> — SQL metric queries, data quality checks, JSON/Markdown report generation</li>
+          <li>• <strong>Data Contract Validation</strong> — Schema compliance checks for all major entities</li>
+          <li>• <strong>Data Lineage Tracking</strong> — Entity-to-entity relationship graph with edge counts</li>
+        </ul>
+      </Section>
 
-        <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-white border-b border-white/10 pb-2">Data Flow Examples</h2>
-          <div className="space-y-4">
-            <FlowCard title="Email Attachment Workflow" flow="Gmail/Outlook → InboxItem → Extracted Metadata → Document → AI Redline → Approval → Export" />
-            <FlowCard title="Calendar Workflow" flow="Google/Outlook Sync → CalendarEvent → Unified Wallet → Daily Brief → Automation Trigger" />
-            <FlowCard title="Draft Generation" flow="Intelligence Action → EmailDraft → Draft Workspace → Approval Center → Local Export (.eml/.txt)" />
+      {/* 2. Analytics & Analyst Layer */}
+      <Section title="Analytics & Analyst Layer" icon={<BarChart3 size={20} />}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+            <h4 className="font-bold text-white mb-2">SQL Metrics Layer</h4>
+            <p className="text-zinc-400 text-sm">14 SQL query files covering inbox, calendar, document, draft, approval, automation, audit, integration, agentic workflow, AI extraction, data quality, lineage, risk, and workload metrics.</p>
           </div>
-        </section>
-
-        {hasMetrics && (
-          <section className="space-y-4 lg:col-span-2">
-            <h2 className="text-2xl font-bold text-white border-b border-white/10 pb-2">Data Quality & Risk Analysis</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white/5 border border-white/10 p-6 rounded-xl">
-                <h3 className="text-lg font-bold text-white mb-4">Quality Checks</h3>
-                <ul className="space-y-2 text-zinc-300 font-mono text-sm">
-                  {Object.entries(metrics.qualityChecks || {}).map(([k, v]) => (
-                    <li key={k} className="flex justify-between">
-                      <span>{k}</span>
-                      <span className={v === 0 ? "text-emerald-400" : "text-rose-400"}>{String(v)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="bg-white/5 border border-white/10 p-6 rounded-xl">
-                <h3 className="text-lg font-bold text-white mb-4">Risk Distribution</h3>
-                <ul className="space-y-2 text-zinc-300 font-mono text-sm">
-                  {Object.entries(metrics.riskDistribution || {}).map(([k, v]) => (
-                    <li key={k} className="flex justify-between">
-                      <span className="capitalize">{k}</span>
-                      <span className="text-blue-400">{String(v)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+            <h4 className="font-bold text-white mb-2">Analytics Data Marts</h4>
+            <p className="text-zinc-400 text-sm">Local JSON marts for inbox, document, draft, integration, automation, and risk analysis — built by the Python pipeline for dashboard consumption.</p>
+          </div>
+        </div>
+        {hasMetrics && metrics.analyticsMarts && (
+          <div className="mt-4 bg-white/5 border border-white/10 p-4 rounded-xl">
+            <h4 className="font-bold text-white mb-2">Live Mart Summary</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm font-mono text-zinc-300">
+              {Object.entries(metrics.analyticsMarts || {}).map(([k, v]: [string, any]) => (
+                <div key={k} className="flex justify-between bg-white/5 px-3 py-1.5 rounded">
+                  <span>{k}</span>
+                  <span className="text-blue-400">{typeof v === 'object' ? Object.keys(v).length + ' keys' : String(v)}</span>
+                </div>
+              ))}
             </div>
-            
-            <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-xl mt-4">
-              <h3 className="text-lg font-bold text-blue-400 mb-2 flex items-center gap-2">
-                <Code size={18} /> Automated Analyst Recommendations
-              </h3>
-              <ul className="list-disc pl-5 text-blue-200 space-y-1">
-                {(metrics.recommendations || []).map((r: string, i: number) => (
-                  <li key={i}>{r}</li>
+          </div>
+        )}
+      </Section>
+
+      {/* 3. AI / ML Feature Layer */}
+      <Section title="AI / ML Feature Engineering" icon={<BrainCircuit size={20} />}>
+        <ul className="space-y-2 text-zinc-300 text-sm">
+          <li>• <strong>Urgency Score</strong> — Weighted combination of overdue reminders, pending follow-ups, and approval queue depth</li>
+          <li>• <strong>Workload Score</strong> — User capacity estimation from active tasks, upcoming events, and pending items</li>
+          <li>• <strong>Document Risk Score</strong> — Keyword-based risk detection in AI summaries (legal, payment, deadline, termination)</li>
+          <li>• <strong>Integration Reliability</strong> — Connector health percentage from status and error tracking</li>
+          <li>• <strong>Automation Failure Rate</strong> — Pipeline reliability from run success/failure ratios</li>
+          <li>• <strong>Approval Complexity</strong> — Denial rate analysis to measure workflow friction</li>
+        </ul>
+        {hasMetrics && metrics.mlFeatureSummary && (
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-2">
+            {Object.entries(metrics.mlFeatureSummary || {}).map(([k, v]: [string, any]) => (
+              <div key={k} className="bg-white/5 border border-white/10 px-4 py-3 rounded-xl">
+                <p className="text-xs text-zinc-500 capitalize">{k.replace(/_/g, ' ')}</p>
+                <p className="text-lg font-bold text-white">{typeof v === 'object' ? v.score || JSON.stringify(v) : String(v)}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      {/* 4. GenAI Document Intelligence */}
+      <Section title="GenAI Document Intelligence" icon={<Bot size={20} />}>
+        <ul className="space-y-2 text-zinc-300 text-sm">
+          <li>• <strong>Document Summarization</strong> — Local LLM (Ollama) or rules-based extraction with structured output schema</li>
+          <li>• <strong>Entity Extraction</strong> — Deadlines, parties, payment terms, signature requirements, action items</li>
+          <li>• <strong>Draft Generation</strong> — AI-generated reply/forward/clarification/signature request drafts from document context</li>
+          <li>• <strong>Risk Detection</strong> — Automatic sensitivity flagging with escalation to approval gates</li>
+          <li>• <strong>Provider Abstraction</strong> — Pluggable AI backend (Ollama, rules fallback) with no paid API dependency</li>
+        </ul>
+        {hasMetrics && metrics.aiEvaluationMetrics && (
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-2">
+            <MiniStat label="Classification Coverage" value={`${metrics.aiEvaluationMetrics.classification?.coverage_percent ?? 0}%`} />
+            <MiniStat label="Extraction Coverage" value={`${metrics.aiEvaluationMetrics.extraction?.coverage_percent ?? 0}%`} />
+            <MiniStat label="Risk Flag Rate" value={`${metrics.aiEvaluationMetrics.risk_flagging?.flag_rate ?? 0}%`} />
+          </div>
+        )}
+      </Section>
+
+      {/* 5. Agentic AI Workflow Orchestration */}
+      <Section title="Agentic AI Workflow Orchestration" icon={<Workflow size={20} />}>
+        <div className="space-y-4">
+          <FlowCard title="Document Pipeline" flow="Gmail/Outlook → InboxItem → Attachment Download → Document → AI Extraction → EmailDraft → ApprovalRequest → Export / Provider Draft" />
+          <FlowCard title="Email Classification Pipeline" flow="InboxItem → Category Classification → WalletCard / FollowUp / Reminder → Automation Trigger" />
+          <FlowCard title="Calendar Pipeline" flow="Google/Outlook Calendar → CalendarEvent → WalletCard → Reminder → Daily Brief → Automation" />
+        </div>
+        {hasMetrics && metrics.agenticWorkflowMetrics && (
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-2">
+            <MiniStat label="Approval Rate" value={`${metrics.agenticWorkflowMetrics.human_approval_gate?.approval_rate ?? 0}%`} />
+            <MiniStat label="Automation Success" value={`${metrics.agenticWorkflowMetrics.automation_metrics?.success_rate ?? 100}%`} />
+            <MiniStat label="No-Send Compliance" value={`${metrics.agenticWorkflowMetrics.safety_compliance?.compliance_rate ?? 100}%`} />
+          </div>
+        )}
+      </Section>
+
+      {/* 6. Forward-Deployed Engineering */}
+      <Section title="Forward-Deployed Engineering" icon={<Server size={20} />}>
+        <ul className="space-y-2 text-zinc-300 text-sm">
+          <li>• <strong>Zero-Cost Local Deployment</strong> — Runs entirely on one machine with no cloud infrastructure</li>
+          <li>• <strong>No Paid APIs</strong> — Standard library Python, local LLM, free OAuth tiers</li>
+          <li>• <strong>No External Telemetry</strong> — Zero tracking, zero analytics leaving the device</li>
+          <li>• <strong>Demo Mode</strong> — Guided onboarding with seed data for immediate evaluation</li>
+          <li>• <strong>PWA Support</strong> — Installable as a local app on desktop and mobile</li>
+        </ul>
+      </Section>
+
+      {/* 7. Software Engineering / Full Stack */}
+      <Section title="Software Engineering / Full Stack" icon={<Code size={20} />}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-zinc-300 text-sm">
+          <div>
+            <h4 className="font-bold text-white mb-1">Backend</h4>
+            <ul className="space-y-1">
+              <li>• Next.js 16 App Router with Server Components</li>
+              <li>• Prisma ORM with SQLite (15+ models)</li>
+              <li>• OAuth 2.0 (Google, Microsoft) with PKCE</li>
+              <li>• AES-256 encrypted token storage</li>
+              <li>• Background automation worker</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-white mb-1">Frontend / UI</h4>
+            <ul className="space-y-1">
+              <li>• Glassmorphic dark theme with Tailwind CSS</li>
+              <li>• Framer Motion animations and transitions</li>
+              <li>• Mobile-responsive PWA shell</li>
+              <li>• Global search command palette (Cmd+K)</li>
+              <li>• Approval Center and audit log UI</li>
+            </ul>
+          </div>
+        </div>
+      </Section>
+
+      {/* 8. Data Quality & Lineage */}
+      {hasMetrics && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Data Quality */}
+          <div className="bg-white/5 border border-white/10 p-6 rounded-xl">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <ShieldCheck size={18} className="text-emerald-400" /> Data Quality Checks
+            </h3>
+            <ul className="space-y-2 text-zinc-300 font-mono text-sm">
+              {Object.entries(metrics.qualityChecks || {}).map(([k, v]) => (
+                <li key={k} className="flex justify-between">
+                  <span>{k}</span>
+                  <span className={v === 0 ? "text-emerald-400" : "text-rose-400"}>{String(v)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Lineage */}
+          <div className="bg-white/5 border border-white/10 p-6 rounded-xl">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <GitBranch size={18} className="text-blue-400" /> Data Lineage Graph
+            </h3>
+            {metrics.lineageGraphSummary ? (
+              <ul className="space-y-2 text-zinc-300 font-mono text-sm">
+                {(metrics.lineageGraphSummary.edges || []).map((e: any, i: number) => (
+                  <li key={i} className="flex justify-between bg-white/5 px-3 py-1.5 rounded">
+                    <span>{e.source} → {e.target}</span>
+                    <span className="text-blue-400">{e.count}</span>
+                  </li>
                 ))}
               </ul>
-            </div>
-          </section>
-        )}
-      </div>
-      
-      <footer className="pt-8 text-center text-zinc-500 text-sm">
+            ) : (
+              <p className="text-zinc-500 text-sm">Run analytics pipeline to see lineage data.</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Privacy & Safety */}
+      <Section title="Privacy & Safety Model" icon={<Lock size={20} />}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <SafetyBadge label="No Telemetry" />
+          <SafetyBadge label="No Cloud Storage" />
+          <SafetyBadge label="No Email Sending" />
+          <SafetyBadge label="No Paid APIs" />
+          <SafetyBadge label="Encrypted Tokens" />
+          <SafetyBadge label="Private File Vault" />
+          <SafetyBadge label="Blocked Executables" />
+          <SafetyBadge label="Audit Trail" />
+        </div>
+      </Section>
+
+      {/* Recommendations */}
+      {hasMetrics && metrics.recommendations && (
+        <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-xl">
+          <h3 className="text-lg font-bold text-blue-400 mb-2 flex items-center gap-2">
+            <Activity size={18} /> Automated Analyst Recommendations
+          </h3>
+          <ul className="list-disc pl-5 text-blue-200 space-y-1">
+            {metrics.recommendations.map((r: string, i: number) => (
+              <li key={i}>{r}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Footer */}
+      <footer className="pt-4 text-center text-zinc-500 text-sm border-t border-white/5">
         <p>Personal Assist operates 100% locally. No analytics, tracking, or private data leaves this machine.</p>
         {hasMetrics && <p className="mt-1">Last Analysis Run: {new Date(metrics.generatedAt).toLocaleString()}</p>}
       </footer>
@@ -125,31 +288,48 @@ export default async function ShowcasePage() {
   );
 }
 
-function MetricCard({ title, value, icon }: { title: string, value: any, icon: any }) {
+function MetricCard({ title, value }: { title: string; value: any }) {
   return (
-    <div className="bg-white/5 border border-white/10 p-5 rounded-xl flex items-center gap-4">
-      <div className="p-3 bg-white/5 rounded-lg text-zinc-400">
-        {icon}
-      </div>
-      <div>
-        <p className="text-sm text-zinc-400">{title}</p>
-        <p className="text-2xl font-bold text-white">{value ?? "-"}</p>
-      </div>
+    <div className="bg-white/5 border border-white/10 p-4 rounded-xl text-center">
+      <p className="text-xs text-zinc-500 mb-1">{title}</p>
+      <p className="text-2xl font-bold text-white">{value ?? "-"}</p>
     </div>
   );
 }
 
-function FlowCard({ title, flow }: { title: string, flow: string }) {
+function Section({ title, icon, children }: { title: string; icon: any; children: any }) {
+  return (
+    <section className="space-y-4">
+      <h2 className="text-2xl font-bold text-white border-b border-white/10 pb-2 flex items-center gap-2">
+        <span className="text-blue-400">{icon}</span> {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+function FlowCard({ title, flow }: { title: string; flow: string }) {
   return (
     <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
-      <h3 className="font-bold text-blue-300 mb-2">{title}</h3>
+      <h4 className="font-bold text-blue-300 mb-2">{title}</h4>
       <p className="text-zinc-300 text-sm font-mono leading-relaxed">{flow}</p>
     </div>
   );
 }
 
-// Minimal Icons
-function MailIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="m22 6-10 7L2 6"/></svg> }
-function CalendarIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> }
-function DocIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> }
-function DraftIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> }
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-white/5 border border-white/10 px-4 py-3 rounded-xl">
+      <p className="text-xs text-zinc-500">{label}</p>
+      <p className="text-lg font-bold text-white">{value}</p>
+    </div>
+  );
+}
+
+function SafetyBadge({ label }: { label: string }) {
+  return (
+    <div className="bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-lg text-center">
+      <span className="text-emerald-400 text-sm font-medium">{label}</span>
+    </div>
+  );
+}
