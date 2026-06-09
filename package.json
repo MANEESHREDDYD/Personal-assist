@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "db:push": "npx prisma db push",
     "db:seed": "node scripts/seed.js",
     "db:reset": "node scripts/reset-db.js && npx prisma db push && npm run db:seed",
@@ -15,7 +15,8 @@
     "smoke:test": "tsx scripts/smoke-test.ts",
     "analytics:run": "python analytics/personal_assist_analytics/run.py",
     "analytics:report": "python analytics/personal_assist_analytics/report.py",
-    "repo:languages": "node scripts/language-breakdown.mjs"
+    "repo:languages": "node scripts/language-breakdown.mjs",
+    "security:no-send": "node scripts/check-no-send-policy.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

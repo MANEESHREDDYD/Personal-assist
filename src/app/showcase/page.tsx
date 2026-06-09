@@ -197,6 +197,44 @@ export default async function ShowcasePage() {
         </div>
       </Section>
 
+      {/* No-Send Compliance & Human-in-the-Loop Safety */}
+      <Section title="No-Send Compliance & Human-in-the-Loop Safety" icon={<ShieldCheck size={20} />}>
+        <p className="text-zinc-300 text-sm">
+          Personal Assist creates provider-side drafts only after local approval. The final
+          send remains a human action inside Gmail or Outlook. The metrics below come from the
+          local analytics pipeline; the blocked actions are enforced in code and verified by a
+          static no-send guard (<code className="text-emerald-300">npm run security:no-send</code>).
+        </p>
+
+        {hasMetrics && metrics.agenticWorkflowMetrics?.provider_drafts ? (
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+            <MiniStat label="Emails Sent" value={String(metrics.agenticWorkflowMetrics.provider_drafts.emails_sent ?? 0)} />
+            <MiniStat label="No-Send Compliance" value={`${metrics.agenticWorkflowMetrics.safety_compliance?.compliance_rate ?? 100}%`} />
+            <MiniStat label="Provider Drafts Created" value={String(metrics.agenticWorkflowMetrics.provider_drafts.provider_drafts_created ?? 0)} />
+            <MiniStat label="Creation Failures" value={String(metrics.agenticWorkflowMetrics.provider_drafts.creation_failures ?? 0)} />
+            <MiniStat label="Approval → Draft" value={`${metrics.agenticWorkflowMetrics.provider_drafts.approval_to_provider_draft_rate ?? 0}%`} />
+          </div>
+        ) : (
+          <p className="mt-4 text-zinc-500 text-sm">Run <code>npm run analytics:run</code> to populate live no-send metrics.</p>
+        )}
+
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+          {[
+            "Gmail send endpoint not used",
+            "Outlook send endpoint not used",
+            "No mailbox deletion",
+            "No label / category modification",
+            "No automatic draft creation",
+            "No attachment upload in Phase 3H",
+          ].map((item) => (
+            <div key={item} className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-lg">
+              <ShieldCheck size={16} className="text-emerald-400 shrink-0" />
+              <span className="text-emerald-200 text-sm">{item}</span>
+            </div>
+          ))}
+        </div>
+      </Section>
+
       {/* 6. Forward-Deployed Engineering */}
       <Section title="Forward-Deployed Engineering" icon={<Server size={20} />}>
         <ul className="space-y-2 text-zinc-300 text-sm">

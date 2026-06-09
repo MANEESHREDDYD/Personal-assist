@@ -69,9 +69,14 @@ const PHASES = [
     items: ["Agentic workflow analytics", "AI evaluation with deterministic guardrails", "ML feature engineering & data contracts", "Data lineage graph & analytics marts", "Data/AI-first README & Showcase positioning", "Local language footprint script"]
   },
   {
-    title: "Phase 3H: Provider-Side Draft Creation After Approval (Active)",
-    status: "active",
+    title: "Phase 3H: Provider-Side Draft Creation After Approval (Completed)",
+    status: "completed",
     items: ["Gmail draft creation (gmail.compose)", "Outlook draft creation (Mail.ReadWrite)", "Isolated draft OAuth connectors", "Strict no-send policy enforcement", "Approval-gated, duplicate-blocked, fully audited"]
+  },
+  {
+    title: "Phase 3H.1: Lint Repair + Live OAuth Verification + No-Send Compliance Evidence (Active)",
+    status: "active",
+    items: ["Working lint command (eslint flat config)", "Gmail/Outlook live verification checklist", "No-send policy documentation", "Static no-send guard (security:no-send)", "No-send compliance evidence on Showcase"]
   },
   {
     title: "Phase 3I: Provider Draft Attachment Upload (Planned)",

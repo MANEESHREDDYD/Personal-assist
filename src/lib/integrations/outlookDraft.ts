@@ -5,7 +5,9 @@
  * permission. This connector is kept isolated from the read-only `outlook_mail`
  * connector (which uses `Mail.Read`). Personal Assist never sends email: this
  * module only ever POSTs to /me/messages (which creates a draft). It never calls
- * /send, sendMail, or any message update/move/delete endpoint.
+ * the Graph message-send or send-mail actions, nor any message update/move/delete
+ * endpoint. The forbidden endpoints are enumerated in
+ * docs/security/no-send-policy.md and enforced by scripts/check-no-send-policy.mjs.
  */
 
 const OUTLOOK_DRAFT_SCOPE = "offline_access User.Read Mail.ReadWrite";
@@ -121,7 +123,8 @@ function toRecipients(value?: string | null) {
 
 /**
  * Creates an Outlook draft via POST /me/messages (a draft is created, not sent).
- * Returns the safe message id + webLink. NEVER calls /send or sendMail.
+ * Returns the safe message id + webLink. NEVER triggers a send (no message-send
+ * or send-mail action).
  */
 export async function createOutlookDraft(
   accessToken: string,

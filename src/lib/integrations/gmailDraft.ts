@@ -4,8 +4,10 @@
  * Creates provider-side Gmail drafts ONLY. This connector deliberately uses a
  * separate OAuth client and the `gmail.compose` scope, kept isolated from the
  * read-only `gmail` connector. Personal Assist never sends email: this module
- * only ever calls users.drafts.create. It never calls users.drafts.send,
- * users.messages.send, or any modify/label endpoint.
+ * only ever calls the Gmail create-draft endpoint (users.drafts.create). It
+ * never calls any draft-send, message-send, modify, or label endpoint. The
+ * forbidden endpoints are enumerated in docs/security/no-send-policy.md and
+ * enforced by scripts/check-no-send-policy.mjs.
  */
 
 const GMAIL_COMPOSE_SCOPE = "https://www.googleapis.com/auth/gmail.compose";
@@ -134,7 +136,7 @@ function sanitizeHeader(value: string): string {
 
 /**
  * Creates a Gmail draft via users.drafts.create. Returns the safe draft + message
- * identifiers. NEVER calls drafts.send or messages.send.
+ * identifiers. NEVER triggers a send (no draft-send or message-send endpoint).
  */
 export async function createGmailDraft(
   accessToken: string,
