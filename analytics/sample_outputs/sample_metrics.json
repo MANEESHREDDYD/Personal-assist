@@ -68,9 +68,21 @@
       "failed_runs": 2,
       "success_rate": 98.33
     },
+    "provider_drafts": {
+      "approved_drafts": 8,
+      "provider_drafts_created": 5,
+      "gmail_provider_drafts": 3,
+      "outlook_provider_drafts": 2,
+      "emails_sent": 0,
+      "draft_connectors_total": 2,
+      "draft_connectors_connected": 2,
+      "draft_connector_health": 100.0,
+      "creation_failures": 0,
+      "approval_to_provider_draft_rate": 62.5
+    },
     "safety_compliance": {
       "no_send_policy_enforced": true,
-      "provider_drafts_created": 0,
+      "provider_drafts_created": 5,
       "emails_sent_via_api": 0,
       "compliance_rate": 100.0
     }
@@ -157,7 +169,7 @@
     "dataScience": { "demonstrated": true, "evidence": "Deterministic feature engineering and scoring", "features_computed": 6 },
     "mlAiEngineering": { "demonstrated": true, "evidence": "AI output evaluation with deterministic guardrails", "deterministic_checks_passed": 5 },
     "genAi": { "demonstrated": true, "evidence": "Document summarization + draft generation via provider abstraction", "configured_provider": "rules", "uses_paid_api": false },
-    "agenticAi": { "demonstrated": true, "evidence": "Multi-step pipelines with human-in-the-loop approval gates", "approval_rate": 80.0, "no_send_compliance": 100.0 },
+    "agenticAi": { "demonstrated": true, "evidence": "Document intelligence -> local draft -> approval -> provider-side draft creation, with human-in-the-loop gates and a no-send safety policy", "approval_rate": 80.0, "no_send_compliance": 100.0, "provider_drafts_created": 5, "emails_sent": 0 },
     "forwardDeployedEngineering": { "demonstrated": true, "evidence": "Local-first, zero-cost, no cloud dependency, no telemetry" },
     "dataQuality": { "demonstrated": true, "evidence": "Contract enforcement across major entities", "total_violations": 0 }
   },

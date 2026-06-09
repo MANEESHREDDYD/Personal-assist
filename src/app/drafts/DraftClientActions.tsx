@@ -4,6 +4,7 @@ import { useState } from "react";
 import { updateDraftStatus, markDraftExported, markDraftManuallySent, reopenDraft, logClipboardAction } from "../actions/drafts";
 import { Check, Copy, Archive, Loader2, Download, ExternalLink, RotateCcw } from "lucide-react";
 import { parseMetadata } from "@/lib/metadata";
+import { ProviderDraftActions } from "./ProviderDraftActions";
 
 export function DraftClientActions({ draft }: { draft: any }) {
   const [loading, setLoading] = useState(false);
@@ -151,6 +152,9 @@ export function DraftClientActions({ draft }: { draft: any }) {
           )}
         </div>
       )}
+
+      {/* Provider-side draft creation — approved drafts only, never sends */}
+      {isApproved && <ProviderDraftActions draft={draft} />}
     </div>
   );
 }

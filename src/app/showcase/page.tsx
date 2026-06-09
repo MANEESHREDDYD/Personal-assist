@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { Terminal, Database, Code, ShieldCheck, Activity, BrainCircuit, GitBranch, BarChart3, Bot, Workflow, Server, Lock } from "lucide-react";
+import { Terminal, Database, Code, ShieldCheck, Activity, BrainCircuit, GitBranch, BarChart3, Bot, Workflow, Server, Lock, PenSquare } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -173,6 +173,28 @@ export default async function ShowcasePage() {
             <MiniStat label="No-Send Compliance" value={`${metrics.agenticWorkflowMetrics.safety_compliance?.compliance_rate ?? 100}%`} />
           </div>
         )}
+
+        {/* Phase 3H — provider-side draft creation after approval */}
+        <div className="mt-4 bg-amber-500/5 border border-amber-500/20 p-4 rounded-xl space-y-2">
+          <h4 className="font-bold text-amber-300 text-sm flex items-center gap-2">
+            <PenSquare size={16} /> Phase 3H — Provider-Side Draft Creation After Approval
+          </h4>
+          <ul className="text-zinc-300 text-sm space-y-1">
+            <li>• Approved local drafts can be pushed as <strong>Gmail or Outlook drafts</strong> — only after explicit human approval</li>
+            <li>• <strong>Strict no-send policy</strong>: the system creates drafts only and never calls any send endpoint</li>
+            <li>• <strong>OAuth scope isolation</strong>: separate <code>gmail_draft</code> / <code>outlook_draft</code> connectors, distinct from read-only access</li>
+            <li>• <strong>Auditability</strong>: every connect, creation, duplicate-block, and failure is written to the audit log</li>
+            <li>• Attachments are <strong>not</strong> uploaded in this phase — added manually by the user (Phase 3I)</li>
+          </ul>
+          {hasMetrics && metrics.agenticWorkflowMetrics.provider_drafts && (
+            <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
+              <MiniStat label="Provider Drafts Created" value={String(metrics.agenticWorkflowMetrics.provider_drafts.provider_drafts_created ?? 0)} />
+              <MiniStat label="Emails Sent" value={String(metrics.agenticWorkflowMetrics.provider_drafts.emails_sent ?? 0)} />
+              <MiniStat label="Draft Connector Health" value={`${metrics.agenticWorkflowMetrics.provider_drafts.draft_connector_health ?? 0}%`} />
+              <MiniStat label="Creation Failures" value={String(metrics.agenticWorkflowMetrics.provider_drafts.creation_failures ?? 0)} />
+            </div>
+          )}
+        </div>
       </Section>
 
       {/* 6. Forward-Deployed Engineering */}
@@ -194,9 +216,10 @@ export default async function ShowcasePage() {
             <ul className="space-y-1">
               <li>• Next.js 16 App Router with Server Components</li>
               <li>• Prisma ORM with SQLite (15+ models)</li>
-              <li>• OAuth 2.0 (Google, Microsoft) with PKCE</li>
-              <li>• AES-256 encrypted token storage</li>
-              <li>• Background automation worker</li>
+              <li>• OAuth 2.0 (Google, Microsoft) with state validation</li>
+              <li>• Scoped connector isolation (read-only vs draft-creation)</li>
+              <li>• AES-256 encrypted token storage, no-send enforcement</li>
+              <li>• Background automation worker + audit logging</li>
             </ul>
           </div>
           <div>

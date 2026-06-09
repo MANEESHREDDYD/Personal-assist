@@ -6,6 +6,8 @@ import { GmailConnectorCard } from "@/components/settings/GmailConnectorCard";
 import { GoogleCalendarConnectorCard } from "@/components/settings/GoogleCalendarConnectorCard";
 import OutlookCalendarConnectorCard from "@/components/settings/OutlookCalendarConnectorCard";
 import { OutlookMailConnectorCard } from "@/components/settings/OutlookMailConnectorCard";
+import { GmailDraftConnectorCard } from "@/components/settings/GmailDraftConnectorCard";
+import { OutlookDraftConnectorCard } from "@/components/settings/OutlookDraftConnectorCard";
 import { prisma } from "@/lib/prisma";
 
 import fs from "fs";
@@ -139,6 +141,8 @@ export default async function SettingsPage() {
           <GoogleCalendarConnectorCard />
           <OutlookMailConnectorCard />
           <OutlookCalendarConnectorCard />
+          <GmailDraftConnectorCard />
+          <OutlookDraftConnectorCard />
 
           <div className="glass-card rounded-2xl p-6 opacity-60">
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">

@@ -14,7 +14,8 @@ def gather_counts():
         "approval": "approval_metrics.sql",
         "automation": "automation_metrics.sql",
         "audit": "audit_metrics.sql",
-        "integration": "integration_metrics.sql"
+        "integration": "integration_metrics.sql",
+        "provider_draft": "provider_draft_metrics.sql"
     }
 
     for category, filename in sql_files.items():

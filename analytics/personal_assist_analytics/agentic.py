@@ -68,12 +68,58 @@ def analyze_agentic_workflows():
         'success_rate': round((total_runs - failed_runs) / total_runs * 100, 2) if total_runs > 0 else 100.0
     }
     
+    # Provider-side draft creation (Phase 3H) — drafts created, never sent
+    provider = analyze_provider_drafts()
+    results['provider_drafts'] = provider
+
     # No-send safety compliance (drafts never sent via API)
     results['safety_compliance'] = {
         'no_send_policy_enforced': True,
-        'provider_drafts_created': 0,
+        'provider_drafts_created': provider['provider_drafts_created'],
         'emails_sent_via_api': 0,
         'compliance_rate': 100.0
     }
-    
+
     return results
+
+
+def analyze_provider_drafts():
+    """Analyzes Phase 3H provider-side draft creation after human approval.
+
+    Provider drafts (Gmail/Outlook) are created only after a local EmailDraft is
+    approved. Personal Assist never sends email, so emails_sent stays at 0 and the
+    pipeline tracks the approval-to-provider-draft conversion instead.
+    """
+    approved = query_one("SELECT COUNT(id) as c FROM EmailDraft WHERE status = 'approved'")['c'] or 0
+    pushed = query_one(
+        "SELECT COUNT(id) as c FROM EmailDraft WHERE metadata LIKE '%\"pushedToProvider\":true%'"
+    )['c'] or 0
+    gmail_drafts = query_one(
+        "SELECT COUNT(id) as c FROM EmailDraft WHERE metadata LIKE '%\"providerDrafts\"%' AND metadata LIKE '%\"gmail\"%'"
+    )['c'] or 0
+    outlook_drafts = query_one(
+        "SELECT COUNT(id) as c FROM EmailDraft WHERE metadata LIKE '%\"providerDrafts\"%' AND metadata LIKE '%\"outlook\"%'"
+    )['c'] or 0
+
+    connectors_total = query_one(
+        "SELECT COUNT(id) as c FROM ConnectorAccount WHERE provider IN ('gmail_draft', 'outlook_draft')"
+    )['c'] or 0
+    connectors_connected = query_one(
+        "SELECT COUNT(id) as c FROM ConnectorAccount WHERE provider IN ('gmail_draft', 'outlook_draft') AND status = 'connected'"
+    )['c'] or 0
+    failures = query_one(
+        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_draft_creation_failed'"
+    )['c'] or 0
+
+    return {
+        'approved_drafts': approved,
+        'provider_drafts_created': pushed,
+        'gmail_provider_drafts': gmail_drafts,
+        'outlook_provider_drafts': outlook_drafts,
+        'emails_sent': 0,
+        'draft_connectors_total': connectors_total,
+        'draft_connectors_connected': connectors_connected,
+        'draft_connector_health': round(connectors_connected / connectors_total * 100, 2) if connectors_total > 0 else 0,
+        'creation_failures': failures,
+        'approval_to_provider_draft_rate': round(pushed / approved * 100, 2) if approved > 0 else 0
+    }

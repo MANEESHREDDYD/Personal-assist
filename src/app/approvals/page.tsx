@@ -157,11 +157,14 @@ export default async function ApprovalsPage() {
                             <div className="flex gap-4">
                               <a href={`/drafts`} className="text-xs text-blue-400 hover:underline">Open Draft</a>
                               {req.status === "approved" && (
-                                <a href={`/drafts`} className="text-xs text-purple-400 hover:underline font-bold">Export Draft</a>
+                                <>
+                                  <a href={`/drafts`} className="text-xs text-purple-400 hover:underline font-bold">Export Manually</a>
+                                  <a href={`/drafts`} className="text-xs text-amber-400 hover:underline font-bold">Create Provider Draft</a>
+                                </>
                               )}
                             </div>
                             {req.status === "approved" && (
-                              <p className="text-[10px] text-orange-400 mt-1 uppercase tracking-wider">Reminder: Must be sent manually outside Personal Assist</p>
+                              <p className="text-[10px] text-orange-400 mt-1 uppercase tracking-wider">After approval: create a Gmail/Outlook draft or export manually. Personal Assist still never sends — review and send yourself.</p>
                             )}
                           </div>
                         )}

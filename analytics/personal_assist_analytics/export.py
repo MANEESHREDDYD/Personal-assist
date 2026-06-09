@@ -60,9 +60,11 @@ def build_skill_showcase_summary(agentic, ai_eval, ml, contracts, lineage, marts
         },
         "agenticAi": {
             "demonstrated": True,
-            "evidence": "Multi-step pipelines with human-in-the-loop approval gates",
+            "evidence": "Document intelligence -> local draft -> approval -> provider-side draft creation, with human-in-the-loop gates and a no-send safety policy",
             "approval_rate": agentic.get('human_approval_gate', {}).get('approval_rate', 0),
-            "no_send_compliance": agentic.get('safety_compliance', {}).get('compliance_rate', 100.0)
+            "no_send_compliance": agentic.get('safety_compliance', {}).get('compliance_rate', 100.0),
+            "provider_drafts_created": agentic.get('provider_drafts', {}).get('provider_drafts_created', 0),
+            "emails_sent": agentic.get('provider_drafts', {}).get('emails_sent', 0)
         },
         "forwardDeployedEngineering": {
             "demonstrated": True,
