@@ -1,0 +1,305 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model WalletCard {
+  id          String    @id @default(cuid())
+  type        String    // document, payment, travel, ticket, order, meeting, reminder, stock, task, follow_up
+  title       String
+  category    String
+  status      String
+  source      String?
+  date        DateTime?
+  amount      Float?
+  location    String?
+  metadata    String?   // stringified JSON
+  aiSummary   String?
+  nextAction  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Document {
+  id          String    @id @default(cuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int
+  path        String
+  status      String    // needs_review, needs_edit, needs_signature, completed
+  notes       String?
+  aiSummary   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  action      String    // card_created, file_uploaded, etc.
+  entityType  String
+  entityId    String
+  details     String?   // stringified JSON
+  createdAt   DateTime  @default(now())
+}
+
+model ApprovalRequest {
+  id          String    @id @default(cuid())
+  actionType  String    // send_email, send_document, etc.
+  description String
+  status      String    // pending, approved, denied
+  metadata    String?   // stringified JSON
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status])
+}
+
+model Connector {
+  id          String    @id @default(cuid())
+  name        String    // Gmail, Outlook, DocuSign, etc.
+  status      String    // not_connected, placeholder, connected, degraded, revoked, unsupported
+  config      String?   // stringified JSON
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Reminder {
+  id               String    @id @default(cuid())
+  title            String
+  description      String?
+  dueDate          DateTime?
+  status           String    // pending, completed, missed, snoozed
+  priority         String?   // high, medium, low
+  snoozedUntil     DateTime?
+  recurrenceRule   String?   // daily, weekly, monthly, custom_days:X
+  recurrenceEndsAt DateTime?
+  lastTriggeredAt  DateTime?
+  nextTriggerAt    DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([status])
+  @@index([nextTriggerAt])
+}
+
+model Brief {
+  id          String    @id @default(cuid())
+  type        String    // daily_start, daily_end, stock_start, stock_end
+  content     String    // stringified JSON or text
+  date        DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+}
+
+model InboxItem {
+  id          String    @id @default(cuid())
+  subject     String
+  body        String
+  sender      String
+  category    String?   // assigned by mock classifier
+  isProcessed Boolean   @default(false)
+  metadata    String?   // stringified JSON for confidenceScore, extractedEntities, etc.
+  externalId  String?   @unique
+  createdAt   DateTime  @default(now())
+}
+
+model UserPreference {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  value       String    // stringified JSON
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model CalendarEvent {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  location      String?
+  startDate     DateTime?
+  endDate       DateTime?
+  organizer     String?
+  attendees     String?   // stringified JSON
+  meetingLink   String?
+  source        String?   // imported_ics, google_calendar, etc.
+  externalId    String?   @unique
+  status        String?
+  metadata      String?
+  relatedCardId String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Contact {
+  id               String    @id @default(cuid())
+  name             String
+  email            String?
+  phone            String?
+  company          String?
+  role             String?
+  notes            String?
+  tags             String?   // stringified JSON array
+  relationshipType String?
+  lastInteraction  DateTime?
+  source           String?
+  metadata         String?   // stringified JSON
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model EmailDraft {
+  id              String    @id @default(cuid())
+  type            String    // new_email, reply, follow_up, document_send, signature_request
+  to              String?
+  cc              String?
+  bcc             String?
+  subject         String?
+  body            String?
+  status          String    // draft, ready_for_review, approved, copied, archived, denied
+  relatedInboxId  String?
+  relatedCardId   String?
+  relatedDocId    String?
+  attachments     String?   // stringified JSON
+  aiGenerated     Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Notification {
+  id                String    @id @default(cuid())
+  title             String
+  message           String
+  type              String    // reminder_due, payment_due, document_review, etc.
+  severity          String    // info, warning, error, success
+  status            String    // unread, read, archived
+  relatedEntityType String?
+  relatedEntityId   String?
+  createdAt         DateTime  @default(now())
+
+  @@index([status])
+}
+
+model FollowUp {
+  id               String    @id @default(cuid())
+  title            String
+  relatedContactId String?
+  dueDate          DateTime?
+  reason           String?
+  source           String?   // email, document, payment, meeting, manual
+  status           String    // pending, completed, snoozed
+  suggestedDraftId String?
+  relatedCardId    String?
+  priority         String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([dueDate])
+}
+
+model DocumentVersion {
+  id            String    @id @default(cuid())
+  documentId    String
+  versionNumber Int
+  type          String    // original, extracted_text, edited_text, summary, changelog, signed_mock
+  title         String
+  content       String?   // For text edits or summaries
+  path          String?   // For generated mock signed PDFs (if applicable)
+  createdBy     String    // user, ai_provider, system
+  notes         String?
+  metadata      String?   // stringified JSON for change log/redline mapping
+  createdAt     DateTime  @default(now())
+
+  @@index([documentId])
+  @@unique([documentId, versionNumber])
+}
+
+model SignatureField {
+  id          String    @id @default(cuid())
+  documentId  String
+  signerId    String?   // References DocumentSigner
+  type        String    // signature, initials, date, text
+  label       String?
+  pageNumber  Int?
+  isRequired  Boolean   @default(true)
+  metadata    String?   // coordinate data if ever needed
+  createdAt   DateTime  @default(now())
+
+  @@index([documentId])
+}
+
+model DocumentSigner {
+  id              String    @id @default(cuid())
+  documentId      String
+  name            String
+  email           String
+  role            String?
+  status          String    // pending, sent, viewed, signed, declined
+  signingOrder    Int       @default(1)
+  signedAt        DateTime?
+  declinedReason  String?
+  metadata        String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([documentId])
+  @@index([email])
+}
+
+model AutomationRule {
+  id            String    @id @default(cuid())
+  name          String
+  description   String
+  triggerType   String    // reminder_due, payment_due_soon, etc.
+  conditionJson String?   // conditions required for trigger
+  actionJson    String?   // actions to perform
+  enabled       Boolean   @default(true)
+  lastRunAt     DateTime?
+  nextRunAt     DateTime?
+  runCount      Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  runs          AutomationRun[]
+
+  @@index([nextRunAt])
+  @@index([enabled])
+}
+
+model AutomationRun {
+  id            String    @id @default(cuid())
+  ruleId        String
+  status        String    // success, failed, skipped
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  resultSummary String?
+  errorMessage  String?
+  metadata      String?
+
+  rule          AutomationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId])
+}
+
+model ConnectorAccount {
+  id                    String    @id @default(cuid())
+  provider              String    // e.g. "gmail"
+  status                String    // not_configured, disconnected, connected, error, revoked
+  email                 String?
+  accessTokenEncrypted  String?
+  refreshTokenEncrypted String?
+  tokenExpiry           DateTime?
+  lastSyncAt            DateTime?
+  lastError             String?
+  metadata              String?   // JSON
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([provider, email])
+}
