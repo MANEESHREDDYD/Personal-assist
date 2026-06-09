@@ -121,5 +121,40 @@ def analyze_provider_drafts():
         'draft_connectors_connected': connectors_connected,
         'draft_connector_health': round(connectors_connected / connectors_total * 100, 2) if connectors_total > 0 else 0,
         'creation_failures': failures,
-        'approval_to_provider_draft_rate': round(pushed / approved * 100, 2) if approved > 0 else 0
+        'approval_to_provider_draft_rate': round(pushed / approved * 100, 2) if approved > 0 else 0,
+        'attachments': analyze_provider_attachments()
+    }
+
+
+def analyze_provider_attachments():
+    """Phase 3I — provider draft attachment upload metrics from the audit trail.
+
+    Attachments are uploaded only to existing draft messages after approval, and
+    only on explicit user action. No emails are sent, so emails_sent stays at 0.
+    """
+    uploaded = query_one(
+        "SELECT COUNT(id) as c FROM AuditLog WHERE action IN "
+        "('gmail_provider_attachment_uploaded', 'outlook_provider_attachment_uploaded')"
+    )['c'] or 0
+    failed = query_one(
+        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_upload_failed'"
+    )['c'] or 0
+    large_blocked = query_one(
+        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_size_blocked'"
+    )['c'] or 0
+    duplicate_blocked = query_one(
+        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_duplicate_blocked'"
+    )['c'] or 0
+    type_blocked = query_one(
+        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_type_blocked'"
+    )['c'] or 0
+
+    return {
+        'uploaded': uploaded,
+        'failures': failed,
+        'large_blocked': large_blocked,
+        'duplicate_blocked': duplicate_blocked,
+        'type_blocked': type_blocked,
+        'max_size_mb': 3,
+        'emails_sent': 0
     }

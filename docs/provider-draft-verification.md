@@ -79,6 +79,35 @@ Google / Microsoft app verification before use beyond test users.
 
 ---
 
+## Phase 3I — Attachment Upload Verification
+
+Attachments can be uploaded to an **already-created** provider draft, for an **approved**
+local draft, on explicit action. Personal Assist still never sends email and never uploads
+attachments automatically. Phase 3I supports files **≤ 3 MB** only.
+
+### Gmail / Outlook attachment checklist
+- [ ] An approved local draft already has a Gmail or Outlook **provider draft**
+- [ ] The draft has at least one **linked local document** (`data/uploads`)
+- [ ] In `/drafts` → **Attach Documents to Provider Draft**, select a small document
+- [ ] Click **Attach to Gmail Draft** / **Attach to Outlook Draft**
+- [ ] Confirm the attachment appears in the draft inside Gmail/Outlook **Drafts**
+- [ ] Confirm **no email was sent**
+- [ ] Try attaching the **same document again** → blocked as **"Already attached"**
+      (audit `provider_attachment_duplicate_blocked`)
+- [ ] Try a document **> 3 MB** → blocked with the Phase 3J note
+      (audit `provider_attachment_size_blocked`)
+- [ ] Try a **blocked extension** (e.g. `.exe`) → blocked
+      (audit `provider_attachment_type_blocked`)
+- [ ] Attempt upload before approval / before a provider draft exists → blocked
+- [ ] Confirm `EmailDraft.metadata.providerDrafts.{gmail|outlook}.attachments` is updated
+- [ ] Confirm audit logs (`*_provider_attachment_uploaded`, `provider_attachment_upload_completed`)
+- [ ] Confirm a notification (**"Attachment uploaded to … draft"**) appears
+- [ ] Confirm **no absolute local paths** are returned by the API
+- [ ] Gmail note: re-attaching rebuilds the draft from the approved local content — if you
+      manually edited the Gmail draft, those edits may be overwritten
+
+---
+
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |

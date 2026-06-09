@@ -11,6 +11,7 @@ import {
   Mail,
 } from "lucide-react";
 import { parseMetadata } from "@/lib/metadata";
+import { ProviderAttachmentActions } from "./ProviderAttachmentActions";
 
 /**
  * Provider-side draft creation actions. Rendered only for approved drafts.
@@ -21,6 +22,8 @@ export function ProviderDraftActions({ draft }: { draft: any }) {
   const router = useRouter();
   const meta = parseMetadata(draft.metadata);
   const existing = meta.providerDrafts || {};
+  const hasGmailDraft = !!existing.gmail;
+  const hasOutlookDraft = !!existing.outlook;
 
   const [gmailStatus, setGmailStatus] = useState<any>(null);
   const [outlookStatus, setOutlookStatus] = useState<any>(null);
@@ -146,14 +149,22 @@ export function ProviderDraftActions({ draft }: { draft: any }) {
 
       <p className="text-[11px] text-orange-400 flex items-center gap-1">
         <AlertTriangle className="w-3 h-3 shrink-0" />
-        Attachments must be added manually in this phase. Review inside your email provider
-        before sending.
+        Review inside your email provider before sending. Personal Assist never sends email.
       </p>
 
       {message && (
         <p className="text-xs text-green-400 bg-green-500/10 p-2 rounded">{message}</p>
       )}
       {error && <p className="text-xs text-red-400 bg-red-500/10 p-2 rounded">{error}</p>}
+
+      {/* Phase 3I — attachment upload, only when a provider draft exists */}
+      {(hasGmailDraft || hasOutlookDraft) && (
+        <ProviderAttachmentActions
+          draftId={draft.id}
+          hasGmail={hasGmailDraft}
+          hasOutlook={hasOutlookDraft}
+        />
+      )}
     </div>
   );
 }

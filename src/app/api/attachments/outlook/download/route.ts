@@ -5,14 +5,10 @@ import { fetchOutlookAttachment, refreshAccessToken } from "@/lib/integrations/o
 import { encryptToken, decryptToken } from "@/lib/integrations/crypto";
 import { saveBuffer } from "@/lib/storage";
 import { extractText } from "@/lib/documentExtraction";
+import { BLOCKED_EXTENSIONS } from "@/lib/attachments";
 import fs from "fs/promises";
 import path from "path";
 
-const BLOCKED_EXTENSIONS = [
-  ".exe", ".bat", ".cmd", ".msi", ".scr", ".ps1", ".sh", ".app", ".dmg",
-  ".com", ".vbs", ".vbe", ".js", ".jse", ".wsf", ".hta", ".jar", ".reg",
-  ".lnk", ".url", ".apk", ".pkg"
-];
 const MAX_SIZE = 25 * 1024 * 1024; // 25 MB
 
 export async function POST(req: Request) {

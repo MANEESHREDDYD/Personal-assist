@@ -166,3 +166,100 @@ export async function createGmailDraft(
     messageId: data.message?.id || "",
   };
 }
+
+export interface MimeAttachment {
+  filename: string;
+  contentType: string;
+  content: Buffer;
+}
+
+// Wrap a base64 string at 76 chars per line (RFC 2045).
+function wrapBase64(b64: string): string {
+  return b64.replace(/(.{76})/g, "$1\r\n");
+}
+
+/**
+ * Encodes a single file as a base64 MIME part (Content-Disposition: attachment).
+ * Returns the part WITHOUT the leading boundary delimiter.
+ */
+export function encodeMimeAttachment(att: MimeAttachment): string {
+  const name = sanitizeHeader(att.filename || "attachment");
+  const contentType = sanitizeHeader(att.contentType || "application/octet-stream");
+  const b64 = wrapBase64(att.content.toString("base64"));
+  return [
+    `Content-Type: ${contentType}; name="${name}"`,
+    "Content-Transfer-Encoding: base64",
+    `Content-Disposition: attachment; filename="${name}"`,
+    "",
+    b64,
+  ].join("\r\n");
+}
+
+/**
+ * Builds a multipart/mixed RFC 2822 message: a text/plain part (body + footer)
+ * followed by one base64 attachment part per file. Used to update a Gmail draft
+ * so it carries attachments. No send action is performed.
+ */
+export function buildMultipartRfc2822Message(
+  fields: DraftFields,
+  attachments: MimeAttachment[]
+): string {
+  const boundary = `PA_BOUNDARY_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+  const headers: string[] = [];
+  if (fields.to) headers.push(`To: ${sanitizeHeader(fields.to)}`);
+  if (fields.cc) headers.push(`Cc: ${sanitizeHeader(fields.cc)}`);
+  if (fields.bcc) headers.push(`Bcc: ${sanitizeHeader(fields.bcc)}`);
+  headers.push(`Subject: ${sanitizeHeader(fields.subject || "(No Subject)")}`);
+  headers.push("MIME-Version: 1.0");
+  headers.push(`Content-Type: multipart/mixed; boundary="${boundary}"`);
+
+  const textPart = [
+    `Content-Type: text/plain; charset="UTF-8"`,
+    "Content-Transfer-Encoding: 7bit",
+    "",
+    `${fields.body || ""}\n\n--\n${DRAFT_FOOTER}`,
+  ].join("\r\n");
+
+  const parts = [textPart, ...attachments.map(encodeMimeAttachment)];
+  const body = parts.map((p) => `--${boundary}\r\n${p}`).join("\r\n") + `\r\n--${boundary}--`;
+
+  return `${headers.join("\r\n")}\r\n\r\n${body}`;
+}
+
+/**
+ * Updates (replaces) an existing Gmail draft with a multipart message carrying
+ * attachments, via users.drafts.update (PUT). Gmail draft update replaces the
+ * draft message, so the caller must pass the full intended content + attachment
+ * set. NEVER triggers a send (no draft-send or message-send endpoint).
+ */
+export async function updateGmailDraftWithAttachments(
+  accessToken: string,
+  draftId: string,
+  fields: DraftFields,
+  attachments: MimeAttachment[]
+): Promise<{ draftId: string; messageId: string }> {
+  const raw = base64UrlEncode(buildMultipartRfc2822Message(fields, attachments));
+
+  const res = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/drafts/${encodeURIComponent(draftId)}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: draftId, message: { raw } }),
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(`Failed to update Gmail draft with attachments: ${await res.text()}`);
+  }
+
+  const data = await res.json();
+  return {
+    draftId: data.id,
+    messageId: data.message?.id || "",
+  };
+}

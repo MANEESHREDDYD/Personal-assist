@@ -160,3 +160,41 @@ export async function createOutlookDraft(
     webLink: data.webLink || "",
   };
 }
+
+/**
+ * Attaches a single small file (<= 3 MB) to an existing Outlook draft message via
+ * the message attachments collection (Microsoft Graph fileAttachment). Phase 3I
+ * uses simple attachments only — large files require upload sessions (Phase 3J).
+ * This targets a draft message and NEVER triggers a send.
+ */
+export async function attachFileToOutlookDraft(
+  accessToken: string,
+  messageId: string,
+  file: { name: string; contentType: string; contentBytes: string }
+): Promise<{ attachmentId: string }> {
+  const payload = {
+    "@odata.type": "#microsoft.graph.fileAttachment",
+    name: file.name,
+    contentType: file.contentType || "application/octet-stream",
+    contentBytes: file.contentBytes,
+  };
+
+  const res = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/attachments`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(`Failed to attach file to Outlook draft: ${await res.text()}`);
+  }
+
+  const data = await res.json();
+  return { attachmentId: data.id || "" };
+}

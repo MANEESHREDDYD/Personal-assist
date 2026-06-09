@@ -195,6 +195,28 @@ export default async function ShowcasePage() {
             </div>
           )}
         </div>
+
+        {/* Phase 3I — provider draft attachment upload after approval */}
+        <div className="mt-4 bg-amber-500/5 border border-amber-500/20 p-4 rounded-xl space-y-2">
+          <h4 className="font-bold text-amber-300 text-sm flex items-center gap-2">
+            <PenSquare size={16} /> Phase 3I — Provider Draft Attachment Upload After Approval
+          </h4>
+          <ul className="text-zinc-300 text-sm space-y-1">
+            <li>• Selected local documents can be uploaded as <strong>attachments to an existing Gmail/Outlook draft</strong>, on explicit user action</li>
+            <li>• <strong>Approval-gated provider mutation</strong>: only approved drafts with an existing provider draft can receive attachments</li>
+            <li>• <strong>Secure private storage → provider draft</strong>: files are read from the private vault, never exposing local paths</li>
+            <li>• <strong>No-send safety remains 100%</strong> — attachments update the draft only; no send endpoint is ever called</li>
+            <li>• Small files only (≤ 3 MB) in this phase; <strong>large-upload sessions are planned as Phase 3J</strong></li>
+          </ul>
+          {hasMetrics && metrics.agenticWorkflowMetrics.provider_drafts?.attachments && (
+            <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
+              <MiniStat label="Attachments Uploaded" value={String(metrics.agenticWorkflowMetrics.provider_drafts.attachments.uploaded ?? 0)} />
+              <MiniStat label="Upload Failures" value={String(metrics.agenticWorkflowMetrics.provider_drafts.attachments.failures ?? 0)} />
+              <MiniStat label="Large Blocked (>3MB)" value={String(metrics.agenticWorkflowMetrics.provider_drafts.attachments.large_blocked ?? 0)} />
+              <MiniStat label="Duplicate Blocked" value={String(metrics.agenticWorkflowMetrics.provider_drafts.attachments.duplicate_blocked ?? 0)} />
+            </div>
+          )}
+        </div>
       </Section>
 
       {/* No-Send Compliance & Human-in-the-Loop Safety */}

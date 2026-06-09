@@ -164,7 +164,7 @@ export default async function ApprovalsPage() {
                               )}
                             </div>
                             {req.status === "approved" && (
-                              <p className="text-[10px] text-orange-400 mt-1 uppercase tracking-wider">After approval: create a Gmail/Outlook draft or export manually. Personal Assist still never sends — review and send yourself.</p>
+                              <p className="text-[10px] text-orange-400 mt-1 uppercase tracking-wider">After approval: create a Gmail/Outlook draft, attach documents to the provider draft, or export manually. Personal Assist still never sends — review and send yourself.</p>
                             )}
                           </div>
                         )}

@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
 import { parseMetadata, stringifyMetadata } from "@/lib/metadata";
-import { encryptToken, decryptToken } from "@/lib/integrations/crypto";
 import * as gmailDraft from "@/lib/integrations/gmailDraft";
 import * as outlookDraft from "@/lib/integrations/outlookDraft";
+import { getValidAccessToken } from "@/lib/integrations/draftTokens";
 
 export const dynamic = "force-dynamic";
 
@@ -39,49 +39,6 @@ async function notify(
   } catch (e) {
     console.error("Failed to create provider draft notification", e);
   }
-}
-
-/**
- * Returns a valid (refreshed if necessary) access token for the draft connector.
- * Refreshes when the stored token expires within 60s. Never logs token values.
- */
-async function getValidAccessToken(account: any, provider: ProviderValue): Promise<string> {
-  const accessToken = account.accessTokenEncrypted
-    ? decryptToken(account.accessTokenEncrypted)
-    : "";
-
-  const expiry = account.tokenExpiry ? new Date(account.tokenExpiry).getTime() : 0;
-  const needsRefresh = !accessToken || expiry < Date.now() + 60_000;
-
-  if (!needsRefresh) return accessToken;
-
-  if (!account.refreshTokenEncrypted) {
-    throw new Error("Token expired and no refresh token is available. Reconnect the connector.");
-  }
-
-  const refreshToken = decryptToken(account.refreshTokenEncrypted);
-  const lib = provider === "gmail_draft" ? gmailDraft : outlookDraft;
-  const refreshed = await lib.refreshAccessToken(refreshToken);
-
-  const newExpiry = new Date();
-  if (refreshed.expires_in) {
-    newExpiry.setSeconds(newExpiry.getSeconds() + refreshed.expires_in);
-  }
-
-  await prisma.connectorAccount.update({
-    where: { id: account.id },
-    data: {
-      accessTokenEncrypted: encryptToken(refreshed.access_token),
-      ...(refreshed.refresh_token && {
-        refreshTokenEncrypted: encryptToken(refreshed.refresh_token),
-      }),
-      tokenExpiry: newExpiry,
-      status: "connected",
-      lastError: null,
-    },
-  });
-
-  return refreshed.access_token;
 }
 
 export async function POST(

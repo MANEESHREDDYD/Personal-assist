@@ -74,17 +74,22 @@ const PHASES = [
     items: ["Gmail draft creation (gmail.compose)", "Outlook draft creation (Mail.ReadWrite)", "Isolated draft OAuth connectors", "Strict no-send policy enforcement", "Approval-gated, duplicate-blocked, fully audited"]
   },
   {
-    title: "Phase 3H.1: Lint Repair + Live OAuth Verification + No-Send Compliance Evidence (Active)",
-    status: "active",
+    title: "Phase 3H.1: Lint Repair + Live OAuth Verification + No-Send Compliance Evidence (Completed)",
+    status: "completed",
     items: ["Working lint command (eslint flat config)", "Gmail/Outlook live verification checklist", "No-send policy documentation", "Static no-send guard (security:no-send)", "No-send compliance evidence on Showcase"]
   },
   {
-    title: "Phase 3I: Provider Draft Attachment Upload (Planned)",
-    status: "pending",
-    items: ["Upload local vault documents to provider drafts", "Preserve risk warnings in drafts"]
+    title: "Phase 3I: Provider Draft Attachment Upload After Approval (Active)",
+    status: "active",
+    items: ["Upload local vault documents to Gmail/Outlook drafts (<= 3 MB)", "Approval-gated, explicit user action only", "Blocked-extension, size, and path-traversal guards", "Duplicate attachment blocking", "No-send guarantee + full audit logging"]
   },
   {
-    title: "Phase 3J: Native Bridges & Desktop (Planned)",
+    title: "Phase 3J: Large Attachment Upload Sessions (Planned)",
+    status: "pending",
+    items: ["Microsoft Graph upload sessions for large files", "Chunked Gmail attachment handling", "Preserve no-send safety and approval gates"]
+  },
+  {
+    title: "Native Bridges & Desktop (Planned)",
     status: "pending",
     items: ["Apple Mail / Apple Calendar native-helper planning", "Local system calendar bridge planning", "Optional desktop wrapper"]
   },

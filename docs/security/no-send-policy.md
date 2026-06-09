@@ -25,6 +25,20 @@ allowed and forbidden provider endpoints, and is enforced by a static guard.
 Read-only connectors (`gmail`, `outlook_mail`, calendars) continue to use their
 existing read-only endpoints and are unchanged.
 
+### Allowed provider draft attachment operations (Phase 3I)
+
+Attachment upload is allowed **only to draft messages**, **only after local approval**,
+and **only on explicit user action**. None of these endpoints send email.
+
+| Provider | Endpoint | Purpose |
+|---|---|---|
+| Gmail | `PUT .../users/me/drafts/{id}` (users.drafts.update) | Replace the draft with a multipart MIME message carrying attachments |
+| Outlook | `POST https://graph.microsoft.com/v1.0/me/messages/{id}/attachments` | Add a small (`<= 3 MB`) file attachment to a draft message |
+
+Phase 3I uses simple/small attachments only (`<= 3 MB`). Large attachment **upload
+sessions** are deferred to Phase 3J. Attachment upload never sends, moves, deletes, or
+re-labels any message, and never touches inbox messages.
+
 ---
 
 ## Explicitly forbidden endpoints

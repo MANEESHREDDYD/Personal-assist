@@ -90,8 +90,11 @@ export function OutlookDraftConnectorCard() {
           is kept separate and unchanged.
         </p>
 
-        <p className="text-xs text-gray-500 mb-3">
+        <p className="text-xs text-gray-500 mb-1">
           Required permission: <code className="text-amber-300">Mail.ReadWrite</code>
+        </p>
+        <p className="text-xs text-gray-500 mb-3">
+          Attachment upload: small files only (max 3 MB). Large uploads planned later.
         </p>
 
         {!status?.configured && (

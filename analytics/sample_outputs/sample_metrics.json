@@ -78,7 +78,16 @@
       "draft_connectors_connected": 2,
       "draft_connector_health": 100.0,
       "creation_failures": 0,
-      "approval_to_provider_draft_rate": 62.5
+      "approval_to_provider_draft_rate": 62.5,
+      "attachments": {
+        "uploaded": 4,
+        "failures": 0,
+        "large_blocked": 1,
+        "duplicate_blocked": 1,
+        "type_blocked": 0,
+        "max_size_mb": 3,
+        "emails_sent": 0
+      }
     },
     "safety_compliance": {
       "no_send_policy_enforced": true,
