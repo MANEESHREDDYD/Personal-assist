@@ -14,20 +14,25 @@ export async function processApproval(id: string, status: string) {
       data: { status },
     });
 
-    if (status === "approved" && req.metadata) {
+    if (req.metadata) {
       const meta = JSON.parse(req.metadata);
       
-      // If it's a draft approval, approve the draft
+      // If it's a draft approval, sync status
       if (meta.draftId) {
+        let draftStatus = "pending_approval";
+        if (status === "approved") draftStatus = "approved";
+        if (status === "denied" || status === "rejected") draftStatus = "rejected";
+        if (status === "needs_changes") draftStatus = "needs_changes";
+
         await prisma.emailDraft.update({
           where: { id: meta.draftId },
-          data: { status: "approved" }
+          data: { status: draftStatus }
         });
         revalidatePath("/drafts");
       }
       
       // If it's a document signature approval
-      if (meta.documentId && req.actionType === "Sign Document") {
+      if (status === "approved" && meta.documentId && req.actionType === "Sign Document") {
         await prisma.document.update({
           where: { id: meta.documentId },
           data: { status: "signed" }
@@ -36,7 +41,7 @@ export async function processApproval(id: string, status: string) {
       }
 
       // Phase 2C Approval Types
-      if (meta.documentId) {
+      if (status === "approved" && meta.documentId) {
         if (req.actionType === "final_document_edit") {
            // We might apply an edit to final here if needed
            await prisma.document.update({ where: { id: meta.documentId }, data: { status: "ready_for_signature" }});

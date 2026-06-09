@@ -1,19 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, CheckCircle, Clock, XCircle, PenTool, GitMerge, FileSignature, Play, Plus, Trash2, Send } from "lucide-react";
+import { FileText, CheckCircle, Clock, XCircle, PenTool, GitMerge, FileSignature, Play, Plus, Trash2, Send, Brain, Calendar, Mail, FileWarning, Wallet, Bell, Loader2 } from "lucide-react";
 import { generateDocumentEdit, acceptDocumentEdit, rejectDocumentEdit } from "@/app/actions/documentEdits";
 import { addSigner, removeSigner, addSignatureField, createMockSigningRequest, simulateSignerViewed, simulateSignerSigned, simulateSignerDeclined } from "@/app/actions/signing";
 import { generateMockApproval } from "@/app/actions/approvals";
+import { 
+  extractDocumentProperties, 
+  generateDocumentDraft, 
+  createExtractedReminder, 
+  createExtractedFollowUp, 
+  createExtractedWalletCard 
+} from "@/app/actions/documentIntelligence";
 
 interface Props {
   document: any;
   versions: any[];
   signers: any[];
   fields: any[];
+  sourceInboxItem?: any;
+  relatedDrafts?: any[];
+  relatedCards?: any[];
+  relatedFollowUps?: any[];
+  relatedApprovals?: any[];
+  metadataObj?: any;
 }
 
-export function DocumentWorkspaceClient({ document, versions, signers, fields }: Props) {
+export function DocumentWorkspaceClient({ document, versions, signers, fields, sourceInboxItem, relatedDrafts, relatedCards, relatedFollowUps, relatedApprovals, metadataObj }: Props) {
   const [activeTab, setActiveTab] = useState("overview");
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
@@ -24,6 +37,32 @@ export function DocumentWorkspaceClient({ document, versions, signers, fields }:
   // New Field State
   const [newFieldSigner, setNewFieldSigner] = useState("");
   const [newFieldType, setNewFieldType] = useState("signature");
+
+  // Intelligence State
+  const [extractedData, setExtractedData] = useState<any>({});
+  
+  async function handleExtract(property: any) {
+    setLoadingAction(`extract_${property}`);
+    const res = await extractDocumentProperties(document.id, property);
+    if (res.success) {
+      setExtractedData((prev: any) => ({ ...prev, [property]: res.result }));
+    }
+    setLoadingAction(null);
+  }
+
+  async function handleGenerateDraft(type: string) {
+    setLoadingAction(`draft_${type}`);
+    await generateDocumentDraft(document.id, type, sourceInboxItem?.id);
+    setLoadingAction(null);
+  }
+
+  async function handleQuickAction(action: string, payload: any) {
+    setLoadingAction(`quick_${action}`);
+    if (action === "reminder") await createExtractedReminder(document.id, payload.date, payload.desc);
+    if (action === "followup") await createExtractedFollowUp(document.id, payload.item);
+    if (action === "wallet") await createExtractedWalletCard(document.id, payload.title, payload.content);
+    setLoadingAction(null);
+  }
 
   const latestVersion = versions.length > 0 ? versions[0] : null;
 
@@ -79,6 +118,7 @@ export function DocumentWorkspaceClient({ document, versions, signers, fields }:
 
   const tabs = [
     { id: "overview", label: "Overview", icon: <FileText className="w-4 h-4" /> },
+    { id: "intelligence", label: "Intelligence", icon: <Brain className="w-4 h-4 text-purple-400" /> },
     { id: "versions", label: "Versions", icon: <Clock className="w-4 h-4" /> },
     { id: "edit", label: "Edit Studio", icon: <PenTool className="w-4 h-4" /> },
     { id: "redline", label: "Redline", icon: <GitMerge className="w-4 h-4" /> },
@@ -148,6 +188,225 @@ export function DocumentWorkspaceClient({ document, versions, signers, fields }:
                <div className="bg-black/30 p-4 rounded-lg text-zinc-300 whitespace-pre-wrap text-sm border border-white/5 h-64 overflow-y-auto">
                   {latestVersion?.content || "No extracted text available yet."}
                </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "intelligence" && (
+          <div className="space-y-6">
+            <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl flex items-start gap-3">
+              <Brain className="w-5 h-5 text-purple-400 mt-0.5" />
+              <div>
+                <h3 className="font-bold text-purple-400">Local Intelligence Beta</h3>
+                <p className="text-sm text-purple-300">Document intelligence is local beta assistance, not legal or financial advice. Generated drafts are local only and are not sent. Attachments remain in private local storage. Review all generated content before using it externally.</p>
+              </div>
+            </div>
+
+            {sourceInboxItem && (
+              <div className="glass-card rounded-2xl p-6 border-l-4 border-l-blue-500">
+                <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-blue-400" /> Source Email Context
+                </h3>
+                <div className="grid grid-cols-2 gap-4 text-sm mt-4">
+                  <div><span className="text-zinc-500">Subject:</span> <span className="text-white">{sourceInboxItem.subject}</span></div>
+                  <div><span className="text-zinc-500">Sender:</span> <span className="text-white">{sourceInboxItem.sender}</span></div>
+                  <div><span className="text-zinc-500">Source:</span> <span className="text-white">{metadataObj?.source || "Unknown"}</span></div>
+                  <div>
+                    <a href={`/inbox/${sourceInboxItem.id}`} className="text-blue-400 hover:underline">View Email</a>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Extractions Panel */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-bold text-white mb-4">Insights & Extractions</h3>
+
+                {/* Action Items */}
+                <div className="glass-card p-5 rounded-xl border border-white/5">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-bold text-white flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400" /> Action Items</h4>
+                    <button onClick={() => handleExtract("action_items")} disabled={loadingAction === "extract_action_items"} className="text-xs px-2 py-1 bg-white/10 hover:bg-white/20 rounded">
+                      {loadingAction === "extract_action_items" ? "Extracting..." : "Extract"}
+                    </button>
+                  </div>
+                  {extractedData.action_items ? (
+                    <ul className="space-y-2 text-sm">
+                      {extractedData.action_items.map((item: string, i: number) => (
+                        <li key={i} className="flex justify-between items-start gap-2 bg-black/20 p-2 rounded">
+                          <span className="text-zinc-300 flex-1">{item}</span>
+                          <button onClick={() => handleQuickAction("followup", { item })} disabled={loadingAction?.startsWith("quick_")} className="text-[10px] px-2 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 whitespace-nowrap">
+                            Create Follow-Up
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <p className="text-xs text-zinc-500">Not extracted yet.</p>}
+                </div>
+
+                {/* Deadlines */}
+                <div className="glass-card p-5 rounded-xl border border-white/5">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-bold text-white flex items-center gap-2"><Calendar className="w-4 h-4 text-orange-400" /> Deadlines</h4>
+                    <button onClick={() => handleExtract("deadlines")} disabled={loadingAction === "extract_deadlines"} className="text-xs px-2 py-1 bg-white/10 hover:bg-white/20 rounded">
+                      {loadingAction === "extract_deadlines" ? "Extracting..." : "Extract"}
+                    </button>
+                  </div>
+                  {extractedData.deadlines ? (
+                    <ul className="space-y-2 text-sm">
+                      {extractedData.deadlines.map((d: any, i: number) => (
+                        <li key={i} className="flex justify-between items-start gap-2 bg-black/20 p-2 rounded">
+                          <div>
+                            <div className="font-bold text-orange-300">{d.date}</div>
+                            <div className="text-zinc-400 text-xs">{d.description}</div>
+                          </div>
+                          <button onClick={() => handleQuickAction("reminder", d)} disabled={loadingAction?.startsWith("quick_")} className="text-[10px] px-2 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 whitespace-nowrap">
+                            Create Reminder
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <p className="text-xs text-zinc-500">Not extracted yet.</p>}
+                </div>
+
+                {/* Parties */}
+                <div className="glass-card p-5 rounded-xl border border-white/5">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-bold text-white flex items-center gap-2"><FileSignature className="w-4 h-4 text-indigo-400" /> Parties & Contacts</h4>
+                    <button onClick={() => handleExtract("parties")} disabled={loadingAction === "extract_parties"} className="text-xs px-2 py-1 bg-white/10 hover:bg-white/20 rounded">
+                      {loadingAction === "extract_parties" ? "Extracting..." : "Extract"}
+                    </button>
+                  </div>
+                  {extractedData.parties ? (
+                    <ul className="space-y-2 text-sm">
+                      {extractedData.parties.map((p: any, i: number) => (
+                        <li key={i} className="bg-black/20 p-2 rounded flex items-center gap-2">
+                          <span className="font-bold text-zinc-200">{p.name}</span>
+                          <span className="text-xs text-zinc-500 bg-zinc-800 px-1.5 py-0.5 rounded">{p.role}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <p className="text-xs text-zinc-500">Not extracted yet.</p>}
+                </div>
+
+                {/* Terms & Risks */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="glass-card p-4 rounded-xl border border-white/5">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-bold text-white text-sm">Payment Terms</h4>
+                      <button onClick={() => handleExtract("payment_terms")} className="text-[10px] px-2 py-1 bg-white/10 rounded">Extract</button>
+                    </div>
+                    {extractedData.payment_terms ? <p className="text-xs text-zinc-300">{extractedData.payment_terms}</p> : <p className="text-[10px] text-zinc-500">Not extracted</p>}
+                  </div>
+                  <div className="glass-card p-4 rounded-xl border border-white/5">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-bold text-white text-sm">Signatures</h4>
+                      <button onClick={() => handleExtract("signatures")} className="text-[10px] px-2 py-1 bg-white/10 rounded">Extract</button>
+                    </div>
+                    {extractedData.signatures ? <p className="text-xs text-zinc-300">{extractedData.signatures}</p> : <p className="text-[10px] text-zinc-500">Not extracted</p>}
+                  </div>
+                </div>
+
+                <div className="glass-card p-5 rounded-xl border border-red-500/20 bg-red-500/5">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-bold text-red-400 flex items-center gap-2"><FileWarning className="w-4 h-4" /> Risk Identification</h4>
+                    <button onClick={() => handleExtract("risks")} disabled={loadingAction === "extract_risks"} className="text-xs px-2 py-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded">
+                      {loadingAction === "extract_risks" ? "Scanning..." : "Scan"}
+                    </button>
+                  </div>
+                  {extractedData.risks ? (
+                    <ul className="space-y-1 text-sm text-red-300 list-disc pl-4">
+                      {extractedData.risks.map((r: string, i: number) => <li key={i}>{r}</li>)}
+                    </ul>
+                  ) : <p className="text-xs text-red-500/50">Not scanned yet.</p>}
+                </div>
+              </div>
+
+              {/* Drafts & Related Panel */}
+              <div className="space-y-6">
+                <div className="glass-card rounded-2xl p-6 border border-white/10">
+                  <h3 className="text-xl font-bold text-white mb-4">Draft Actions</h3>
+                  <p className="text-sm text-zinc-400 mb-6">Generate local email drafts from this document. They will be stored securely and will not sync to your email provider until approved.</p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                    <button onClick={() => handleGenerateDraft("reply")} disabled={loadingAction?.startsWith("draft_")} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl flex items-center gap-3 text-left transition-colors">
+                      <div className="p-2 bg-blue-500/20 rounded-lg"><Mail className="w-4 h-4 text-blue-400" /></div>
+                      <div>
+                        <div className="font-bold text-white text-sm">Reply</div>
+                        <div className="text-[10px] text-zinc-500">Respond to sender</div>
+                      </div>
+                    </button>
+                    <button onClick={() => handleGenerateDraft("forward")} disabled={loadingAction?.startsWith("draft_")} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl flex items-center gap-3 text-left transition-colors">
+                      <div className="p-2 bg-green-500/20 rounded-lg"><Send className="w-4 h-4 text-green-400" /></div>
+                      <div>
+                        <div className="font-bold text-white text-sm">Forward</div>
+                        <div className="text-[10px] text-zinc-500">Share with others</div>
+                      </div>
+                    </button>
+                    <button onClick={() => handleGenerateDraft("signature_request")} disabled={loadingAction?.startsWith("draft_")} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl flex items-center gap-3 text-left transition-colors">
+                      <div className="p-2 bg-purple-500/20 rounded-lg"><FileSignature className="w-4 h-4 text-purple-400" /></div>
+                      <div>
+                        <div className="font-bold text-white text-sm">Signature Req.</div>
+                        <div className="text-[10px] text-zinc-500">Ask for signatures</div>
+                      </div>
+                    </button>
+                    <button onClick={() => handleGenerateDraft("clarification")} disabled={loadingAction?.startsWith("draft_")} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl flex items-center gap-3 text-left transition-colors">
+                      <div className="p-2 bg-orange-500/20 rounded-lg"><Brain className="w-4 h-4 text-orange-400" /></div>
+                      <div>
+                        <div className="font-bold text-white text-sm">Clarification</div>
+                        <div className="text-[10px] text-zinc-500">Ask questions</div>
+                      </div>
+                    </button>
+                  </div>
+
+                  {relatedDrafts && relatedDrafts.length > 0 && (
+                    <div className="pt-4 border-t border-white/10">
+                      <h4 className="font-bold text-white text-sm mb-3">Generated Drafts</h4>
+                      <div className="space-y-2">
+                        {relatedDrafts.map((draft: any) => (
+                          <div key={draft.id} className="p-3 bg-black/20 rounded-lg flex justify-between items-center text-sm border border-white/5">
+                             <div className="truncate pr-4">
+                                <div className="text-white font-medium truncate">{draft.subject || "No Subject"}</div>
+                                <div className="text-xs text-zinc-500 capitalize">
+                                  {draft.metadata ? JSON.parse(draft.metadata).draftType : draft.type} • {draft.status.replace("_", " ")}
+                                  {draft.metadata && JSON.parse(draft.metadata).exportStatus && (
+                                    <span className="ml-1 text-purple-400">• {JSON.parse(draft.metadata).exportStatus.replace("_", " ")}</span>
+                                  )}
+                                </div>
+                             </div>
+                             <a href={`/drafts`} className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded text-xs whitespace-nowrap hover:bg-blue-500/30">View</a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="glass-card rounded-2xl p-6 border border-white/10">
+                  <h3 className="text-lg font-bold text-white mb-4">Related Records</h3>
+                  <div className="space-y-3">
+                    {relatedCards && relatedCards.map((c: any) => (
+                      <div key={c.id} className="p-2 bg-white/5 rounded text-sm flex items-center gap-2 text-zinc-300">
+                        <Wallet className="w-4 h-4 text-zinc-500" /> {c.title}
+                      </div>
+                    ))}
+                    {relatedFollowUps && relatedFollowUps.map((f: any) => (
+                      <div key={f.id} className="p-2 bg-white/5 rounded text-sm flex items-center gap-2 text-zinc-300">
+                        <CheckCircle className="w-4 h-4 text-zinc-500" /> {f.title}
+                      </div>
+                    ))}
+                    {relatedApprovals && relatedApprovals.map((a: any) => (
+                      <div key={a.id} className="p-2 bg-white/5 rounded text-sm flex items-center gap-2 text-zinc-300">
+                        <CheckCircle className="w-4 h-4 text-zinc-500" /> Approval: {a.description}
+                      </div>
+                    ))}
+                    {(!relatedCards?.length && !relatedFollowUps?.length && !relatedApprovals?.length) && (
+                      <p className="text-sm text-zinc-500">No related records generated yet.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

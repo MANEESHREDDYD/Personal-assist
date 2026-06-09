@@ -10,6 +10,9 @@ export default async function InboxPage() {
     orderBy: { createdAt: "desc" },
   });
 
+  const documents = await prisma.document.findMany();
+  const drafts = await prisma.emailDraft.findMany();
+
   return (
     <div className="p-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-8">
       <div>
@@ -33,9 +36,21 @@ export default async function InboxPage() {
           </div>
         ) : (
           <div className="space-y-4">
-              {items.map((item) => (
-                <InboxItemCard key={item.id} item={item} />
-              ))}
+              {items.map((item) => {
+                const itemDocs = documents.filter(d => d.notes && d.notes.includes(`"inboxItemId":"${item.id}"`));
+                const itemDrafts = drafts.filter(d => {
+                  if (!d.metadata) return false;
+                  try {
+                    const m = JSON.parse(d.metadata);
+                    return m.sourceInboxItemId === item.id;
+                  } catch {
+                    return false;
+                  }
+                });
+                return (
+                  <InboxItemCard key={item.id} item={item} relatedDocs={itemDocs} relatedDrafts={itemDrafts} />
+                );
+              })}
           </div>
         )}
       </div>

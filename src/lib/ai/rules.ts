@@ -86,4 +86,81 @@ export class RulesProvider implements AIProvider {
   async editDocument(text: string, instructions: string) {
     return `[RULES EDITED VERSION]\nInstructions applied: ${instructions}\n\nOriginal excerpt:\n${text.substring(0, 150)}...`;
   }
+
+  async extractActionItems(text: string): Promise<string[]> {
+    const lower = text.toLowerCase();
+    const items: string[] = [];
+    if (lower.includes("please review")) items.push("Review the document");
+    if (lower.includes("sign")) items.push("Sign the document");
+    if (lower.includes("pay") || lower.includes("invoice")) items.push("Process payment");
+    if (lower.includes("reply") || lower.includes("respond")) items.push("Respond to the sender");
+    return items.length > 0 ? items : ["No specific action items detected by rules."];
+  }
+
+  async extractDeadlines(text: string): Promise<{ date: string; description: string }[]> {
+    const dates: { date: string; description: string }[] = [];
+    const dateMatch = text.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* \d{1,2}(st|nd|rd|th)?,? \d{4}\b/gi);
+    if (dateMatch) {
+      dateMatch.forEach(d => dates.push({ date: d, description: "Mentioned date (Rule-based)" }));
+    }
+    const daysMatch = text.match(/net \d{2}/gi);
+    if (daysMatch) {
+      daysMatch.forEach(d => dates.push({ date: d, description: "Payment term deadline" }));
+    }
+    return dates;
+  }
+
+  async extractParties(text: string): Promise<{ name: string; role: string }[]> {
+    return [{ name: "Unknown Party", role: "Extracted via Rules placeholder" }];
+  }
+
+  async extractPaymentTerms(text: string): Promise<string> {
+    const lower = text.toLowerCase();
+    if (lower.includes("net 30")) return "Net 30 Days";
+    if (lower.includes("due upon receipt")) return "Due Upon Receipt";
+    if (lower.includes("invoice") && text.match(/\$[0-9,]+(\.\d{2})?/)) return "Invoice amount detected, terms unspecified.";
+    return "No explicit payment terms detected.";
+  }
+
+  async extractSignatureRequirements(text: string): Promise<string> {
+    const lower = text.toLowerCase();
+    if (lower.includes("sign here") || lower.includes("signature block")) return "Signature block detected in document.";
+    if (lower.includes("docusign")) return "DocuSign signature required.";
+    return "No explicit signature requirements detected.";
+  }
+
+  async identifyRisks(text: string): Promise<string[]> {
+    const lower = text.toLowerCase();
+    const risks: string[] = [];
+    if (lower.includes("penalty") || lower.includes("fee")) risks.push("Contains penalty or fee clauses");
+    if (lower.includes("confidential") || lower.includes("nda")) risks.push("Contains confidentiality/NDA terms");
+    if (lower.includes("liability") || lower.includes("indemnif")) risks.push("Contains liability/indemnification clauses");
+    return risks.length > 0 ? risks : ["No obvious high-risk terms detected by rules."];
+  }
+
+  async generateDraftFromDocument(text: string, draftType: string): Promise<{ subject: string; body: string }> {
+    if (draftType === "signature_request") {
+      return {
+        subject: "Signature Required for Document",
+        body: "Hello,\n\nPlease review and sign the attached document.\n\nThank you,\nLocal Assist Beta"
+      };
+    }
+    if (draftType === "forward") {
+      return {
+        subject: "Fwd: Document for Review",
+        body: "Please see the attached document for your review.\n\nBest,\nLocal Assist Beta"
+      };
+    }
+    if (draftType === "clarification") {
+      return {
+        subject: "Clarification Needed on Document",
+        body: "Hello,\n\nCould you please provide some clarification on the attached document?\n\nThank you,\nLocal Assist Beta"
+      };
+    }
+    // reply default
+    return {
+      subject: "Re: Document Received",
+      body: "Hello,\n\nI have received the document and will review it shortly.\n\nBest,\nLocal Assist Beta"
+    };
+  }
 }

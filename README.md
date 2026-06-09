@@ -147,19 +147,28 @@ Add the following to your `.env` file (alongside your calendar URI):
 MICROSOFT_OUTLOOK_MAIL_REDIRECT_URI="http://localhost:3000/api/integrations/outlook-mail/callback"
 ```
 
-### Limitations & Security
-- **Local Beta:** This feature is for local testing only.
-- **Read-Only:** The app requests `Mail.Read`. It cannot send emails, delete emails, move folders, mark as read, or modify drafts.
-- **Storage:** OAuth tokens are encrypted using `ENCRYPTION_KEY` and stored locally in your SQLite database.
+### Local Integrations (Beta)
 
-## Phase 3E.1: Attachment Storage Hardening (Complete)
-Personal Assist implements explicit, secure, private attachment downloading for Gmail and Outlook emails.
+**Phase 3E.1: Attachment Storage Hardening**
+Downloaded attachments are stored exclusively in a private `data/uploads` folder (not public). Files are served through controlled API routes that enforce strict security policies, including MIME-type sniffing prevention.
+
+**Phase 3F: Attachment Intelligence Workflow**
+Imported documents and attachments can be analyzed locally for insights. Personal Assist can extract deadlines, action items, parties, payment terms, and signature requirements. It will also flag risks based on sensitive keywords. Using the "Intelligence" tab, you can generate local email drafts (Reply, Forward, Signature Request, Clarification) directly from the document. 
+
+**Phase 3G: Safe Draft Export & Manual Send**
+Generated email drafts are strictly local and are not sent to Gmail or Outlook. Attachments remain in private local storage. Drafts must go through the local **Approval Center** (if high risk) to be approved. Approved drafts can be exported as `.txt` or `.eml` files, or copied to your clipboard. A Manual Send Checklist ensures you follow safe procedures to manually attach local files and send the email yourself. There is absolutely NO background auto-sending or syncing to provider drafts.
+
+**Available Connectors:**
+- **Gmail Read-Only:** Uses standard Google OAuth but only requests `mail.readonly`. Downloads latest messages locally.
+- **Google Calendar Read-Only:** Uses standard Google OAuth with `calendar.readonly`. Syncs upcoming events.
+- **Outlook Calendar Read-Only:** Uses Microsoft Graph API for `Calendars.Read`. Syncs upcoming events.
+- **Outlook Mail Read-Only:** Uses Microsoft Graph API for `Mail.Read`. Syncs latest inbox items.
+- **Attachment Download on Demand:** Manually download specific attachments directly into private local storage (`data/uploads`) securely. Gmail and Outlook emails.
 
 ### How it works
 - **Explicit Action Required:** Attachments are never downloaded automatically. You must explicitly click "Download" on an attachment.
 - **Private Storage:** Decoded attachments are saved to a private, non-public directory `data/uploads`. They are not accessible directly as static web assets. **Do not commit this folder.**
 - **Controlled API Serving:** Files are only readable through a secure, authenticated-capable API route (`GET /api/documents/[id]/file`) which enforces strict MIME type sniffing constraints (`nosniff`).
-- **Size Limit:** A hardcoded maximum size of 25 MB is enforced.
 - **Blocked Extensions:** Unsafe executable and script files (`.exe`, `.sh`, `.js`, etc.) are blocked.
 - **Document Creation:** Once downloaded, attachments are converted into local `Document` records. The system falls back to supporting older demo files temporarily located in `public/uploads` to maintain backward compatibility without crashing.
 

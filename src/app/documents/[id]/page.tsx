@@ -29,7 +29,7 @@ export default async function DocumentDetailPage({ params }: { params: { id: str
     where: { documentId: document.id }
   });
 
-  let metadataObj = null;
+  let metadataObj: any = null;
   if (document.notes && document.notes.includes("METADATA_JSON:")) {
     try {
       const parts = document.notes.split("METADATA_JSON:");
@@ -40,6 +40,33 @@ export default async function DocumentDetailPage({ params }: { params: { id: str
       // Ignore parse errors
     }
   }
+
+  let sourceInboxItem = null;
+  if (metadataObj && metadataObj.inboxItemId) {
+    sourceInboxItem = await prisma.inboxItem.findUnique({
+      where: { id: metadataObj.inboxItemId }
+    });
+  }
+
+  const relatedDrafts = await prisma.emailDraft.findMany({
+    where: { relatedDocId: document.id },
+    orderBy: { createdAt: "desc" }
+  });
+
+  // Wallet cards might refer to this document in metadata
+  const allCards = await prisma.walletCard.findMany({
+    where: { type: "task" }
+  });
+  const relatedCards = allCards.filter(c => c.metadata && c.metadata.includes(document.id));
+
+  // Followups might refer to this document in source
+  const relatedFollowUps = await prisma.followUp.findMany({
+    where: { source: "document", reason: { contains: document.id } } // Simplistic mapping, real app would use proper relation
+  });
+
+  // Approvals might have draft metadata
+  const allApprovals = await prisma.approvalRequest.findMany();
+  const relatedApprovals = allApprovals.filter(a => a.metadata && a.metadata.includes(document.id));
 
   return (
     <div className="p-8 max-w-7xl mx-auto w-full">
@@ -74,6 +101,12 @@ export default async function DocumentDetailPage({ params }: { params: { id: str
         versions={versions}
         signers={signers}
         fields={fields}
+        sourceInboxItem={sourceInboxItem}
+        relatedDrafts={relatedDrafts}
+        relatedCards={relatedCards}
+        relatedFollowUps={relatedFollowUps}
+        relatedApprovals={relatedApprovals}
+        metadataObj={metadataObj}
       />
     </div>
   );

@@ -8,6 +8,13 @@ export interface AIProvider {
   detectFollowUps(text: string): Promise<{ detected: boolean; reason?: string; dueDate?: Date }>;
   generateBrief(type: string, context: any): Promise<string>;
   editDocument(text: string, instructions: string): Promise<string>;
+  extractActionItems(text: string): Promise<string[]>;
+  extractDeadlines(text: string): Promise<{ date: string; description: string }[]>;
+  extractParties(text: string): Promise<{ name: string; role: string }[]>;
+  extractPaymentTerms(text: string): Promise<string>;
+  extractSignatureRequirements(text: string): Promise<string>;
+  identifyRisks(text: string): Promise<string[]>;
+  generateDraftFromDocument(text: string, draftType: string): Promise<{ subject: string; body: string }>;
 }
 
 export async function getAIProvider(): Promise<AIProvider> {

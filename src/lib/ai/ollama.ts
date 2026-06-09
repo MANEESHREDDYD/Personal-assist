@@ -100,4 +100,79 @@ export class OllamaProvider implements AIProvider {
     if (!result) return this.rulesFallback.editDocument(text, instructions);
     return result.trim();
   }
+
+  async extractActionItems(text: string): Promise<string[]> {
+    const prompt = `Extract a list of distinct action items or tasks from the following text. Return ONLY a valid JSON array of strings. If no action items, return [].\nText: ${text.slice(0, 2000)}`;
+    const result = await this.generate(prompt);
+    if (!result) return this.rulesFallback.extractActionItems(text);
+    try {
+      const parsed = JSON.parse(result);
+      return Array.isArray(parsed) ? parsed : this.rulesFallback.extractActionItems(text);
+    } catch {
+      return this.rulesFallback.extractActionItems(text);
+    }
+  }
+
+  async extractDeadlines(text: string): Promise<{ date: string; description: string }[]> {
+    const prompt = `Extract deadlines from the following text. Return ONLY a valid JSON array of objects with keys "date" and "description". If none, return [].\nText: ${text.slice(0, 2000)}`;
+    const result = await this.generate(prompt);
+    if (!result) return this.rulesFallback.extractDeadlines(text);
+    try {
+      const parsed = JSON.parse(result);
+      return Array.isArray(parsed) ? parsed : this.rulesFallback.extractDeadlines(text);
+    } catch {
+      return this.rulesFallback.extractDeadlines(text);
+    }
+  }
+
+  async extractParties(text: string): Promise<{ name: string; role: string }[]> {
+    const prompt = `Extract people or companies from the following text and their roles. Return ONLY a valid JSON array of objects with keys "name" and "role". If none, return [].\nText: ${text.slice(0, 2000)}`;
+    const result = await this.generate(prompt);
+    if (!result) return this.rulesFallback.extractParties(text);
+    try {
+      const parsed = JSON.parse(result);
+      return Array.isArray(parsed) ? parsed : this.rulesFallback.extractParties(text);
+    } catch {
+      return this.rulesFallback.extractParties(text);
+    }
+  }
+
+  async extractPaymentTerms(text: string): Promise<string> {
+    const prompt = `Extract payment terms, amounts due, or pricing from the following text. Return a concise string summary. If none, return "No explicit payment terms detected."\nText: ${text.slice(0, 2000)}`;
+    const result = await this.generate(prompt);
+    if (!result) return this.rulesFallback.extractPaymentTerms(text);
+    return result.trim();
+  }
+
+  async extractSignatureRequirements(text: string): Promise<string> {
+    const prompt = `Extract signature requirements from the following text (e.g. who needs to sign, dates, format). Return a concise string summary. If none, return "No explicit signature requirements detected."\nText: ${text.slice(0, 2000)}`;
+    const result = await this.generate(prompt);
+    if (!result) return this.rulesFallback.extractSignatureRequirements(text);
+    return result.trim();
+  }
+
+  async identifyRisks(text: string): Promise<string[]> {
+    const prompt = `Identify risks, penalty clauses, harsh terms, or missing information in the following text. Return ONLY a valid JSON array of strings. If none, return ["No obvious high-risk terms detected."].\nText: ${text.slice(0, 2000)}`;
+    const result = await this.generate(prompt);
+    if (!result) return this.rulesFallback.identifyRisks(text);
+    try {
+      const parsed = JSON.parse(result);
+      return Array.isArray(parsed) ? parsed : this.rulesFallback.identifyRisks(text);
+    } catch {
+      return this.rulesFallback.identifyRisks(text);
+    }
+  }
+
+  async generateDraftFromDocument(text: string, draftType: string): Promise<{ subject: string; body: string }> {
+    const prompt = `Write a professional email draft based on this document. The draft type is "${draftType}". Do not include placeholder brackets, write a realistic draft. Return ONLY a valid JSON object with "subject" and "body" keys.\nDocument text: ${text.slice(0, 2000)}`;
+    const result = await this.generate(prompt);
+    if (!result) return this.rulesFallback.generateDraftFromDocument(text, draftType);
+    try {
+      const parsed = JSON.parse(result);
+      if (parsed.subject && parsed.body) return parsed;
+      return this.rulesFallback.generateDraftFromDocument(text, draftType);
+    } catch {
+      return this.rulesFallback.generateDraftFromDocument(text, draftType);
+    }
+  }
 }

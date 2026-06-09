@@ -73,23 +73,46 @@ export default async function ApprovalsPage() {
                   </div>
                   <h3 className="font-semibold text-white mb-1">Action: {req.actionType}</h3>
                   <p className="text-sm text-zinc-400">{req.description}</p>
+                  
+                  {(() => {
+                    const meta = parseMetadata(req.metadata);
+                    return (
+                      <div className="flex gap-4 mt-2">
+                        {meta.documentId && (
+                          <a href={`/documents/${meta.documentId}`} className="text-xs text-blue-400 hover:underline">View Source Document</a>
+                        )}
+                        {meta.draftId && (
+                          <a href={`/drafts`} className="text-xs text-blue-400 hover:underline">View Local Draft</a>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   <p className="text-xs text-zinc-500 mt-2">{new Date(req.createdAt).toLocaleString()}</p>
                 </div>
                 
-                <div className="flex gap-2 shrink-0">
+                <div className="flex flex-wrap gap-2 shrink-0">
                   <form action={async () => {
                     "use server";
                     await processApproval(req.id, "approved");
                   }}>
-                    <button className="px-5 py-2.5 bg-green-500/20 text-green-400 font-bold rounded-xl hover:bg-green-500/30 transition-colors border border-green-500/20">
+                    <button className="px-4 py-2 bg-green-500/20 text-green-400 text-sm font-bold rounded-xl hover:bg-green-500/30 transition-colors border border-green-500/20">
                       Approve
+                    </button>
+                  </form>
+                  <form action={async () => {
+                    "use server";
+                    await processApproval(req.id, "needs_changes");
+                  }}>
+                    <button className="px-4 py-2 bg-orange-500/20 text-orange-400 text-sm font-bold rounded-xl hover:bg-orange-500/30 transition-colors border border-orange-500/20">
+                      Needs Changes
                     </button>
                   </form>
                   <form action={async () => {
                     "use server";
                     await processApproval(req.id, "denied");
                   }}>
-                    <button className="px-5 py-2.5 bg-red-500/20 text-red-400 font-bold rounded-xl hover:bg-red-500/30 transition-colors border border-red-500/20">
+                    <button className="px-4 py-2 bg-red-500/20 text-red-400 text-sm font-bold rounded-xl hover:bg-red-500/30 transition-colors border border-red-500/20">
                       Deny
                     </button>
                   </form>
@@ -121,6 +144,31 @@ export default async function ApprovalsPage() {
                   </div>
                   <h3 className="font-semibold text-white mb-1">Action: {req.actionType}</h3>
                   <p className="text-sm text-zinc-400">{req.description}</p>
+                  
+                  {(() => {
+                    const meta = parseMetadata(req.metadata);
+                    return (
+                      <div className="flex gap-4 mt-2">
+                        {meta.documentId && (
+                          <a href={`/documents/${meta.documentId}`} className="text-xs text-blue-400 hover:underline">View Source Document</a>
+                        )}
+                        {meta.draftId && (
+                          <div className="space-y-1">
+                            <div className="flex gap-4">
+                              <a href={`/drafts`} className="text-xs text-blue-400 hover:underline">Open Draft</a>
+                              {req.status === "approved" && (
+                                <a href={`/drafts`} className="text-xs text-purple-400 hover:underline font-bold">Export Draft</a>
+                              )}
+                            </div>
+                            {req.status === "approved" && (
+                              <p className="text-[10px] text-orange-400 mt-1 uppercase tracking-wider">Reminder: Must be sent manually outside Personal Assist</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   <p className="text-xs text-zinc-500 mt-2">{new Date(req.createdAt).toLocaleString()}</p>
                 </div>
               </div>

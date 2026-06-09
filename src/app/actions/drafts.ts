@@ -81,3 +81,108 @@ export async function updateDraftStatus(id: string, status: string) {
     return { success: false };
   }
 }
+
+export async function markDraftExported(id: string) {
+  try {
+    const draft = await prisma.emailDraft.findUnique({ where: { id } });
+    if (!draft) return { success: false };
+
+    const meta = draft.metadata ? JSON.parse(draft.metadata) : {};
+    meta.exportStatus = "exported";
+    meta.exportedAt = new Date().toISOString();
+
+    await prisma.emailDraft.update({
+      where: { id },
+      data: { metadata: JSON.stringify(meta) }
+    });
+
+    await logAudit("draft_marked_exported", "EmailDraft", id);
+    
+    await prisma.notification.create({
+      data: {
+        title: "Draft Exported",
+        message: `Draft "${draft.subject}" was exported manually.`,
+        type: "draft_exported",
+        severity: "info",
+        status: "unread",
+        relatedEntityType: "EmailDraft",
+        relatedEntityId: id
+      }
+    });
+
+    revalidatePath("/drafts");
+    revalidatePath(`/documents/${draft.relatedDocId}`);
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}
+
+export async function markDraftManuallySent(id: string) {
+  try {
+    const draft = await prisma.emailDraft.findUnique({ where: { id } });
+    if (!draft) return { success: false };
+
+    const meta = draft.metadata ? JSON.parse(draft.metadata) : {};
+    meta.exportStatus = "manually_sent";
+    meta.sentOutsidePersonalAssist = true;
+    meta.manuallySentAt = new Date().toISOString();
+
+    await prisma.emailDraft.update({
+      where: { id },
+      data: { metadata: JSON.stringify(meta) }
+    });
+
+    await logAudit("draft_marked_manually_sent", "EmailDraft", id);
+
+    await prisma.notification.create({
+      data: {
+        title: "Draft Manually Sent",
+        message: `Draft "${draft.subject}" was marked as sent outside Personal Assist.`,
+        type: "draft_sent",
+        severity: "success",
+        status: "unread",
+        relatedEntityType: "EmailDraft",
+        relatedEntityId: id
+      }
+    });
+
+    revalidatePath("/drafts");
+    revalidatePath(`/documents/${draft.relatedDocId}`);
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}
+
+export async function reopenDraft(id: string) {
+  try {
+    const draft = await prisma.emailDraft.findUnique({ where: { id } });
+    if (!draft) return { success: false };
+
+    // Reset status to draft or approved
+    const status = "draft"; 
+
+    await prisma.emailDraft.update({
+      where: { id },
+      data: { status }
+    });
+
+    await logAudit("draft_reopened", "EmailDraft", id);
+    revalidatePath("/drafts");
+    return { success: true };
+  } catch (error) {
+    return { success: false };
+  }
+}
+
+export async function logClipboardAction(id: string, actionName: string) {
+  try {
+    await logAudit(`draft_copied_${actionName}`, "EmailDraft", id);
+    return { success: true };
+  } catch {
+    return { success: false };
+  }
+}

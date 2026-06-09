@@ -39,7 +39,22 @@ const PHASES = [
     items: ["Gmail attachment download on demand", "Outlook Mail attachment download on demand", "Local document vault storage"]
   },
   {
-    title: "Phase 3F: Apple Native Bridge (Planned)",
+    title: "Phase 3E.1: Attachment Storage Hardening (Completed)",
+    status: "completed",
+    items: ["Private data/uploads folder", "Controlled API document serving", "Public static file blocking"]
+  },
+  {
+    title: "Phase 3F: Attachment Intelligence & Local Drafts (Completed)",
+    status: "completed",
+    items: ["AI provider intelligence actions", "Generate drafts from local documents", "Draft Approval Center Integration"]
+  },
+  {
+    title: "Phase 3G: Safe Draft Export & Manual Send (Completed)",
+    status: "completed",
+    items: ["Local Draft Export to TXT/EML", "Draft Copy formatting", "Manual Send Tracking & Checklist"]
+  },
+  {
+    title: "Phase 3H: Apple Native Bridge (Planned)",
     status: "pending",
     items: [".eml / .mbox import", ".ics import", "macOS AppleScript/Shortcuts helper", "iOS Share Sheet integration", "Native EventKit wrapper"]
   },

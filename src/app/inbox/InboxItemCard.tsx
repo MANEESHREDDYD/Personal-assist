@@ -9,9 +9,11 @@ import { AttachmentList } from "@/components/inbox/AttachmentList";
 
 interface Props {
   item: InboxItem;
+  relatedDocs?: any[];
+  relatedDrafts?: any[];
 }
 
-export function InboxItemCard({ item }: Props) {
+export function InboxItemCard({ item, relatedDocs, relatedDrafts }: Props) {
   const [showCorrection, setShowCorrection] = useState(false);
   const meta = parseMetadata(item.metadata);
   const confidenceScore = meta.confidenceScore as number | undefined;
@@ -60,6 +62,42 @@ export function InboxItemCard({ item }: Props) {
             />
           </div>
         )}
+
+        {(relatedDocs && relatedDocs.length > 0) || (relatedDrafts && relatedDrafts.length > 0) ? (
+          <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
+            {relatedDocs && relatedDocs.length > 0 && (
+              <div>
+                <p className="text-xs font-bold text-zinc-400 mb-2">Downloaded Documents</p>
+                <div className="space-y-1">
+                  {relatedDocs.map(d => (
+                    <a key={d.id} href={`/documents/${d.id}`} className="block px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm text-blue-400 transition-colors">
+                      {d.originalName}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {relatedDrafts && relatedDrafts.length > 0 && (
+              <div>
+                <p className="text-xs font-bold text-zinc-400 mb-2">Generated Drafts</p>
+                <div className="space-y-1">
+                  {relatedDrafts.map(d => (
+                    <a key={d.id} href="/drafts" className="block px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 rounded-lg text-sm text-purple-400 transition-colors flex justify-between items-center">
+                      <span className="truncate pr-2">{d.subject || "No Subject"}</span>
+                      <span className="text-[10px] uppercase font-bold tracking-wider opacity-75">
+                        {d.status.replace("_", " ")}
+                        {d.metadata && JSON.parse(d.metadata).exportStatus && (
+                          <span className="ml-1 opacity-75">• {JSON.parse(d.metadata).exportStatus.replace("_", " ")}</span>
+                        )}
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
 
       {showCorrection && (
