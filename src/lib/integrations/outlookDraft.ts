@@ -198,3 +198,123 @@ export async function attachFileToOutlookDraft(
   const data = await res.json();
   return { attachmentId: data.id || "" };
 }
+
+// Microsoft Graph requires upload-session chunks to be a multiple of 320 KiB
+// (except the final chunk). 10 * 320 KiB = 3.125 MiB per chunk.
+const GRAPH_CHUNK_SIZE = 10 * 327680;
+
+/**
+ * Creates a Microsoft Graph upload session for a large attachment on an existing
+ * draft message (Phase 3J). Used for files > 3 MB and <= 150 MB. Targets a draft
+ * message attachment only and NEVER triggers a send.
+ */
+export async function createOutlookAttachmentUploadSession(
+  accessToken: string,
+  messageId: string,
+  file: { name: string; size: number; contentType: string }
+): Promise<{ uploadUrl: string; expirationDateTime?: string }> {
+  const payload = {
+    AttachmentItem: {
+      attachmentType: "file",
+      name: file.name,
+      size: file.size,
+      contentType: file.contentType || "application/octet-stream",
+    },
+  };
+
+  const res = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/attachments/createUploadSession`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(`Failed to create Outlook upload session: ${await res.text()}`);
+  }
+
+  const data = await res.json();
+  if (!data.uploadUrl) throw new Error("Upload session did not return an uploadUrl.");
+  return { uploadUrl: data.uploadUrl, expirationDateTime: data.expirationDateTime };
+}
+
+/**
+ * Uploads file bytes to a Graph upload session URL in sequential chunks.
+ * Intermediate chunks return 202; the final chunk returns 200/201 with the
+ * created attachment. Returns the attachment id (when available) and chunk count.
+ * The upload URL is a short-lived, pre-authorized Graph URL — no auth header is
+ * sent and no send endpoint is contacted.
+ */
+export async function uploadOutlookAttachmentBytes(
+  uploadUrl: string,
+  content: Buffer,
+  opts?: { chunkSize?: number }
+): Promise<{ attachmentId?: string; chunks: number }> {
+  const chunkSize = opts?.chunkSize ?? GRAPH_CHUNK_SIZE;
+  const total = content.length;
+  let start = 0;
+  let chunks = 0;
+  let attachmentId: string | undefined;
+
+  while (start < total) {
+    const end = Math.min(start + chunkSize, total);
+    const chunk = content.subarray(start, end);
+
+    const res = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Length": String(chunk.length),
+        "Content-Range": `bytes ${start}-${end - 1}/${total}`,
+      },
+      // Convert the Buffer slice to a Uint8Array for a standard fetch BodyInit.
+      body: new Uint8Array(chunk),
+    });
+    chunks++;
+
+    if (res.status === 200 || res.status === 201) {
+      try {
+        const body = await res.json();
+        attachmentId = body?.id;
+      } catch {
+        // Some responses are empty; fall back to the Location header.
+      }
+      if (!attachmentId) {
+        const loc = res.headers.get("location") || "";
+        const m = loc.match(/attachments\/([^/?]+)/);
+        if (m) attachmentId = decodeURIComponent(m[1]);
+      }
+      return { attachmentId, chunks };
+    }
+
+    if (res.status === 202) {
+      start = end;
+      continue;
+    }
+
+    throw new Error(`Outlook chunk upload failed (${res.status}): ${await res.text()}`);
+  }
+
+  return { attachmentId, chunks };
+}
+
+/**
+ * Attaches a large file (> 3 MB, <= 150 MB) to an existing Outlook draft message
+ * using an upload session. NEVER triggers a send.
+ */
+export async function attachLargeFileToOutlookDraft(
+  accessToken: string,
+  messageId: string,
+  file: { name: string; contentType: string; content: Buffer }
+): Promise<{ attachmentId?: string; chunks: number }> {
+  const session = await createOutlookAttachmentUploadSession(accessToken, messageId, {
+    name: file.name,
+    size: file.content.length,
+    contentType: file.contentType || "application/octet-stream",
+  });
+  return uploadOutlookAttachmentBytes(session.uploadUrl, file.content);
+}

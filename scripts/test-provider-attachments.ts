@@ -107,6 +107,23 @@ async function main() {
   const okFile = writeUpload(`${FILE_PREFIX}ok.txt`, "Safe small demo attachment.\n");
   const okDoc = await createDoc({ originalName: `${FILE_PREFIX}ok.txt`, filename: okFile, size: 28 });
 
+  // Large + over-limit docs use mocked DB sizes (size class is derived from the
+  // Document.size field) backed by tiny real files — so we never write 150 MB.
+  const largeFile = writeUpload(`${FILE_PREFIX}large.bin`, "placeholder for large doc\n");
+  const largeDoc = await createDoc({
+    originalName: `${FILE_PREFIX}large.bin`,
+    filename: largeFile,
+    size: 5 * 1024 * 1024, // 5 MB -> "large"
+    mimeType: "application/octet-stream",
+  });
+  const hugeFile = writeUpload(`${FILE_PREFIX}huge.bin`, "placeholder for huge doc\n");
+  const hugeDoc = await createDoc({
+    originalName: `${FILE_PREFIX}huge.bin`,
+    filename: hugeFile,
+    size: 200 * 1024 * 1024, // 200 MB -> "too_large"
+    mimeType: "application/octet-stream",
+  });
+
   // A. Happy dry-run path.
   {
     const draft = await createDraft({
@@ -173,23 +190,28 @@ async function main() {
     check("D blocked extension (.js -> blocked_type)", o?.status === "blocked_type", `got ${o?.status}`);
   }
 
-  // E. Size limit blocked (> 3 MB).
+  // E. Just over the small limit (3 MB + 1 byte) on Outlook -> large/upload_session.
+  //    Size class comes from Document.size, so no real 3 MB file is written.
   {
-    const bigFile = writeUpload(`${FILE_PREFIX}big.bin`, MAX + 1024);
-    const bigDoc = await createDoc({
-      originalName: `${FILE_PREFIX}big.bin`,
-      filename: bigFile,
-      size: MAX + 1024,
+    const boundaryFile = writeUpload(`${FILE_PREFIX}boundary.bin`, "placeholder for boundary doc\n");
+    const boundaryDoc = await createDoc({
+      originalName: `${FILE_PREFIX}boundary.bin`,
+      filename: boundaryFile,
+      size: MAX + 1,
       mimeType: "application/octet-stream",
     });
     const draft = await createDraft({
-      subject: `${TAG} too-large`,
+      subject: `${TAG} boundary`,
       status: "approved",
-      metadata: { attachedDocumentIds: [bigDoc.id], providerDrafts: gmailProviderDraft() },
+      metadata: { attachedDocumentIds: [boundaryDoc.id], providerDrafts: { outlook: { messageId: "test-outlook-msg", status: "created", attachments: [] } } },
     });
-    const vr = await statusOf("gmail_draft", draft.id, [bigDoc.id]);
-    const o = vr.outcomes.find((x) => x.documentId === bigDoc.id);
-    check("E size limit blocked (> 3 MB -> too_large)", o?.status === "too_large", `got ${o?.status}`);
+    const vr = await statusOf("outlook_draft", draft.id, [boundaryDoc.id]);
+    const o = vr.outcomes.find((x) => x.documentId === boundaryDoc.id);
+    check(
+      "E just over 3 MB on Outlook -> large/upload_session",
+      o?.status === "ok" && o?.sizeClass === "large" && o?.uploadMode === "upload_session",
+      `got status=${o?.status} class=${o?.sizeClass} mode=${o?.uploadMode}`
+    );
   }
 
   // F. Pending/rejected draft blocked before upload.
@@ -212,6 +234,72 @@ async function main() {
     });
     const vr = await statusOf("gmail_draft", draft.id, [okDoc.id]);
     check("G provider draft missing blocked (provider_draft_missing)", !vr.ok && vr.errorCode === "provider_draft_missing", `got ok=${vr.ok} code=${vr.errorCode}`);
+  }
+
+  const outlookPd = { outlook: { messageId: "test-outlook-msg", status: "created", demo: true, attachments: [] as any[] } };
+
+  // H. Outlook large file -> upload_session.
+  {
+    const draft = await createDraft({
+      subject: `${TAG} outlook-large`,
+      status: "approved",
+      metadata: { attachedDocumentIds: [largeDoc.id], providerDrafts: outlookPd },
+    });
+    const vr = await statusOf("outlook_draft", draft.id, [largeDoc.id]);
+    const o = vr.outcomes.find((x) => x.documentId === largeDoc.id);
+    check(
+      "H Outlook large -> upload_session",
+      o?.status === "ok" && o?.sizeClass === "large" && o?.uploadMode === "upload_session",
+      `got status=${o?.status} class=${o?.sizeClass} mode=${o?.uploadMode}`
+    );
+  }
+
+  // I. Over 150 MB -> too_large.
+  {
+    const draft = await createDraft({
+      subject: `${TAG} over-limit`,
+      status: "approved",
+      metadata: { attachedDocumentIds: [hugeDoc.id], providerDrafts: outlookPd },
+    });
+    const vr = await statusOf("outlook_draft", draft.id, [hugeDoc.id]);
+    const o = vr.outcomes.find((x) => x.documentId === hugeDoc.id);
+    check(
+      "I over 150 MB -> too_large (blocked)",
+      o?.status === "too_large" && o?.sizeClass === "too_large" && o?.uploadMode === "blocked",
+      `got status=${o?.status} class=${o?.sizeClass} mode=${o?.uploadMode}`
+    );
+  }
+
+  // J. Gmail large file -> deferred.
+  {
+    const draft = await createDraft({
+      subject: `${TAG} gmail-large`,
+      status: "approved",
+      metadata: { attachedDocumentIds: [largeDoc.id], providerDrafts: gmailProviderDraft() },
+    });
+    const vr = await statusOf("gmail_draft", draft.id, [largeDoc.id]);
+    const o = vr.outcomes.find((x) => x.documentId === largeDoc.id);
+    check(
+      "J Gmail large -> deferred",
+      o?.status === "deferred" && o?.sizeClass === "large" && o?.uploadMode === "deferred",
+      `got status=${o?.status} class=${o?.sizeClass} mode=${o?.uploadMode}`
+    );
+  }
+
+  // K. Small file still -> simple.
+  {
+    const draft = await createDraft({
+      subject: `${TAG} outlook-small`,
+      status: "approved",
+      metadata: { attachedDocumentIds: [okDoc.id], providerDrafts: outlookPd },
+    });
+    const vr = await statusOf("outlook_draft", draft.id, [okDoc.id]);
+    const o = vr.outcomes.find((x) => x.documentId === okDoc.id);
+    check(
+      "K small file -> simple",
+      o?.status === "ok" && o?.sizeClass === "small" && o?.uploadMode === "simple",
+      `got status=${o?.status} class=${o?.sizeClass} mode=${o?.uploadMode}`
+    );
   }
 
   await cleanup();

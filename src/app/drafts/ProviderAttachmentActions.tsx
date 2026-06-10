@@ -10,7 +10,9 @@ interface LinkedDoc {
   size: number;
   contentType: string;
   blocked: boolean;
+  large: boolean;
   tooLarge: boolean;
+  sizeClass: "small" | "large" | "too_large";
   attachedGmail: boolean;
   attachedOutlook: boolean;
 }
@@ -146,8 +148,9 @@ export function ProviderAttachmentActions({
       <p className="text-[11px] text-zinc-400">
         Attachment upload updates the provider-side draft only. Personal Assist still does
         not send emails. After uploading, review the draft and attachments inside Gmail or
-        Outlook before sending manually. Phase 3I supports files up to 3 MB; large
-        attachment upload is planned later.
+        Outlook before sending manually. Small files (≤ 3 MB) use a simple upload; large
+        files (≤ 150 MB) use <strong>Outlook upload sessions</strong>. Files over 150 MB are
+        blocked. Large Gmail attachments are deferred (attach them manually in Gmail).
       </p>
 
       {docs === null ? (
@@ -184,9 +187,17 @@ export function ProviderAttachmentActions({
                   </span>
                 )}
                 {d.tooLarge && !d.blocked && (
-                  <span className="text-orange-400 flex items-center gap-0.5 shrink-0" title="Large attachment upload is planned for Phase 3J.">
-                    <AlertTriangle className="w-3 h-3" /> &gt; 3 MB
+                  <span className="text-red-400 flex items-center gap-0.5 shrink-0" title="Files over 150 MB cannot be attached.">
+                    <Ban className="w-3 h-3" /> &gt; 150 MB
                   </span>
+                )}
+                {d.large && !d.blocked && (
+                  <span className="text-amber-400 flex items-center gap-0.5 shrink-0" title="Outlook: upload session. Gmail: deferred (attach manually).">
+                    <AlertTriangle className="w-3 h-3" /> large
+                  </span>
+                )}
+                {!d.large && !d.tooLarge && !d.blocked && (
+                  <span className="text-zinc-500 shrink-0 text-[10px]">small</span>
                 )}
                 {d.attachedGmail && (
                   <span className="text-green-400 flex items-center gap-0.5 shrink-0">

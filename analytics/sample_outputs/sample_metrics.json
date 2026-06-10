@@ -87,6 +87,13 @@
         "type_blocked": 0,
         "dry_runs": 6,
         "validation_failures": 1,
+        "large_uploaded": 2,
+        "upload_sessions": 2,
+        "upload_session_failures": 0,
+        "too_large_blocked": 1,
+        "gmail_large_deferred": 1,
+        "small_max_mb": 3,
+        "large_max_mb": 150,
         "max_size_mb": 3,
         "emails_sent": 0
       }

@@ -35,9 +35,26 @@ and **only on explicit user action**. None of these endpoints send email.
 | Gmail | `PUT .../users/me/drafts/{id}` (users.drafts.update) | Replace the draft with a multipart MIME message carrying attachments |
 | Outlook | `POST https://graph.microsoft.com/v1.0/me/messages/{id}/attachments` | Add a small (`<= 3 MB`) file attachment to a draft message |
 
-Phase 3I uses simple/small attachments only (`<= 3 MB`). Large attachment **upload
-sessions** are deferred to Phase 3J. Attachment upload never sends, moves, deletes, or
-re-labels any message, and never touches inbox messages.
+Phase 3I uses simple/small attachments only (`<= 3 MB`). Attachment upload never sends,
+moves, deletes, or re-labels any message, and never touches inbox messages.
+
+### Allowed Outlook large-attachment upload sessions (Phase 3J)
+
+Large attachments (`> 3 MB` and `<= 150 MB`) use Microsoft Graph **upload sessions**, on a
+**draft message** only, after approval and on explicit user action.
+
+| Provider | Endpoint | Purpose |
+|---|---|---|
+| Outlook | `POST .../me/messages/{id}/attachments/createUploadSession` | Start an upload session for a draft attachment |
+| Outlook | `PUT {uploadUrl}` (chunked, Content-Range) | Upload attachment bytes to the session |
+
+Rules:
+- Upload sessions are allowed **only for draft message attachments**.
+- Files `> 150 MB` are blocked.
+- Gmail large files are **deferred** (no upload-session equivalent here) to avoid
+  memory-heavy MIME rebuilds.
+- Send endpoints remain forbidden, and there is **no mailbox message modification**
+  outside the draft attachment operations above (no move/delete/update/label/category).
 
 ---
 

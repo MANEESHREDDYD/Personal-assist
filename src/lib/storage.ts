@@ -54,6 +54,24 @@ export async function getFile(filename: string): Promise<Buffer | null> {
   }
 }
 
+/**
+ * Returns the byte size of a stored file, or null if it does not exist.
+ * Used for existence + size checks without reading the whole file into memory.
+ */
+export async function statFile(filename: string): Promise<number | null> {
+  try {
+    const stat = await fs.stat(path.join(UPLOADS_DIR, filename));
+    return stat.size;
+  } catch {
+    try {
+      const stat = await fs.stat(path.join(LEGACY_UPLOADS_DIR, filename));
+      return stat.size;
+    } catch {
+      return null;
+    }
+  }
+}
+
 export async function getFilePath(filename: string): Promise<string> {
   // Try data/uploads first
   try {

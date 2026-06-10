@@ -125,7 +125,28 @@ async function runSmokeTest() {
     if (!attachmentsSrc.includes("3 * 1024 * 1024")) {
       throw new Error("3 MB provider attachment limit not found");
     }
-    console.log("✅ 3 MB attachment limit present.");
+    if (!attachmentsSrc.includes("150 * 1024 * 1024")) {
+      throw new Error("150 MB large attachment limit not found");
+    }
+    console.log("✅ 3 MB + 150 MB attachment limits present.");
+
+    const outlookSrc = fs.readFileSync(path.join(root, "src/lib/integrations/outlookDraft.ts"), "utf-8");
+    if (!outlookSrc.includes("createOutlookAttachmentUploadSession") || !outlookSrc.includes("attachLargeFileToOutlookDraft")) {
+      throw new Error("Outlook upload session helpers not found");
+    }
+    console.log("✅ Outlook upload session helpers present.");
+
+    const validationSrc = fs.readFileSync(path.join(root, "src/lib/providerAttachments/validation.ts"), "utf-8");
+    if (!validationSrc.includes("classifyProviderAttachmentSize") || !validationSrc.includes("sizeClass")) {
+      throw new Error("Validation helper does not support size classification");
+    }
+    console.log("✅ Validation helper supports size classification.");
+
+    const harnessSrc = fs.readFileSync(path.join(root, "scripts/test-provider-attachments.ts"), "utf-8");
+    if (!harnessSrc.includes("upload_session") || !harnessSrc.includes("too_large")) {
+      throw new Error("Test harness missing large / too-large cases");
+    }
+    console.log("✅ Test harness includes large + too-large cases.");
 
     const agenticSrc = fs.readFileSync(
       path.join(root, "analytics/personal_assist_analytics/agentic.py"),

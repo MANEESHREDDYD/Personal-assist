@@ -94,7 +94,8 @@ export function GmailDraftConnectorCard() {
           Required scope: <code className="text-amber-300">gmail.compose</code>
         </p>
         <p className="text-xs text-gray-500 mb-3">
-          Attachment upload: small files only (max 3 MB). Large uploads planned later.
+          Attachment upload: small files via MIME draft rebuild (≤ 3 MB). Large Gmail
+          attachments are deferred — attach them manually in Gmail.
         </p>
 
         {!status?.configured && (

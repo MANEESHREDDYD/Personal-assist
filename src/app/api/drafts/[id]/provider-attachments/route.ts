@@ -5,20 +5,30 @@ import { logAudit } from "@/lib/audit";
 import { parseMetadata, stringifyMetadata } from "@/lib/metadata";
 import { getFile } from "@/lib/storage";
 import {
-  MAX_PROVIDER_ATTACHMENT_SIZE,
+  SMALL_PROVIDER_ATTACHMENT_LIMIT,
+  LARGE_PROVIDER_ATTACHMENT_LIMIT,
+  classifyProviderAttachmentSize,
   isBlockedExtension,
   isSafeStoredFilename,
   getLinkedDocumentIds,
 } from "@/lib/attachments";
 import { getValidAccessToken } from "@/lib/integrations/draftTokens";
 import { updateGmailDraftWithAttachments } from "@/lib/integrations/gmailDraft";
-import { attachFileToOutlookDraft } from "@/lib/integrations/outlookDraft";
+import {
+  attachFileToOutlookDraft,
+  attachLargeFileToOutlookDraft,
+} from "@/lib/integrations/outlookDraft";
 import {
   validateProviderAttachmentRequest,
   ProviderValue,
 } from "@/lib/providerAttachments/validation";
 
 export const dynamic = "force-dynamic";
+
+const PROVIDER_SUPPORT = {
+  gmail: "small files (≤ 3 MB) via MIME rebuild; large files deferred",
+  outlook: "small (≤ 3 MB) via simple upload; large (> 3 MB, ≤ 150 MB) via upload session; > 150 MB blocked",
+};
 
 async function notify(title: string, message: string, severity: string, draftId: string) {
   try {
@@ -36,6 +46,17 @@ async function notify(title: string, message: string, severity: string, draftId:
   } catch (e) {
     console.error("Failed to create provider attachment notification", e);
   }
+}
+
+// Loads a Document + its file buffer for upload, applying the path-traversal guard.
+async function loadDocBuffer(documentId: string) {
+  const doc = await prisma.document.findUnique({ where: { id: documentId } });
+  if (!doc) return null;
+  const fn = path.basename(doc.path || "");
+  if (!isSafeStoredFilename(fn)) return null;
+  const buffer = await getFile(fn);
+  if (!buffer) return null;
+  return { doc, buffer };
 }
 
 /** GET — returns safe metadata for documents linked to the draft + provider attach status. */
@@ -64,14 +85,16 @@ export async function GET(
     const documents = docs.map((d) => {
       const filename = path.basename(d.path || "");
       const blocked = isBlockedExtension(d.originalName) || isBlockedExtension(filename);
-      const tooLarge = (d.size || 0) > MAX_PROVIDER_ATTACHMENT_SIZE;
+      const sizeClass = classifyProviderAttachmentSize(d.size || 0);
       return {
         id: d.id,
         name: d.originalName,
         size: d.size,
         contentType: d.mimeType,
         blocked,
-        tooLarge,
+        sizeClass,
+        large: sizeClass === "large",
+        tooLarge: sizeClass === "too_large",
         attachedGmail: gmailAttached.includes(d.id),
         attachedOutlook: outlookAttached.includes(d.id),
       };
@@ -81,7 +104,9 @@ export async function GET(
       approved: draft.status === "approved",
       hasGmailDraft: !!providerDrafts.gmail,
       hasOutlookDraft: !!providerDrafts.outlook,
-      maxSize: MAX_PROVIDER_ATTACHMENT_SIZE,
+      smallMax: SMALL_PROVIDER_ATTACHMENT_LIMIT,
+      largeMax: LARGE_PROVIDER_ATTACHMENT_LIMIT,
+      providerSupport: PROVIDER_SUPPORT,
       documents,
     });
   } catch (error: any) {
@@ -133,20 +158,43 @@ export async function POST(
     // Split validated outcomes into uploadable docs and reported blocks. In real
     // mode, emit the per-block audit logs / notifications.
     const blockedResults: any[] = [];
-    const toUpload: { documentId: string; name?: string; contentType?: string; buffer: Buffer }[] = [];
+    const toUpload: {
+      documentId: string;
+      name?: string;
+      size?: number;
+      contentType?: string;
+      uploadMode?: string;
+      sizeClass?: string;
+    }[] = [];
 
     for (const o of vr.outcomes!) {
-      if (o.status === "ok" && o.buffer) {
-        toUpload.push({ documentId: o.documentId, name: o.name, contentType: o.contentType, buffer: o.buffer });
+      if (o.status === "ok") {
+        toUpload.push({
+          documentId: o.documentId,
+          name: o.name,
+          size: o.size,
+          contentType: o.contentType,
+          uploadMode: o.uploadMode,
+          sizeClass: o.sizeClass,
+        });
         continue;
       }
-      blockedResults.push({ documentId: o.documentId, name: o.name, status: o.status });
+      blockedResults.push({
+        documentId: o.documentId,
+        name: o.name,
+        status: o.status,
+        sizeClass: o.sizeClass,
+        uploadMode: o.uploadMode,
+      });
       if (!dryRun) {
         if (o.status === "already_attached") {
           await logAudit("provider_attachment_duplicate_blocked", "EmailDraft", draftId, { provider, documentId: o.documentId });
         } else if (o.status === "too_large") {
-          await logAudit("provider_attachment_size_blocked", "EmailDraft", draftId, { provider, documentId: o.documentId });
-          await notify("Attachment too large for Phase 3I", `"${o.name || o.documentId}" exceeds the 3 MB limit. Large attachment upload is planned for Phase 3J.`, "warning", draftId);
+          await logAudit("provider_attachment_too_large_blocked", "EmailDraft", draftId, { provider, documentId: o.documentId, size: o.size });
+          await notify("Attachment exceeds 150 MB limit", `"${o.name || o.documentId}" is larger than 150 MB and cannot be attached.`, "warning", draftId);
+        } else if (o.status === "deferred") {
+          await logAudit("gmail_large_attachment_deferred", "EmailDraft", draftId, { provider, documentId: o.documentId, size: o.size });
+          await notify("Gmail large attachment upload deferred", `"${o.name || o.documentId}" is over 3 MB. Large Gmail attachments are deferred — attach it manually in Gmail, or use Outlook upload sessions.`, "warning", draftId);
         } else if (o.status === "blocked_type") {
           await logAudit("provider_attachment_type_blocked", "EmailDraft", draftId, { provider, documentId: o.documentId });
         } else if (o.status === "missing_file") {
@@ -155,8 +203,7 @@ export async function POST(
       }
     }
 
-    // Dry-run: report what would happen without contacting the provider or
-    // mutating any state.
+    // Dry-run: report what would happen, including size class + upload mode.
     if (dryRun) {
       await logAudit("provider_attachment_dry_run_completed", "EmailDraft", draftId, {
         provider,
@@ -167,11 +214,14 @@ export async function POST(
         dryRun: true,
         provider,
         connectorConnected: account?.status === "connected",
+        providerSupport: PROVIDER_SUPPORT,
         wouldUpload: toUpload.map((u) => ({
           documentId: u.documentId,
           name: u.name,
-          size: u.buffer.length,
+          size: u.size,
           contentType: u.contentType,
+          sizeClass: u.sizeClass,
+          uploadMode: u.uploadMode,
         })),
         results: blockedResults,
         message:
@@ -195,84 +245,119 @@ export async function POST(
     const uploadedAt = new Date().toISOString();
     const results: any[] = [...blockedResults];
     const newRecords: any[] = [];
+    let usedUploadSession = false;
 
     if (provider === "gmail_draft") {
       // Gmail draft update replaces the message, so rebuild with existing + new
-      // attachments and the original approved draft content.
+      // attachments and the original approved draft content. (All gmail uploads
+      // here are small/simple — large gmail files are reported as deferred above.)
       const preserved: { filename: string; contentType: string; content: Buffer }[] = [];
       for (const rec of existing!) {
-        const prevDoc = await prisma.document.findUnique({ where: { id: rec.documentId } });
-        if (!prevDoc) continue;
-        const fn = path.basename(prevDoc.path || "");
-        if (!isSafeStoredFilename(fn)) continue;
-        const buf = await getFile(fn);
-        if (buf) preserved.push({ filename: prevDoc.originalName, contentType: prevDoc.mimeType, content: buf });
+        const loaded = await loadDocBuffer(rec.documentId);
+        if (loaded) preserved.push({ filename: loaded.doc.originalName, contentType: loaded.doc.mimeType, content: loaded.buffer });
       }
 
-      const fresh = toUpload.map((u) => ({
-        filename: u.name || "attachment",
-        contentType: u.contentType || "application/octet-stream",
-        content: u.buffer,
-      }));
+      const fresh: { u: any; doc: any; buffer: Buffer }[] = [];
+      for (const u of toUpload) {
+        const loaded = await loadDocBuffer(u.documentId);
+        if (loaded) fresh.push({ u, doc: loaded.doc, buffer: loaded.buffer });
+      }
 
       await updateGmailDraftWithAttachments(
         accessToken,
         providerDraft.draftId,
         { to: draft.to, cc: draft.cc, bcc: draft.bcc, subject: draft.subject, body: draft.body },
-        [...preserved, ...fresh]
+        [...preserved, ...fresh.map((f) => ({ filename: f.doc.originalName, contentType: f.doc.mimeType, content: f.buffer }))]
       );
 
-      for (const u of toUpload) {
+      for (const f of fresh) {
         newRecords.push({
-          documentId: u.documentId,
-          filename: u.name,
-          size: u.buffer.length,
-          contentType: u.contentType,
+          documentId: f.u.documentId,
+          filename: f.doc.originalName,
+          size: f.buffer.length,
+          contentType: f.doc.mimeType,
           uploadedAt,
           providerAttachmentId: null,
           status: "attached",
+          uploadMode: "simple",
+          sizeClass: "small",
         });
-        results.push({ documentId: u.documentId, name: u.name, status: "attached" });
+        results.push({ documentId: f.u.documentId, name: f.doc.originalName, status: "attached" });
       }
       await logAudit("gmail_provider_attachment_uploaded", "EmailDraft", draftId, {
-        count: newRecords.length,
-        filenames: newRecords.map((r) => r.filename),
+        count: fresh.length,
+        filenames: fresh.map((f) => f.doc.originalName),
       });
     } else {
-      // Outlook attachments are added incrementally; upload only the new files.
+      // Outlook: simple upload for small files, upload sessions for large files.
       for (const u of toUpload) {
+        const loaded = await loadDocBuffer(u.documentId);
+        if (!loaded) {
+          await logAudit("provider_attachment_missing_file", "EmailDraft", draftId, { provider, documentId: u.documentId });
+          results.push({ documentId: u.documentId, name: u.name, status: "missing_file" });
+          continue;
+        }
+        const { doc, buffer } = loaded;
         try {
-          const { attachmentId } = await attachFileToOutlookDraft(accessToken, providerDraft.messageId, {
-            name: u.name || "attachment",
-            contentType: u.contentType || "application/octet-stream",
-            contentBytes: u.buffer.toString("base64"),
-          });
-          newRecords.push({
-            documentId: u.documentId,
-            filename: u.name,
-            size: u.buffer.length,
-            contentType: u.contentType,
-            uploadedAt,
-            providerAttachmentId: attachmentId || null,
-            status: "attached",
-          });
-          results.push({ documentId: u.documentId, name: u.name, status: "attached" });
+          if (u.uploadMode === "upload_session") {
+            await logAudit("provider_large_attachment_upload_started", "EmailDraft", draftId, { provider, documentId: u.documentId, size: buffer.length });
+            await logAudit("outlook_large_attachment_session_created", "EmailDraft", draftId, { documentId: u.documentId });
+            const { attachmentId, chunks } = await attachLargeFileToOutlookDraft(accessToken, providerDraft.messageId, {
+              name: doc.originalName,
+              contentType: doc.mimeType,
+              content: buffer,
+            });
+            await logAudit("outlook_large_attachment_chunk_uploaded", "EmailDraft", draftId, { documentId: u.documentId, chunks });
+            await logAudit("outlook_large_attachment_uploaded", "EmailDraft", draftId, { documentId: u.documentId });
+            usedUploadSession = true;
+            newRecords.push({
+              documentId: u.documentId,
+              filename: doc.originalName,
+              size: buffer.length,
+              contentType: doc.mimeType,
+              uploadedAt,
+              providerAttachmentId: attachmentId || null,
+              status: "attached",
+              uploadMode: "upload_session",
+              sizeClass: "large",
+            });
+            results.push({ documentId: u.documentId, name: doc.originalName, status: "attached" });
+          } else {
+            const { attachmentId } = await attachFileToOutlookDraft(accessToken, providerDraft.messageId, {
+              name: doc.originalName,
+              contentType: doc.mimeType,
+              contentBytes: buffer.toString("base64"),
+            });
+            newRecords.push({
+              documentId: u.documentId,
+              filename: doc.originalName,
+              size: buffer.length,
+              contentType: doc.mimeType,
+              uploadedAt,
+              providerAttachmentId: attachmentId || null,
+              status: "attached",
+              uploadMode: "simple",
+              sizeClass: "small",
+            });
+            results.push({ documentId: u.documentId, name: doc.originalName, status: "attached" });
+          }
         } catch (e: any) {
-          await logAudit("provider_attachment_upload_failed", "EmailDraft", draftId, {
-            provider,
-            documentId: u.documentId,
-            error: e?.message,
-          });
+          const failAction = u.uploadMode === "upload_session" ? "provider_large_attachment_upload_failed" : "provider_attachment_upload_failed";
+          await logAudit(failAction, "EmailDraft", draftId, { provider, documentId: u.documentId, error: e?.message });
+          if (u.uploadMode === "upload_session") {
+            await notify("Large attachment upload failed", `Could not upload "${doc.originalName}" to your Outlook draft: ${e?.message || "Unknown error"}.`, "error", draftId);
+          }
           newRecords.push({
             documentId: u.documentId,
-            filename: u.name,
-            size: u.buffer.length,
-            contentType: u.contentType,
+            filename: doc.originalName,
+            size: buffer.length,
+            contentType: doc.mimeType,
             uploadedAt,
             status: "failed",
+            uploadMode: u.uploadMode,
             error: e?.message,
           });
-          results.push({ documentId: u.documentId, name: u.name, status: "failed" });
+          results.push({ documentId: u.documentId, name: doc.originalName, status: "failed" });
         }
       }
       if (newRecords.some((r) => r.status === "attached")) {
@@ -306,12 +391,21 @@ export async function POST(
 
     const attachedCount = newRecords.filter((r) => r.status === "attached").length;
     if (attachedCount > 0) {
-      await notify(
-        `Attachment uploaded to ${label} draft`,
-        `${attachedCount} attachment(s) added to your ${label} draft for "${draft.subject}". Review and send manually from ${label}.`,
-        "success",
-        draftId
-      );
+      if (usedUploadSession) {
+        await notify(
+          "Large attachment uploaded to Outlook draft",
+          `${attachedCount} attachment(s) added to your Outlook draft for "${draft.subject}" (large files via upload session). Review and send manually from Outlook.`,
+          "success",
+          draftId
+        );
+      } else {
+        await notify(
+          `Attachment uploaded to ${label} draft`,
+          `${attachedCount} attachment(s) added to your ${label} draft for "${draft.subject}". Review and send manually from ${label}.`,
+          "success",
+          draftId
+        );
+      }
     }
 
     // Return safe attachment metadata only (no paths, tokens, or file bytes).

@@ -94,7 +94,8 @@ export function OutlookDraftConnectorCard() {
           Required permission: <code className="text-amber-300">Mail.ReadWrite</code>
         </p>
         <p className="text-xs text-gray-500 mb-3">
-          Attachment upload: small files only (max 3 MB). Large uploads planned later.
+          Attachment upload: small files (≤ 3 MB) + large files via Graph upload sessions
+          (≤ 150 MB). Files over 150 MB are blocked.
         </p>
 
         {!status?.configured && (

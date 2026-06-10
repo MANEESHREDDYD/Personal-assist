@@ -157,6 +157,23 @@ def analyze_provider_attachments():
         "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_missing_file'"
     )['c'] or 0)
 
+    # Phase 3J large attachment (Outlook upload session) metrics.
+    large_uploaded = query_one(
+        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'outlook_large_attachment_uploaded'"
+    )['c'] or 0
+    upload_sessions = query_one(
+        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'outlook_large_attachment_session_created'"
+    )['c'] or 0
+    upload_session_failures = query_one(
+        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_large_attachment_upload_failed'"
+    )['c'] or 0
+    too_large_blocked = query_one(
+        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_too_large_blocked'"
+    )['c'] or 0
+    gmail_large_deferred = query_one(
+        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'gmail_large_attachment_deferred'"
+    )['c'] or 0
+
     return {
         'uploaded': uploaded,
         'failures': failed,
@@ -165,6 +182,13 @@ def analyze_provider_attachments():
         'type_blocked': type_blocked,
         'dry_runs': dry_runs,
         'validation_failures': validation_failures,
+        'large_uploaded': large_uploaded,
+        'upload_sessions': upload_sessions,
+        'upload_session_failures': upload_session_failures,
+        'too_large_blocked': too_large_blocked,
+        'gmail_large_deferred': gmail_large_deferred,
+        'small_max_mb': 3,
+        'large_max_mb': 150,
         'max_size_mb': 3,
         'emails_sent': 0
     }

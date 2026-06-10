@@ -206,13 +206,14 @@ export default async function ShowcasePage() {
             <li>• <strong>Approval-gated provider mutation</strong>: only approved drafts with an existing provider draft can receive attachments</li>
             <li>• <strong>Secure private storage → provider draft</strong>: files are read from the private vault, never exposing local paths</li>
             <li>• <strong>No-send safety remains 100%</strong> — attachments update the draft only; no send endpoint is ever called</li>
-            <li>• Small files only (≤ 3 MB) in this phase; <strong>large-upload sessions are planned as Phase 3J</strong></li>
+            <li>• <strong>Phase 3J:</strong> Outlook large files (≤ 150 MB) upload via Microsoft Graph <strong>upload sessions</strong>; Gmail large files are deferred; &gt; 150 MB is blocked</li>
           </ul>
           {hasMetrics && metrics.agenticWorkflowMetrics.provider_drafts?.attachments && (
-            <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
               <MiniStat label="Attachments Uploaded" value={String(metrics.agenticWorkflowMetrics.provider_drafts.attachments.uploaded ?? 0)} />
-              <MiniStat label="Upload Failures" value={String(metrics.agenticWorkflowMetrics.provider_drafts.attachments.failures ?? 0)} />
-              <MiniStat label="Large Blocked (>3MB)" value={String(metrics.agenticWorkflowMetrics.provider_drafts.attachments.large_blocked ?? 0)} />
+              <MiniStat label="Large (Upload Sessions)" value={String(metrics.agenticWorkflowMetrics.provider_drafts.attachments.large_uploaded ?? 0)} />
+              <MiniStat label="Too Large Blocked (>150MB)" value={String(metrics.agenticWorkflowMetrics.provider_drafts.attachments.too_large_blocked ?? 0)} />
+              <MiniStat label="Gmail Large Deferred" value={String(metrics.agenticWorkflowMetrics.provider_drafts.attachments.gmail_large_deferred ?? 0)} />
               <MiniStat label="Duplicate Blocked" value={String(metrics.agenticWorkflowMetrics.provider_drafts.attachments.duplicate_blocked ?? 0)} />
             </div>
           )}

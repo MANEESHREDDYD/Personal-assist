@@ -133,6 +133,30 @@ attachments automatically. Phase 3I supports files **≤ 3 MB** only.
 
 ---
 
+## Phase 3J — Large Attachment Verification (Outlook upload sessions)
+
+Large attachments (`> 3 MB`, `<= 150 MB`) use Microsoft Graph upload sessions on the
+Outlook draft. Gmail large files are deferred. Still no sending.
+
+- [ ] Create an approved local draft
+- [ ] Create a provider **Outlook** draft
+- [ ] Attach a **~2 MB** file → uploads via the **simple** flow
+- [ ] Attach a **~5 MB** file → uploads via the **upload session** flow
+- [ ] Confirm both attachments are visible in the Outlook draft
+- [ ] Confirm **no email was sent**
+- [ ] Try a **> 150 MB** file → blocked (`too_large`)
+- [ ] Try a **large Gmail** file → reported **deferred** (attach manually in Gmail)
+- [ ] Confirm duplicate upload is blocked
+- [ ] Confirm audit logs (`outlook_large_attachment_session_created`,
+      `outlook_large_attachment_uploaded`, `provider_attachment_upload_completed`) and notifications
+- [ ] Confirm `npm run security:no-send` still passes
+- [ ] Confirm `EmailDraft.metadata` records `uploadMode` and `sizeClass` per attachment
+
+> Tip: run `npm run test:provider-attachments` first — it validates the size
+> classification and gating locally (no live OAuth) before you test for real.
+
+---
+
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |

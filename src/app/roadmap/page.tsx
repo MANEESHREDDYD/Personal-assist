@@ -89,14 +89,19 @@ const PHASES = [
     items: ["Dry-run attachment validation (no provider contact)", "Safe sanitized demo fixture script", "Strengthened smoke tests", "Recruiter demo script + live-OAuth results template", "No-send guard + showcase evidence pack"]
   },
   {
-    title: "Phase 3I.2: Provider Attachment Integration Test Harness (Active)",
-    status: "active",
-    items: ["Shared side-effect-free validation module", "8 local validation cases (no live OAuth)", "Duplicate / missing-file / blocked-extension / size checks", "Approval + provider-draft gating tests", "Deterministic fixtures with safe cleanup"]
+    title: "Phase 3I.2: Provider Attachment Integration Test Harness (Completed)",
+    status: "completed",
+    items: ["Shared side-effect-free validation module", "Local validation cases (no live OAuth)", "Duplicate / missing-file / blocked-extension / size checks", "Approval + provider-draft gating tests", "Deterministic fixtures with safe cleanup"]
   },
   {
-    title: "Phase 3J: Large Attachment Upload Sessions (Planned)",
+    title: "Phase 3J: Large Attachment Upload Sessions + Provider Upload QA (Active)",
+    status: "active",
+    items: ["Outlook Graph upload sessions (> 3 MB, <= 150 MB)", "Chunked Content-Range PUT uploads", "Gmail large attachments deferred (conservative)", "> 150 MB blocked; size class + upload mode", "12-case test harness, no-send preserved"]
+  },
+  {
+    title: "Phase 3J.1: Live Provider Verification Results Capture (Planned)",
     status: "pending",
-    items: ["Microsoft Graph upload sessions for large files", "Chunked Gmail attachment handling", "Preserve no-send safety and approval gates"]
+    items: ["Capture redacted live Gmail/Outlook verification results", "Confirm large attachment upload sessions end-to-end", "No credentials or private data committed"]
   },
   {
     title: "Native Bridges & Desktop (Planned)",

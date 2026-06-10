@@ -13,10 +13,11 @@
 
 import path from "path";
 import { prisma } from "../prisma";
-import { getFile } from "../storage";
+import { statFile } from "../storage";
 import { parseMetadata } from "../metadata";
 import {
-  MAX_PROVIDER_ATTACHMENT_SIZE,
+  classifyProviderAttachmentSize,
+  AttachmentSizeClass,
   isBlockedExtension,
   isSafeStoredFilename,
   getLinkedDocumentIds,
@@ -39,8 +40,11 @@ export type DocStatus =
   | "missing_file"
   | "blocked_type"
   | "too_large"
+  | "deferred"
   | "not_linked"
   | "not_found";
+
+export type UploadMode = "simple" | "upload_session" | "deferred" | "blocked";
 
 export interface DocOutcome {
   documentId: string;
@@ -48,8 +52,8 @@ export interface DocOutcome {
   size?: number;
   contentType?: string;
   status: DocStatus;
-  /** Present only for status "ok"; server-only, never serialized to the client. */
-  buffer?: Buffer;
+  sizeClass?: AttachmentSizeClass;
+  uploadMode?: UploadMode;
 }
 
 export type RequestErrorCode =
@@ -75,13 +79,34 @@ export interface RequestValidation {
 }
 
 /**
- * Evaluates a single document against the attachment policy. Pure read-only;
- * returns a DocOutcome and never throws on validation failures.
+ * Maps a size class to the per-provider status + upload mode.
+ *  - small     -> simple upload (Gmail MIME rebuild / Outlook fileAttachment)
+ *  - large     -> Outlook upload session; Gmail deferred (conservative)
+ *  - too_large -> blocked
+ */
+function resolveProviderMode(
+  provider: ProviderValue,
+  sizeClass: AttachmentSizeClass
+): { status: DocStatus; uploadMode: UploadMode } {
+  if (sizeClass === "too_large") return { status: "too_large", uploadMode: "blocked" };
+  if (sizeClass === "large") {
+    return provider === "outlook_draft"
+      ? { status: "ok", uploadMode: "upload_session" }
+      : { status: "deferred", uploadMode: "deferred" };
+  }
+  return { status: "ok", uploadMode: "simple" };
+}
+
+/**
+ * Evaluates a single document against the attachment policy for a provider.
+ * Pure read-only: checks existence via stat (no full read) and classifies size
+ * from the Document record. Never throws on validation failures.
  */
 export async function evaluateDocument(
   documentId: string,
   linkedIds: string[],
-  existingDocIds: Set<string>
+  existingDocIds: Set<string>,
+  provider: ProviderValue
 ): Promise<DocOutcome> {
   if (existingDocIds.has(documentId)) {
     return { documentId, status: "already_attached" };
@@ -108,14 +133,14 @@ export async function evaluateDocument(
     return { ...base, status: "blocked_type" };
   }
 
-  const buffer = await getFile(filename);
-  if (!buffer) return { ...base, status: "missing_file" };
+  const onDiskSize = await statFile(filename);
+  if (onDiskSize === null) return { ...base, status: "missing_file" };
 
-  if (buffer.length > MAX_PROVIDER_ATTACHMENT_SIZE) {
-    return { ...base, status: "too_large" };
-  }
+  // Classify by the recorded Document size (authoritative for the workflow).
+  const sizeClass = classifyProviderAttachmentSize(doc.size ?? onDiskSize);
+  const { status, uploadMode } = resolveProviderMode(provider, sizeClass);
 
-  return { ...base, size: buffer.length, status: "ok", buffer };
+  return { ...base, status, sizeClass, uploadMode };
 }
 
 /**
@@ -181,7 +206,7 @@ export async function validateProviderAttachmentRequest(input: {
 
   const outcomes: DocOutcome[] = [];
   for (const documentId of documentIds) {
-    outcomes.push(await evaluateDocument(documentId, linkedIds, existingDocIds));
+    outcomes.push(await evaluateDocument(documentId, linkedIds, existingDocIds, provider));
   }
 
   return {
