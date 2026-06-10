@@ -165,6 +165,44 @@ async function runSmokeTest() {
     errors++;
   }
 
+  try {
+    console.log("Checking Phase 3J.1.2 OAuth setup + safe dev server layer...");
+    const fs = require("fs");
+    const path = require("path");
+    const root = process.cwd();
+
+    const requiredFiles = [
+      ".env.example",
+      "docs/demo/live-verification/oauth-test-setup.md",
+      "scripts/live-provider-preflight.mjs",
+      "scripts/start-personal-assist-dev.mjs",
+      "scripts/stop-personal-assist-dev.mjs",
+    ];
+    for (const rel of requiredFiles) {
+      if (!fs.existsSync(path.join(root, rel))) {
+        throw new Error(`Missing required file: ${rel}`);
+      }
+    }
+    console.log("OAuth setup guide, env template, preflight, and safe dev scripts present.");
+
+    const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf-8"));
+    for (const scriptName of ["verify:live-provider-env", "dev:safe", "dev:stop"]) {
+      if (!pkg.scripts?.[scriptName]) {
+        throw new Error(`Missing package script: ${scriptName}`);
+      }
+    }
+    console.log("Live provider preflight and safe dev package scripts present.");
+
+    const gitignoreSrc = fs.readFileSync(path.join(root, ".gitignore"), "utf-8");
+    if (!gitignoreSrc.includes(".env") || !gitignoreSrc.includes(".tmp/")) {
+      throw new Error(".env and .tmp/ must remain gitignored");
+    }
+    console.log(".env and .tmp/ are gitignored.");
+  } catch (error) {
+    console.error("Phase 3J.1.2 OAuth setup / safe dev server check failed:", error);
+    errors++;
+  }
+
   if (errors > 0) {
     console.error(`\nSmoke test finished with ${errors} errors.`);
     process.exit(1);

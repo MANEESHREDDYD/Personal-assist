@@ -17,6 +17,17 @@ complete this checklist. Live Gmail/Outlook verification remains pending until r
 test accounts complete the OAuth flow, provider drafts appear in Drafts, no-send is
 confirmed, and attachment behavior is checked in the providers.
 
+Before live testing, use the OAuth setup guide and safe local commands:
+
+- OAuth setup guide: [`docs/demo/live-verification/oauth-test-setup.md`](demo/live-verification/oauth-test-setup.md)
+- Environment template: [`.env.example`](../.env.example)
+- Preflight command: `npm run verify:live-provider-env`
+- Safe start command: `npm run dev:safe`
+- Safe stop command: `npm run dev:stop`
+
+The safe dev commands use a repo-specific PID file and avoid stopping unrelated Next.js
+projects by port or broad process-name matching.
+
 ---
 
 ## Gmail Draft Verification

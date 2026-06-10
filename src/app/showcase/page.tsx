@@ -25,6 +25,9 @@ type VerificationStatus = {
   gmailLivePassed: boolean;
   outlookLivePassed: boolean;
   outlookLargeUploadPassed: boolean;
+  oauthSetupGuideAvailable: boolean;
+  safeDevScriptsAvailable: boolean;
+  liveProviderPreflightAvailable: boolean;
 };
 
 function sectionBetween(text: string, start: string, end: string) {
@@ -46,6 +49,15 @@ function getLiveProviderVerificationStatus(): VerificationStatus {
     "live-verification",
     "live-provider-results.md"
   );
+  const oauthSetupGuideAvailable = fs.existsSync(
+    path.join(process.cwd(), "docs", "demo", "live-verification", "oauth-test-setup.md")
+  );
+  const safeDevScriptsAvailable =
+    fs.existsSync(path.join(process.cwd(), "scripts", "start-personal-assist-dev.mjs")) &&
+    fs.existsSync(path.join(process.cwd(), "scripts", "stop-personal-assist-dev.mjs"));
+  const liveProviderPreflightAvailable = fs.existsSync(
+    path.join(process.cwd(), "scripts", "live-provider-preflight.mjs")
+  );
 
   const pending: VerificationStatus = {
     evidenceRecorded: false,
@@ -55,6 +67,9 @@ function getLiveProviderVerificationStatus(): VerificationStatus {
     gmailLivePassed: false,
     outlookLivePassed: false,
     outlookLargeUploadPassed: false,
+    oauthSetupGuideAvailable,
+    safeDevScriptsAvailable,
+    liveProviderPreflightAvailable,
   };
 
   try {
@@ -95,6 +110,9 @@ function getLiveProviderVerificationStatus(): VerificationStatus {
       gmailLivePassed,
       outlookLivePassed,
       outlookLargeUploadPassed,
+      oauthSetupGuideAvailable,
+      safeDevScriptsAvailable,
+      liveProviderPreflightAvailable,
     };
   } catch {
     return pending;
@@ -369,6 +387,9 @@ export default async function ShowcasePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <VerifyRow label="Local validation harness" status="Complete" />
           <VerifyRow label="Dry-run validation" status="Complete" />
+          <VerifyRow label="OAuth setup guide available" status={verificationStatus.oauthSetupGuideAvailable ? "Available" : "Pending"} />
+          <VerifyRow label="Live provider env preflight available" status={verificationStatus.liveProviderPreflightAvailable ? "Available" : "Pending"} />
+          <VerifyRow label="Safe dev server scripts available" status={verificationStatus.safeDevScriptsAvailable ? "Available" : "Pending"} />
           <VerifyRow label="Evidence file" status={verificationStatus.evidenceRecorded ? "Recorded" : "Pending"} />
           <VerifyRow label="Local Evidence Recorded" status={verificationStatus.localEvidenceRecorded ? "Recorded" : "Pending"} />
           <VerifyRow label="No-Send Local Gate Passed" status={verificationStatus.noSendLocalGatePassed ? "Passed" : "Pending"} />
@@ -545,7 +566,7 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function VerifyRow({ label, status }: { label: string; status: "Complete" | "Recorded" | "Passed" | "Pending" }) {
+function VerifyRow({ label, status }: { label: string; status: "Available" | "Complete" | "Recorded" | "Passed" | "Pending" }) {
   const done = status !== "Pending";
 
   return (
