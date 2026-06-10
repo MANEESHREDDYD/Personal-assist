@@ -95,16 +95,24 @@ async function runSmokeTest() {
 
     const requiredFiles = [
       "src/lib/attachments.ts",
+      "src/lib/providerAttachments/validation.ts",
       "src/app/api/drafts/[id]/provider-attachments/route.ts",
       "src/app/drafts/ProviderAttachmentActions.tsx",
       "scripts/check-no-send-policy.mjs",
+      "scripts/test-provider-attachments.ts",
     ];
     for (const rel of requiredFiles) {
       if (!fs.existsSync(path.join(root, rel))) {
         throw new Error(`Missing required file: ${rel}`);
       }
     }
-    console.log("✅ Provider attachment source files present.");
+    console.log("✅ Provider attachment source + test harness files present.");
+
+    const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf-8"));
+    if (!pkg.scripts || !pkg.scripts["test:provider-attachments"]) {
+      throw new Error("Missing package script: test:provider-attachments");
+    }
+    console.log("✅ test:provider-attachments script present.");
 
     const attachmentsSrc = fs.readFileSync(path.join(root, "src/lib/attachments.ts"), "utf-8");
     for (const ext of [".exe", ".js", ".ps1", ".apk", ".pkg"]) {

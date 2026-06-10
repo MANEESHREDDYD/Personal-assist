@@ -7,9 +7,16 @@ Everything is local. No email is ever sent.
 
 ```bash
 npm run demo:provider-draft-fixture   # seeds a sanitized approved demo draft
+npm run test:provider-attachments     # local validation harness (no Gmail/Outlook)
+npm run security:no-send              # static guard: no provider send endpoints
 npm run analytics:run                 # populates /showcase metrics (Python)
 npm run dev                           # start the app
 ```
+
+> These are **local validation tests**, not live Gmail/Outlook tests. They confirm
+> dry-run validation, duplicate/missing-file/blocked-extension/size blocking, and the
+> approval + provider-draft gates — without any real account or OAuth credentials.
+> Live provider verification is separate (see the verification checklist).
 
 The fixture uses fake names/emails and a tiny demo attachment in the private
 `data/uploads` vault. It also seeds **DEMO** provider-draft placeholders so the

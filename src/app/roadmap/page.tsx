@@ -84,9 +84,14 @@ const PHASES = [
     items: ["Upload local vault documents to Gmail/Outlook drafts (<= 3 MB)", "Approval-gated, explicit user action only", "Blocked-extension, size, and path-traversal guards", "Duplicate attachment blocking", "No-send guarantee + full audit logging"]
   },
   {
-    title: "Phase 3I.1: Provider Draft Attachment QA + Demo Evidence Pack (Active)",
-    status: "active",
+    title: "Phase 3I.1: Provider Draft Attachment QA + Demo Evidence Pack (Completed)",
+    status: "completed",
     items: ["Dry-run attachment validation (no provider contact)", "Safe sanitized demo fixture script", "Strengthened smoke tests", "Recruiter demo script + live-OAuth results template", "No-send guard + showcase evidence pack"]
+  },
+  {
+    title: "Phase 3I.2: Provider Attachment Integration Test Harness (Active)",
+    status: "active",
+    items: ["Shared side-effect-free validation module", "8 local validation cases (no live OAuth)", "Duplicate / missing-file / blocked-extension / size checks", "Approval + provider-draft gating tests", "Deterministic fixtures with safe cleanup"]
   },
   {
     title: "Phase 3J: Large Attachment Upload Sessions (Planned)",

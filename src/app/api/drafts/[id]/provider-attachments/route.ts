@@ -13,18 +13,12 @@ import {
 import { getValidAccessToken } from "@/lib/integrations/draftTokens";
 import { updateGmailDraftWithAttachments } from "@/lib/integrations/gmailDraft";
 import { attachFileToOutlookDraft } from "@/lib/integrations/outlookDraft";
+import {
+  validateProviderAttachmentRequest,
+  ProviderValue,
+} from "@/lib/providerAttachments/validation";
 
 export const dynamic = "force-dynamic";
-
-type ProviderValue = "gmail_draft" | "outlook_draft";
-const PROVIDER_KEY: Record<ProviderValue, "gmail" | "outlook"> = {
-  gmail_draft: "gmail",
-  outlook_draft: "outlook",
-};
-const PROVIDER_LABEL: Record<ProviderValue, string> = {
-  gmail_draft: "Gmail",
-  outlook_draft: "Outlook",
-};
 
 async function notify(title: string, message: string, severity: string, draftId: string) {
   try {
@@ -42,34 +36,6 @@ async function notify(title: string, message: string, severity: string, draftId:
   } catch (e) {
     console.error("Failed to create provider attachment notification", e);
   }
-}
-
-// Loads a Document and its file buffer, applying all Phase 3I validation.
-// Returns either { doc, buffer } or { error } with a reason code. Never throws,
-// and never returns local absolute paths.
-async function loadValidatedDocument(documentId: string, linkedIds: string[]) {
-  if (!linkedIds.includes(documentId)) {
-    return { error: "not_linked" as const };
-  }
-  const doc = await prisma.document.findUnique({ where: { id: documentId } });
-  if (!doc) return { error: "not_found" as const };
-
-  const filename = path.basename(doc.path || "");
-  if (!filename || !isSafeStoredFilename(filename)) {
-    return { error: "missing_file" as const, doc };
-  }
-  if (isBlockedExtension(doc.originalName) || isBlockedExtension(filename)) {
-    return { error: "blocked_type" as const, doc };
-  }
-
-  const buffer = await getFile(filename);
-  if (!buffer) return { error: "missing_file" as const, doc };
-
-  if (buffer.length > MAX_PROVIDER_ATTACHMENT_SIZE) {
-    return { error: "too_large" as const, doc };
-  }
-
-  return { doc, buffer };
 }
 
 /** GET — returns safe metadata for documents linked to the draft + provider attach status. */
@@ -141,38 +107,14 @@ export async function POST(
     const provider = body?.provider as ProviderValue;
     const documentIds: string[] = Array.isArray(body?.documentIds) ? body.documentIds : [];
 
-    if (provider !== "gmail_draft" && provider !== "outlook_draft") {
-      return NextResponse.json({ error: "Invalid provider." }, { status: 400 });
+    // Shared, side-effect-free validation (request-level + per-document).
+    const vr = await validateProviderAttachmentRequest({ draftId, provider, documentIds });
+    if (!vr.ok) {
+      return NextResponse.json({ error: vr.error }, { status: vr.httpStatus });
     }
-    if (documentIds.length === 0) {
-      return NextResponse.json({ error: "No documents selected." }, { status: 400 });
-    }
-    const providerKey = PROVIDER_KEY[provider];
-    const label = PROVIDER_LABEL[provider];
+    const { providerKey, label, draft, meta, providerDrafts, providerDraft, existing } = vr;
 
-    // 1-2. Load draft, verify approved.
-    const draft = await prisma.emailDraft.findUnique({ where: { id: draftId } });
-    if (!draft) return NextResponse.json({ error: "Draft not found" }, { status: 404 });
-    if (draft.status !== "approved") {
-      return NextResponse.json(
-        { error: "Draft must be approved before attaching to a provider draft." },
-        { status: 400 }
-      );
-    }
-
-    const meta = parseMetadata(draft.metadata);
-    const providerDrafts = meta.providerDrafts || {};
-    const providerDraft = providerDrafts[providerKey];
-
-    // 3. Verify provider draft exists.
-    if (!providerDraft) {
-      return NextResponse.json(
-        { error: `No ${label} provider draft exists yet. Create the provider draft first.` },
-        { status: 400 }
-      );
-    }
-
-    // 6. Load + verify the connector. Dry-run does not require a live connection.
+    // Load + verify the connector. Dry-run does not require a live connection.
     const account = await prisma.connectorAccount.findFirst({ where: { provider } });
     if (!dryRun && (!account || account.status !== "connected")) {
       return NextResponse.json(
@@ -188,49 +130,29 @@ export async function POST(
       });
     }
 
-    const linkedIds = getLinkedDocumentIds(draft, meta);
-    const existing: any[] = providerDraft.attachments || [];
-    const existingDocIds = new Set(existing.map((a) => a.documentId));
+    // Split validated outcomes into uploadable docs and reported blocks. In real
+    // mode, emit the per-block audit logs / notifications.
+    const blockedResults: any[] = [];
+    const toUpload: { documentId: string; name?: string; contentType?: string; buffer: Buffer }[] = [];
 
-    const results: any[] = [];
-    const newRecords: any[] = [];
-    const toUpload: { doc: any; buffer: Buffer }[] = [];
-
-    // 4-5. Validate each selected document.
-    for (const documentId of documentIds) {
-      if (existingDocIds.has(documentId)) {
-        if (!dryRun) {
-          await logAudit("provider_attachment_duplicate_blocked", "EmailDraft", draftId, {
-            provider,
-            documentId,
-          });
-        }
-        results.push({ documentId, status: "already_attached" });
+    for (const o of vr.outcomes!) {
+      if (o.status === "ok" && o.buffer) {
+        toUpload.push({ documentId: o.documentId, name: o.name, contentType: o.contentType, buffer: o.buffer });
         continue;
       }
-
-      const loaded = await loadValidatedDocument(documentId, linkedIds);
-      if ("error" in loaded) {
-        const reason = loaded.error;
-        const name = loaded.doc?.originalName || documentId;
-        if (reason === "too_large") {
-          if (!dryRun) {
-            await logAudit("provider_attachment_size_blocked", "EmailDraft", draftId, { provider, documentId });
-            await notify("Attachment too large for Phase 3I", `"${name}" exceeds the 3 MB limit. Large attachment upload is planned for Phase 3J.`, "warning", draftId);
-          }
-          results.push({ documentId, name, status: "too_large" });
-        } else if (reason === "blocked_type") {
-          if (!dryRun) await logAudit("provider_attachment_type_blocked", "EmailDraft", draftId, { provider, documentId });
-          results.push({ documentId, name, status: "blocked_type" });
-        } else if (reason === "missing_file") {
-          if (!dryRun) await logAudit("provider_attachment_missing_file", "EmailDraft", draftId, { provider, documentId });
-          results.push({ documentId, name, status: "missing_file" });
-        } else {
-          results.push({ documentId, name, status: reason });
+      blockedResults.push({ documentId: o.documentId, name: o.name, status: o.status });
+      if (!dryRun) {
+        if (o.status === "already_attached") {
+          await logAudit("provider_attachment_duplicate_blocked", "EmailDraft", draftId, { provider, documentId: o.documentId });
+        } else if (o.status === "too_large") {
+          await logAudit("provider_attachment_size_blocked", "EmailDraft", draftId, { provider, documentId: o.documentId });
+          await notify("Attachment too large for Phase 3I", `"${o.name || o.documentId}" exceeds the 3 MB limit. Large attachment upload is planned for Phase 3J.`, "warning", draftId);
+        } else if (o.status === "blocked_type") {
+          await logAudit("provider_attachment_type_blocked", "EmailDraft", draftId, { provider, documentId: o.documentId });
+        } else if (o.status === "missing_file") {
+          await logAudit("provider_attachment_missing_file", "EmailDraft", draftId, { provider, documentId: o.documentId });
         }
-        continue;
       }
-      toUpload.push(loaded);
     }
 
     // Dry-run: report what would happen without contacting the provider or
@@ -245,13 +167,13 @@ export async function POST(
         dryRun: true,
         provider,
         connectorConnected: account?.status === "connected",
-        wouldUpload: toUpload.map(({ doc, buffer }) => ({
-          documentId: doc.id,
-          name: doc.originalName,
-          size: buffer.length,
-          contentType: doc.mimeType,
+        wouldUpload: toUpload.map((u) => ({
+          documentId: u.documentId,
+          name: u.name,
+          size: u.buffer.length,
+          contentType: u.contentType,
         })),
-        results,
+        results: blockedResults,
         message:
           "Dry-run validation only. Personal Assist did not contact Gmail or Outlook, " +
           "did not upload anything, and did not modify the draft.",
@@ -263,20 +185,22 @@ export async function POST(
       return NextResponse.json({
         success: false,
         provider,
-        results,
+        results: blockedResults,
         message: "No new attachments were uploaded.",
       });
     }
 
-    // 8. Upload to the provider draft.
+    // Upload to the provider draft.
     const accessToken = await getValidAccessToken(account, provider);
     const uploadedAt = new Date().toISOString();
+    const results: any[] = [...blockedResults];
+    const newRecords: any[] = [];
 
     if (provider === "gmail_draft") {
       // Gmail draft update replaces the message, so rebuild with existing + new
       // attachments and the original approved draft content.
       const preserved: { filename: string; contentType: string; content: Buffer }[] = [];
-      for (const rec of existing) {
+      for (const rec of existing!) {
         const prevDoc = await prisma.document.findUnique({ where: { id: rec.documentId } });
         if (!prevDoc) continue;
         const fn = path.basename(prevDoc.path || "");
@@ -285,10 +209,10 @@ export async function POST(
         if (buf) preserved.push({ filename: prevDoc.originalName, contentType: prevDoc.mimeType, content: buf });
       }
 
-      const fresh = toUpload.map(({ doc, buffer }) => ({
-        filename: doc.originalName,
-        contentType: doc.mimeType,
-        content: buffer,
+      const fresh = toUpload.map((u) => ({
+        filename: u.name || "attachment",
+        contentType: u.contentType || "application/octet-stream",
+        content: u.buffer,
       }));
 
       await updateGmailDraftWithAttachments(
@@ -298,17 +222,17 @@ export async function POST(
         [...preserved, ...fresh]
       );
 
-      for (const { doc, buffer } of toUpload) {
+      for (const u of toUpload) {
         newRecords.push({
-          documentId: doc.id,
-          filename: doc.originalName,
-          size: buffer.length,
-          contentType: doc.mimeType,
+          documentId: u.documentId,
+          filename: u.name,
+          size: u.buffer.length,
+          contentType: u.contentType,
           uploadedAt,
           providerAttachmentId: null,
           status: "attached",
         });
-        results.push({ documentId: doc.id, name: doc.originalName, status: "attached" });
+        results.push({ documentId: u.documentId, name: u.name, status: "attached" });
       }
       await logAudit("gmail_provider_attachment_uploaded", "EmailDraft", draftId, {
         count: newRecords.length,
@@ -316,39 +240,39 @@ export async function POST(
       });
     } else {
       // Outlook attachments are added incrementally; upload only the new files.
-      for (const { doc, buffer } of toUpload) {
+      for (const u of toUpload) {
         try {
           const { attachmentId } = await attachFileToOutlookDraft(accessToken, providerDraft.messageId, {
-            name: doc.originalName,
-            contentType: doc.mimeType,
-            contentBytes: buffer.toString("base64"),
+            name: u.name || "attachment",
+            contentType: u.contentType || "application/octet-stream",
+            contentBytes: u.buffer.toString("base64"),
           });
           newRecords.push({
-            documentId: doc.id,
-            filename: doc.originalName,
-            size: buffer.length,
-            contentType: doc.mimeType,
+            documentId: u.documentId,
+            filename: u.name,
+            size: u.buffer.length,
+            contentType: u.contentType,
             uploadedAt,
             providerAttachmentId: attachmentId || null,
             status: "attached",
           });
-          results.push({ documentId: doc.id, name: doc.originalName, status: "attached" });
+          results.push({ documentId: u.documentId, name: u.name, status: "attached" });
         } catch (e: any) {
           await logAudit("provider_attachment_upload_failed", "EmailDraft", draftId, {
             provider,
-            documentId: doc.id,
+            documentId: u.documentId,
             error: e?.message,
           });
           newRecords.push({
-            documentId: doc.id,
-            filename: doc.originalName,
-            size: buffer.length,
-            contentType: doc.mimeType,
+            documentId: u.documentId,
+            filename: u.name,
+            size: u.buffer.length,
+            contentType: u.contentType,
             uploadedAt,
             status: "failed",
             error: e?.message,
           });
-          results.push({ documentId: doc.id, name: doc.originalName, status: "failed" });
+          results.push({ documentId: u.documentId, name: u.name, status: "failed" });
         }
       }
       if (newRecords.some((r) => r.status === "attached")) {
@@ -359,16 +283,16 @@ export async function POST(
       }
     }
 
-    // 9. Update EmailDraft metadata.
+    // Update EmailDraft metadata.
     const updatedProviderDraft = {
       ...providerDraft,
-      attachments: [...existing, ...newRecords],
+      attachments: [...existing!, ...newRecords],
       attachmentStatus: "attached",
       attachmentsUpdatedAt: uploadedAt,
     };
     const updatedMeta = {
       ...meta,
-      providerDrafts: { ...providerDrafts, [providerKey]: updatedProviderDraft },
+      providerDrafts: { ...providerDrafts, [providerKey!]: updatedProviderDraft },
     };
     await prisma.emailDraft.update({
       where: { id: draftId },
@@ -390,7 +314,7 @@ export async function POST(
       );
     }
 
-    // 12. Return safe attachment metadata only (no paths, tokens, or file bytes).
+    // Return safe attachment metadata only (no paths, tokens, or file bytes).
     return NextResponse.json({
       success: attachedCount > 0,
       provider,

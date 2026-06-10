@@ -224,10 +224,11 @@ export default async function ShowcasePage() {
             <ShieldCheck size={16} /> Phase 3I Evidence Pack
           </h4>
           <ul className="text-zinc-300 text-sm space-y-1">
-            <li>• <strong>Dry-run validation</strong> — &ldquo;Validate Attachments&rdquo; checks approval, provider-draft presence, file existence, size, and type without contacting Gmail/Outlook or mutating state</li>
+            <li>• <strong>Integration test harness</strong> — <code>npm run test:provider-attachments</code> runs 8 local validation cases (no live OAuth required)</li>
+            <li>• <strong>Coverage</strong> — dry-run validation · blocked extension · &gt; 3 MB size · duplicate · missing file · approval gate · provider-draft gate</li>
+            <li>• <strong>Dry-run validation</strong> — &ldquo;Validate Attachments&rdquo; checks everything without contacting Gmail/Outlook or mutating state</li>
             <li>• <strong>Safe demo fixture</strong> — <code>npm run demo:provider-draft-fixture</code> seeds a sanitized, approved demo draft (fake names, local-only)</li>
             <li>• <strong>No-send guard</strong> — <code>npm run security:no-send</code> statically blocks any provider send endpoint in source</li>
-            <li>• <strong>Attachment policy</strong> — 3 MB limit · blocked executable extensions · explicit user action · approval gate</li>
             <li>• <strong>Recruiter-ready</strong> — demo script + live-OAuth results template under <code>docs/demo/</code></li>
           </ul>
           <p className="text-[11px] text-orange-400/90 flex items-start gap-1">

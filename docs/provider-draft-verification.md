@@ -79,6 +79,31 @@ Google / Microsoft app verification before use beyond test users.
 
 ---
 
+## Automated local test harness (Phase 3I.2)
+
+Before (or instead of) the manual live checklist, run the local validation harness.
+It uses sanitized demo data and the shared validation module — **no Gmail/Outlook
+calls, no OAuth, no sending**:
+
+```bash
+npm run test:provider-attachments
+```
+
+It asserts (exit 0 = all pass):
+
+- Happy dry-run validates as uploadable, with **no metadata mutation**
+- Duplicate attachment blocked (`already_attached`)
+- Missing file blocked (`missing_file`)
+- Blocked extension blocked (`.js` → `blocked_type`)
+- Size limit blocked (> 3 MB → `too_large`)
+- Pending/unapproved draft blocked (`not_approved`)
+- Provider draft missing blocked (`provider_draft_missing`)
+
+This is a **local** harness. The live OAuth checklist below remains separate and must
+be run by the user with their own accounts.
+
+---
+
 ## Phase 3I — Attachment Upload Verification
 
 Attachments can be uploaded to an **already-created** provider draft, for an **approved**
