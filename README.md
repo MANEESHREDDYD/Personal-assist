@@ -217,7 +217,10 @@ workflow so you can prove real Gmail/Outlook behavior without leaking private da
 - **Results template:** [`docs/demo/live-verification/live-provider-results.template.md`](docs/demo/live-verification/live-provider-results.template.md) — copy to `live-provider-results.md` and fill in (sanitized, pass/fail/not-tested).
 - **Redaction rules:** [`docs/demo/live-verification/README.md`](docs/demo/live-verification/README.md). Raw screenshots (`*.png/.jpg/.jpeg/.webp/.pdf` and `raw/`) under that folder are **gitignored**.
 - **Hygiene guard:** `npm run security:demo-evidence` scans tracked evidence for raw screenshots, tokens/secrets, and non-placeholder emails.
-- **Showcase status:** `/showcase` shows live verification as **pending** until a sanitized results file exists — **no live success is claimed automatically**.
+- **Showcase status:** `/showcase` separates local evidence from live provider pass markers; **no live success is claimed automatically** from file existence.
+
+Current verification evidence records local gates only. Live Gmail/Outlook provider
+verification remains pending until OAuth test accounts are connected.
 
 This demonstrates forward-deployed engineering maturity: separating local correctness from
 live verification, capturing evidence safely, and never overstating what has been proven.

@@ -10,6 +10,13 @@ Google / Microsoft app verification before use beyond test users.
 > **No-send guarantee:** Personal Assist creates provider-side drafts only after local
 > approval. The final send remains a human action inside Gmail or Outlook.
 
+Local-only evidence may be recorded separately in
+`docs/demo/live-verification/live-provider-results.md` when it clearly marks OAuth as
+not configured and live provider checks as `not tested`. That local evidence does not
+complete this checklist. Live Gmail/Outlook verification remains pending until real
+test accounts complete the OAuth flow, provider drafts appear in Drafts, no-send is
+confirmed, and attachment behavior is checked in the providers.
+
 ---
 
 ## Gmail Draft Verification

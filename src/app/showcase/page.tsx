@@ -17,6 +17,90 @@ const SKILL_BADGES = [
   { label: "Full Stack", color: "from-fuchsia-500 to-purple-500" },
 ];
 
+type VerificationStatus = {
+  evidenceRecorded: boolean;
+  localEvidenceRecorded: boolean;
+  noSendLocalGatePassed: boolean;
+  localOnlyEvidence: boolean;
+  gmailLivePassed: boolean;
+  outlookLivePassed: boolean;
+  outlookLargeUploadPassed: boolean;
+};
+
+function sectionBetween(text: string, start: string, end: string) {
+  const startIndex = text.indexOf(start);
+  if (startIndex === -1) return "";
+  const endIndex = text.indexOf(end, startIndex + start.length);
+  return text.slice(startIndex, endIndex === -1 ? text.length : endIndex);
+}
+
+function passed(section: string, check: string) {
+  return section.includes(`| ${check} | pass |`);
+}
+
+function getLiveProviderVerificationStatus(): VerificationStatus {
+  const resultsPath = path.join(
+    process.cwd(),
+    "docs",
+    "demo",
+    "live-verification",
+    "live-provider-results.md"
+  );
+
+  const pending: VerificationStatus = {
+    evidenceRecorded: false,
+    localEvidenceRecorded: false,
+    noSendLocalGatePassed: false,
+    localOnlyEvidence: false,
+    gmailLivePassed: false,
+    outlookLivePassed: false,
+    outlookLargeUploadPassed: false,
+  };
+
+  try {
+    if (!fs.existsSync(resultsPath)) return pending;
+
+    const results = fs.readFileSync(resultsPath, "utf-8");
+    const gmailSection = sectionBetween(results, "## Gmail tests", "## Outlook tests");
+    const outlookSection = sectionBetween(results, "## Outlook tests", "## No-send compliance");
+
+    const gmailLivePassed =
+      passed(gmailSection, "Create Gmail provider draft") &&
+      passed(gmailSection, "Draft appears in Gmail Drafts") &&
+      passed(gmailSection, "No email sent");
+
+    const outlookLivePassed =
+      passed(outlookSection, "Create Outlook provider draft") &&
+      passed(outlookSection, "Draft appears in Outlook Drafts") &&
+      passed(outlookSection, "No email sent");
+
+    const outlookLargeUploadPassed = passed(
+      outlookSection,
+      "Attach large file (> 3 MB, <= 150 MB) via upload session"
+    );
+
+    return {
+      evidenceRecorded: true,
+      localEvidenceRecorded:
+        results.includes("Local verification gates passed") ||
+        results.includes("`npm run security:no-send` passed | yes"),
+      noSendLocalGatePassed:
+        results.includes("`npm run security:no-send` passed | yes") &&
+        results.includes("`emails_sent` analytics remains 0 | yes"),
+      localOnlyEvidence:
+        results.includes("Gmail OAuth configured: no") &&
+        results.includes("Outlook OAuth configured: no") &&
+        results.includes("| Create Gmail provider draft | not tested |") &&
+        results.includes("| Create Outlook provider draft | not tested |"),
+      gmailLivePassed,
+      outlookLivePassed,
+      outlookLargeUploadPassed,
+    };
+  } catch {
+    return pending;
+  }
+}
+
 export default async function ShowcasePage() {
   const analyticsPath = path.join(process.cwd(), "data", "analytics", "personal_assist_metrics.json");
   let metrics: any = null;
@@ -32,16 +116,7 @@ export default async function ShowcasePage() {
     console.error("Failed to load analytics metrics", error);
   }
 
-  // Live provider verification is "recorded" only when the user has saved a
-  // sanitized results file (from the template). Otherwise it stays pending.
-  let liveVerificationRecorded = false;
-  try {
-    liveVerificationRecorded = fs.existsSync(
-      path.join(process.cwd(), "docs", "demo", "live-verification", "live-provider-results.md")
-    );
-  } catch {
-    liveVerificationRecorded = false;
-  }
+  const verificationStatus = getLiveProviderVerificationStatus();
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-10 animate-in fade-in duration-500">
@@ -292,14 +367,23 @@ export default async function ShowcasePage() {
       {/* Live Provider Verification Status */}
       <Section title="Live Provider Verification Status" icon={<ShieldCheck size={20} />}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <VerifyRow label="Local validation harness" done />
-          <VerifyRow label="No-send static guard" done />
-          <VerifyRow label="Dry-run validation" done />
-          <VerifyRow label="Gmail live verification" done={liveVerificationRecorded} />
-          <VerifyRow label="Outlook live verification" done={liveVerificationRecorded} />
-          <VerifyRow label="Outlook large upload-session live verification" done={liveVerificationRecorded} />
+          <VerifyRow label="Local validation harness" status="Complete" />
+          <VerifyRow label="Dry-run validation" status="Complete" />
+          <VerifyRow label="Evidence file" status={verificationStatus.evidenceRecorded ? "Recorded" : "Pending"} />
+          <VerifyRow label="Local Evidence Recorded" status={verificationStatus.localEvidenceRecorded ? "Recorded" : "Pending"} />
+          <VerifyRow label="No-Send Local Gate Passed" status={verificationStatus.noSendLocalGatePassed ? "Passed" : "Pending"} />
+          <VerifyRow label="Live Gmail" status={verificationStatus.gmailLivePassed ? "Passed" : "Pending"} />
+          <VerifyRow label="Live Outlook" status={verificationStatus.outlookLivePassed ? "Passed" : "Pending"} />
+          <VerifyRow label="Large Upload Session" status={verificationStatus.outlookLargeUploadPassed ? "Passed" : "Pending"} />
         </div>
-        {!liveVerificationRecorded && (
+        {verificationStatus.localOnlyEvidence && (
+          <p className="mt-3 text-sm text-orange-300 bg-orange-500/10 border border-orange-500/20 p-3 rounded-lg">
+            Sanitized local-only evidence is recorded. Live Gmail/Outlook verification remains
+            pending until OAuth test accounts are connected and the provider draft, draft
+            visibility, no-send, and large-upload rows are marked pass.
+          </p>
+        )}
+        {!verificationStatus.evidenceRecorded && (
           <p className="mt-3 text-sm text-orange-300 bg-orange-500/10 border border-orange-500/20 p-3 rounded-lg">
             Live provider verification has not been recorded yet. Use{" "}
             <code>docs/demo/live-verification/live-provider-checklist.md</code> to run the live
@@ -461,13 +545,15 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function VerifyRow({ label, done = false }: { label: string; done?: boolean }) {
+function VerifyRow({ label, status }: { label: string; status: "Complete" | "Recorded" | "Passed" | "Pending" }) {
+  const done = status !== "Pending";
+
   return (
     <div className="flex items-center justify-between bg-white/5 border border-white/10 px-3 py-2 rounded-lg">
       <span className="text-zinc-300 text-sm">{label}</span>
       {done ? (
         <span className="text-emerald-400 text-xs font-bold flex items-center gap-1">
-          <ShieldCheck size={14} /> Complete
+          <ShieldCheck size={14} /> {status}
         </span>
       ) : (
         <span className="text-orange-400 text-xs font-bold">Pending</span>

@@ -25,10 +25,21 @@ actually run them and filled in the results template.
 
 ## What is safe to commit
 
+Local-only results files are allowed if they are clearly marked with OAuth not configured,
+connectors not connected, and live provider checks as `not tested`. Local-only evidence is
+useful, but it is not live provider verification.
+
+Do not mark Gmail or Outlook live success unless you actually ran the OAuth flow with test
+accounts and filled in pass/fail results after checking the provider Drafts and Sent folders.
+
 - ✅ The sanitized markdown results file with **pass / fail / not tested** markers.
 - ✅ Placeholder/redacted text only.
 
 ## Guardrails
+
+`/showcase` distinguishes sanitized local evidence from live provider verification:
+local evidence can be recorded while Gmail, Outlook, and large upload-session live
+verification remain pending.
 
 - Raw image/PDF files under this folder are **gitignored** (`*.png`, `*.jpg`, `*.jpeg`,
   `*.webp`, `*.pdf`, and `raw/`).
