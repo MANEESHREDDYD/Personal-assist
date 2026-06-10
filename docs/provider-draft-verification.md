@@ -102,6 +102,17 @@ It asserts (exit 0 = all pass):
 This is a **local** harness. The live OAuth checklist below remains separate and must
 be run by the user with their own accounts.
 
+### Local vs live — both are needed
+
+- **Automated tests** ([`npm run test:provider-attachments`](../scripts/test-provider-attachments.ts))
+  validate the **local gating**: size classification, upload-mode selection, duplicate/
+  missing-file/blocked-extension handling, approval and provider-draft gates.
+- **Live tests** validate real **provider behavior**: that drafts and attachments actually
+  appear in Gmail/Outlook and that nothing is sent.
+- For real confidence you need **both**. Capture live results safely with:
+  - [`docs/demo/live-verification/live-provider-checklist.md`](demo/live-verification/live-provider-checklist.md)
+  - [`docs/demo/live-verification/live-provider-results.template.md`](demo/live-verification/live-provider-results.template.md)
+
 ---
 
 ## Phase 3I — Attachment Upload Verification

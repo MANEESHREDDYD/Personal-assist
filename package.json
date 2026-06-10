@@ -17,6 +17,7 @@
     "analytics:report": "python analytics/personal_assist_analytics/report.py",
     "repo:languages": "node scripts/language-breakdown.mjs",
     "security:no-send": "node scripts/check-no-send-policy.mjs",
+    "security:demo-evidence": "node scripts/check-demo-evidence-hygiene.mjs",
     "demo:provider-draft-fixture": "tsx scripts/create-demo-provider-draft-fixture.ts",
     "test:provider-attachments": "tsx scripts/test-provider-attachments.ts"
   },

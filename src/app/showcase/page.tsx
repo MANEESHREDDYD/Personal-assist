@@ -32,6 +32,17 @@ export default async function ShowcasePage() {
     console.error("Failed to load analytics metrics", error);
   }
 
+  // Live provider verification is "recorded" only when the user has saved a
+  // sanitized results file (from the template). Otherwise it stays pending.
+  let liveVerificationRecorded = false;
+  try {
+    liveVerificationRecorded = fs.existsSync(
+      path.join(process.cwd(), "docs", "demo", "live-verification", "live-provider-results.md")
+    );
+  } catch {
+    liveVerificationRecorded = false;
+  }
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-10 animate-in fade-in duration-500">
       {/* Header */}
@@ -278,6 +289,26 @@ export default async function ShowcasePage() {
         </div>
       </Section>
 
+      {/* Live Provider Verification Status */}
+      <Section title="Live Provider Verification Status" icon={<ShieldCheck size={20} />}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <VerifyRow label="Local validation harness" done />
+          <VerifyRow label="No-send static guard" done />
+          <VerifyRow label="Dry-run validation" done />
+          <VerifyRow label="Gmail live verification" done={liveVerificationRecorded} />
+          <VerifyRow label="Outlook live verification" done={liveVerificationRecorded} />
+          <VerifyRow label="Outlook large upload-session live verification" done={liveVerificationRecorded} />
+        </div>
+        {!liveVerificationRecorded && (
+          <p className="mt-3 text-sm text-orange-300 bg-orange-500/10 border border-orange-500/20 p-3 rounded-lg">
+            Live provider verification has not been recorded yet. Use{" "}
+            <code>docs/demo/live-verification/live-provider-checklist.md</code> to run the live
+            Gmail/Outlook tests, then save a sanitized results file. Live results require your own
+            OAuth credentials and are never asserted automatically.
+          </p>
+        )}
+      </Section>
+
       {/* 6. Forward-Deployed Engineering */}
       <Section title="Forward-Deployed Engineering" icon={<Server size={20} />}>
         <ul className="space-y-2 text-zinc-300 text-sm">
@@ -426,6 +457,21 @@ function MiniStat({ label, value }: { label: string; value: string }) {
     <div className="bg-white/5 border border-white/10 px-4 py-3 rounded-xl">
       <p className="text-xs text-zinc-500">{label}</p>
       <p className="text-lg font-bold text-white">{value}</p>
+    </div>
+  );
+}
+
+function VerifyRow({ label, done = false }: { label: string; done?: boolean }) {
+  return (
+    <div className="flex items-center justify-between bg-white/5 border border-white/10 px-3 py-2 rounded-lg">
+      <span className="text-zinc-300 text-sm">{label}</span>
+      {done ? (
+        <span className="text-emerald-400 text-xs font-bold flex items-center gap-1">
+          <ShieldCheck size={14} /> Complete
+        </span>
+      ) : (
+        <span className="text-orange-400 text-xs font-bold">Pending</span>
+      )}
     </div>
   );
 }

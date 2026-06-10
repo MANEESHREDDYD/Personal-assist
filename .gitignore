@@ -54,3 +54,11 @@ data/analytics/*.md
 analytics/.venv/
 analytics/**/__pycache__/
 *.pyc
+
+# live verification evidence — sanitized markdown only; raw screenshots stay local
+docs/demo/live-verification/raw/
+docs/demo/live-verification/*.png
+docs/demo/live-verification/*.jpg
+docs/demo/live-verification/*.jpeg
+docs/demo/live-verification/*.webp
+docs/demo/live-verification/*.pdf
