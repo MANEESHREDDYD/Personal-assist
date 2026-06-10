@@ -87,6 +87,55 @@ async function runSmokeTest() {
     // Don't fail the smoke test if analytics has an issue, just warn
   }
 
+  try {
+    console.log("Checking Phase 3I Provider Attachment Layer...");
+    const fs = require("fs");
+    const path = require("path");
+    const root = process.cwd();
+
+    const requiredFiles = [
+      "src/lib/attachments.ts",
+      "src/app/api/drafts/[id]/provider-attachments/route.ts",
+      "src/app/drafts/ProviderAttachmentActions.tsx",
+      "scripts/check-no-send-policy.mjs",
+    ];
+    for (const rel of requiredFiles) {
+      if (!fs.existsSync(path.join(root, rel))) {
+        throw new Error(`Missing required file: ${rel}`);
+      }
+    }
+    console.log("✅ Provider attachment source files present.");
+
+    const attachmentsSrc = fs.readFileSync(path.join(root, "src/lib/attachments.ts"), "utf-8");
+    for (const ext of [".exe", ".js", ".ps1", ".apk", ".pkg"]) {
+      if (!attachmentsSrc.includes(`"${ext}"`)) {
+        throw new Error(`Blocked extension list missing ${ext}`);
+      }
+    }
+    console.log("✅ Blocked extension list includes .exe, .js, .ps1, .apk, .pkg.");
+
+    if (!attachmentsSrc.includes("3 * 1024 * 1024")) {
+      throw new Error("3 MB provider attachment limit not found");
+    }
+    console.log("✅ 3 MB attachment limit present.");
+
+    const agenticSrc = fs.readFileSync(
+      path.join(root, "analytics/personal_assist_analytics/agentic.py"),
+      "utf-8"
+    );
+    const sampleSrc = fs.readFileSync(
+      path.join(root, "analytics/sample_outputs/sample_metrics.json"),
+      "utf-8"
+    );
+    if (!agenticSrc.includes("analyze_provider_attachments") || !sampleSrc.includes("\"attachments\"")) {
+      throw new Error("Provider attachment analytics metrics not found");
+    }
+    console.log("✅ Provider attachment analytics metrics present.");
+  } catch (error) {
+    console.error("❌ Phase 3I attachment layer check failed:", error);
+    errors++;
+  }
+
   if (errors > 0) {
     console.error(`\nSmoke test finished with ${errors} errors.`);
     process.exit(1);

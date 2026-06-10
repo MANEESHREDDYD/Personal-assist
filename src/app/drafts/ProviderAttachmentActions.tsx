@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Paperclip, Loader2, AlertTriangle, Ban, CheckCircle2 } from "lucide-react";
+import { Paperclip, Loader2, AlertTriangle, Ban, CheckCircle2, ShieldCheck } from "lucide-react";
 
 interface LinkedDoc {
   id: string;
@@ -38,6 +38,8 @@ export function ProviderAttachmentActions({
   const [docs, setDocs] = useState<LinkedDoc[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [uploading, setUploading] = useState<"gmail_draft" | "outlook_draft" | null>(null);
+  const [validating, setValidating] = useState(false);
+  const [validation, setValidation] = useState<any[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -66,6 +68,39 @@ export function ProviderAttachmentActions({
       else next.add(id);
       return next;
     });
+  }
+
+  async function validate() {
+    const ids = Array.from(selected);
+    if (ids.length === 0) {
+      setError("Select at least one document to validate.");
+      return;
+    }
+    setValidating(true);
+    setError(null);
+    setMessage(null);
+    setValidation(null);
+    try {
+      const providers: ("gmail_draft" | "outlook_draft")[] = [];
+      if (hasGmail) providers.push("gmail_draft");
+      if (hasOutlook) providers.push("outlook_draft");
+
+      const out: any[] = [];
+      for (const provider of providers) {
+        const res = await fetch(`/api/drafts/${draftId}/provider-attachments?dryRun=true`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ provider, documentIds: ids }),
+        });
+        const data = await res.json();
+        out.push({ provider, ...data });
+      }
+      setValidation(out);
+    } catch (e: any) {
+      setError(e.message || "Validation failed.");
+    } finally {
+      setValidating(false);
+    }
   }
 
   async function upload(provider: "gmail_draft" | "outlook_draft") {
@@ -168,6 +203,15 @@ export function ProviderAttachmentActions({
           })}
 
           <div className="flex flex-wrap gap-2 pt-1">
+            <button
+              onClick={validate}
+              disabled={uploading !== null || validating || selected.size === 0}
+              title="Validate selected documents without contacting Gmail or Outlook"
+              className="px-3 py-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {validating ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3 h-3" />}
+              Validate Attachments
+            </button>
             {hasGmail && (
               <button
                 onClick={() => upload("gmail_draft")}
@@ -198,6 +242,31 @@ export function ProviderAttachmentActions({
           Gmail: attaching rebuilds the draft from your approved local content. If you edited
           the Gmail draft manually, re-attaching may overwrite those edits.
         </p>
+      )}
+
+      {validation && (
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 space-y-2">
+          <p className="text-[11px] text-blue-300 flex items-center gap-1 font-medium">
+            <ShieldCheck className="w-3 h-3" /> Dry-run validation — Gmail/Outlook were not contacted, nothing was uploaded or modified.
+          </p>
+          {validation.map((v) => (
+            <div key={v.provider} className="text-[11px] text-zinc-300">
+              <span className="font-semibold text-zinc-200">
+                {v.provider === "gmail_draft" ? "Gmail" : "Outlook"}:
+              </span>{" "}
+              {Array.isArray(v.wouldUpload) ? v.wouldUpload.length : 0} would upload
+              {Array.isArray(v.results) && v.results.length > 0 && (
+                <ul className="mt-0.5 ml-3 list-disc text-zinc-400">
+                  {v.results.map((r: any, i: number) => (
+                    <li key={i}>
+                      {(r.name || r.documentId)}: {String(r.status).replace(/_/g, " ")}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
       )}
 
       {message && <p className="text-xs text-green-400 bg-green-500/10 p-2 rounded">{message}</p>}

@@ -148,6 +148,14 @@ def analyze_provider_attachments():
     type_blocked = query_one(
         "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_type_blocked'"
     )['c'] or 0
+    dry_runs = query_one(
+        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_dry_run_completed'"
+    )['c'] or 0
+
+    # Validation failures = files rejected before/instead of upload (size, type, missing).
+    validation_failures = large_blocked + type_blocked + (query_one(
+        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_missing_file'"
+    )['c'] or 0)
 
     return {
         'uploaded': uploaded,
@@ -155,6 +163,8 @@ def analyze_provider_attachments():
         'large_blocked': large_blocked,
         'duplicate_blocked': duplicate_blocked,
         'type_blocked': type_blocked,
+        'dry_runs': dry_runs,
+        'validation_failures': validation_failures,
         'max_size_mb': 3,
         'emails_sent': 0
     }

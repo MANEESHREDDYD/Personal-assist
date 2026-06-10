@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { Terminal, Database, Code, ShieldCheck, Activity, BrainCircuit, GitBranch, BarChart3, Bot, Workflow, Server, Lock, PenSquare } from "lucide-react";
+import { Terminal, Database, Code, ShieldCheck, Activity, BrainCircuit, GitBranch, BarChart3, Bot, Workflow, Server, Lock, PenSquare, AlertTriangle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -216,6 +216,25 @@ export default async function ShowcasePage() {
               <MiniStat label="Duplicate Blocked" value={String(metrics.agenticWorkflowMetrics.provider_drafts.attachments.duplicate_blocked ?? 0)} />
             </div>
           )}
+        </div>
+
+        {/* Phase 3I.1 — QA / demo evidence pack */}
+        <div className="mt-4 bg-blue-500/5 border border-blue-500/20 p-4 rounded-xl space-y-2">
+          <h4 className="font-bold text-blue-300 text-sm flex items-center gap-2">
+            <ShieldCheck size={16} /> Phase 3I Evidence Pack
+          </h4>
+          <ul className="text-zinc-300 text-sm space-y-1">
+            <li>• <strong>Dry-run validation</strong> — &ldquo;Validate Attachments&rdquo; checks approval, provider-draft presence, file existence, size, and type without contacting Gmail/Outlook or mutating state</li>
+            <li>• <strong>Safe demo fixture</strong> — <code>npm run demo:provider-draft-fixture</code> seeds a sanitized, approved demo draft (fake names, local-only)</li>
+            <li>• <strong>No-send guard</strong> — <code>npm run security:no-send</code> statically blocks any provider send endpoint in source</li>
+            <li>• <strong>Attachment policy</strong> — 3 MB limit · blocked executable extensions · explicit user action · approval gate</li>
+            <li>• <strong>Recruiter-ready</strong> — demo script + live-OAuth results template under <code>docs/demo/</code></li>
+          </ul>
+          <p className="text-[11px] text-orange-400/90 flex items-start gap-1">
+            <AlertTriangle size={13} className="shrink-0 mt-0.5" />
+            Live provider verification requires user-owned OAuth credentials and should be performed
+            using the verification checklist — it is not asserted here.
+          </p>
         </div>
       </Section>
 

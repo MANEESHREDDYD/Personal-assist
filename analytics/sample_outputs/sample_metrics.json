@@ -85,6 +85,8 @@
         "large_blocked": 1,
         "duplicate_blocked": 1,
         "type_blocked": 0,
+        "dry_runs": 6,
+        "validation_failures": 1,
         "max_size_mb": 3,
         "emails_sent": 0
       }

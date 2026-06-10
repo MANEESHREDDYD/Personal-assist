@@ -133,6 +133,10 @@ export async function POST(
     const resolved = await params;
     draftId = resolved.id;
 
+    // Dry-run validates everything but never contacts Gmail/Outlook and never
+    // mutates EmailDraft metadata or uploads anything.
+    const dryRun = request.nextUrl.searchParams.get("dryRun") === "true";
+
     const body = await request.json().catch(() => ({}));
     const provider = body?.provider as ProviderValue;
     const documentIds: string[] = Array.isArray(body?.documentIds) ? body.documentIds : [];
@@ -168,19 +172,21 @@ export async function POST(
       );
     }
 
-    // 6. Load + verify the connector.
+    // 6. Load + verify the connector. Dry-run does not require a live connection.
     const account = await prisma.connectorAccount.findFirst({ where: { provider } });
-    if (!account || account.status !== "connected") {
+    if (!dryRun && (!account || account.status !== "connected")) {
       return NextResponse.json(
         { error: `${label} Draft connector is not connected. Reconnect it in Settings.` },
         { status: 400 }
       );
     }
 
-    await logAudit("provider_attachment_upload_started", "EmailDraft", draftId, {
-      provider,
-      documentIds,
-    });
+    if (!dryRun) {
+      await logAudit("provider_attachment_upload_started", "EmailDraft", draftId, {
+        provider,
+        documentIds,
+      });
+    }
 
     const linkedIds = getLinkedDocumentIds(draft, meta);
     const existing: any[] = providerDraft.attachments || [];
@@ -193,10 +199,12 @@ export async function POST(
     // 4-5. Validate each selected document.
     for (const documentId of documentIds) {
       if (existingDocIds.has(documentId)) {
-        await logAudit("provider_attachment_duplicate_blocked", "EmailDraft", draftId, {
-          provider,
-          documentId,
-        });
+        if (!dryRun) {
+          await logAudit("provider_attachment_duplicate_blocked", "EmailDraft", draftId, {
+            provider,
+            documentId,
+          });
+        }
         results.push({ documentId, status: "already_attached" });
         continue;
       }
@@ -206,14 +214,16 @@ export async function POST(
         const reason = loaded.error;
         const name = loaded.doc?.originalName || documentId;
         if (reason === "too_large") {
-          await logAudit("provider_attachment_size_blocked", "EmailDraft", draftId, { provider, documentId });
-          await notify("Attachment too large for Phase 3I", `"${name}" exceeds the 3 MB limit. Large attachment upload is planned for Phase 3J.`, "warning", draftId);
+          if (!dryRun) {
+            await logAudit("provider_attachment_size_blocked", "EmailDraft", draftId, { provider, documentId });
+            await notify("Attachment too large for Phase 3I", `"${name}" exceeds the 3 MB limit. Large attachment upload is planned for Phase 3J.`, "warning", draftId);
+          }
           results.push({ documentId, name, status: "too_large" });
         } else if (reason === "blocked_type") {
-          await logAudit("provider_attachment_type_blocked", "EmailDraft", draftId, { provider, documentId });
+          if (!dryRun) await logAudit("provider_attachment_type_blocked", "EmailDraft", draftId, { provider, documentId });
           results.push({ documentId, name, status: "blocked_type" });
         } else if (reason === "missing_file") {
-          await logAudit("provider_attachment_missing_file", "EmailDraft", draftId, { provider, documentId });
+          if (!dryRun) await logAudit("provider_attachment_missing_file", "EmailDraft", draftId, { provider, documentId });
           results.push({ documentId, name, status: "missing_file" });
         } else {
           results.push({ documentId, name, status: reason });
@@ -221,6 +231,31 @@ export async function POST(
         continue;
       }
       toUpload.push(loaded);
+    }
+
+    // Dry-run: report what would happen without contacting the provider or
+    // mutating any state.
+    if (dryRun) {
+      await logAudit("provider_attachment_dry_run_completed", "EmailDraft", draftId, {
+        provider,
+        wouldUpload: toUpload.length,
+        selected: documentIds.length,
+      });
+      return NextResponse.json({
+        dryRun: true,
+        provider,
+        connectorConnected: account?.status === "connected",
+        wouldUpload: toUpload.map(({ doc, buffer }) => ({
+          documentId: doc.id,
+          name: doc.originalName,
+          size: buffer.length,
+          contentType: doc.mimeType,
+        })),
+        results,
+        message:
+          "Dry-run validation only. Personal Assist did not contact Gmail or Outlook, " +
+          "did not upload anything, and did not modify the draft.",
+      });
     }
 
     // Nothing valid to upload — return the per-document outcomes.
