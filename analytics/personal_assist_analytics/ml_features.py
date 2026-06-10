@@ -3,9 +3,14 @@ from .db import query_all, query_one
 
 def compute_urgency_score():
     """Computes system-wide urgency based on overdue reminders and pending follow-ups."""
-    overdue = query_one("SELECT COUNT(id) as c FROM Reminder WHERE status = 'pending' AND dueDate < datetime('now')")['c'] or 0
-    pending_followups = query_one("SELECT COUNT(id) as c FROM FollowUp WHERE status = 'pending'")['c'] or 0
-    pending_approvals = query_one("SELECT COUNT(id) as c FROM ApprovalRequest WHERE status = 'pending'")['c'] or 0
+    o_res = query_one("SELECT COUNT(id) as c FROM Reminder WHERE status = 'pending' AND dueDate < datetime('now')")
+    overdue = o_res['c'] if o_res else 0
+    
+    pf_res = query_one("SELECT COUNT(id) as c FROM FollowUp WHERE status = 'pending'")
+    pending_followups = pf_res['c'] if pf_res else 0
+    
+    pa_res = query_one("SELECT COUNT(id) as c FROM ApprovalRequest WHERE status = 'pending'")
+    pending_approvals = pa_res['c'] if pa_res else 0
     
     raw = (overdue * 3.0) + (pending_followups * 2.0) + (pending_approvals * 1.5)
     if raw > 30: return {'score': 'Critical', 'raw': round(raw, 2)}
@@ -57,15 +62,23 @@ def compute_integration_reliability_score():
 
 def compute_automation_failure_score():
     """Computes automation pipeline failure rate."""
-    total = query_one("SELECT COUNT(id) as c FROM AutomationRun")['c'] or 0
-    failed = query_one("SELECT COUNT(id) as c FROM AutomationRun WHERE status = 'failed'")['c'] or 0
+    t_res = query_one("SELECT COUNT(id) as c FROM AutomationRun")
+    total = t_res['c'] if t_res else 0
+    
+    f_res = query_one("SELECT COUNT(id) as c FROM AutomationRun WHERE status = 'failed'")
+    failed = f_res['c'] if f_res else 0
+    
     rate = round(failed / total * 100, 2) if total > 0 else 0
     return {'total_runs': total, 'failed': failed, 'failure_rate': rate}
 
 def compute_approval_complexity_score():
     """Measures how complex the approval workflow is based on volume and denial rates."""
-    total = query_one("SELECT COUNT(id) as c FROM ApprovalRequest")['c'] or 0
-    denied = query_one("SELECT COUNT(id) as c FROM ApprovalRequest WHERE status = 'denied'")['c'] or 0
+    t_res = query_one("SELECT COUNT(id) as c FROM ApprovalRequest")
+    total = t_res['c'] if t_res else 0
+    
+    d_res = query_one("SELECT COUNT(id) as c FROM ApprovalRequest WHERE status = 'denied'")
+    denied = d_res['c'] if d_res else 0
+    
     denial_rate = round(denied / total * 100, 2) if total > 0 else 0
     if denial_rate > 20: complexity = 'High'
     elif denial_rate > 5: complexity = 'Medium'

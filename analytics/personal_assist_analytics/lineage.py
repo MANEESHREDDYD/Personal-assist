@@ -11,55 +11,64 @@ def build_lineage_graph():
     node_counts = {}
     
     # Provider → InboxItem
-    inbox_count = query_one("SELECT COUNT(id) as c FROM InboxItem")['c'] or 0
+    i_res = query_one("SELECT COUNT(id) as c FROM InboxItem")
+    inbox_count = i_res['c'] if i_res else 0
     node_counts['InboxItem'] = inbox_count
     if inbox_count > 0:
         edges.append({'source': 'Gmail/Outlook', 'target': 'InboxItem', 'relationship': 'ingests', 'count': inbox_count})
     
     # Provider → CalendarEvent
-    event_count = query_one("SELECT COUNT(id) as c FROM CalendarEvent")['c'] or 0
+    e_res = query_one("SELECT COUNT(id) as c FROM CalendarEvent")
+    event_count = e_res['c'] if e_res else 0
     node_counts['CalendarEvent'] = event_count
     if event_count > 0:
         edges.append({'source': 'Google/Outlook Calendar', 'target': 'CalendarEvent', 'relationship': 'syncs', 'count': event_count})
     
     # InboxItem → Document (via attachment download)
-    doc_count = query_one("SELECT COUNT(id) as c FROM Document")['c'] or 0
+    d_res = query_one("SELECT COUNT(id) as c FROM Document")
+    doc_count = d_res['c'] if d_res else 0
     node_counts['Document'] = doc_count
     if doc_count > 0:
         edges.append({'source': 'InboxItem', 'target': 'Document', 'relationship': 'extracts_attachment', 'count': doc_count})
     
     # Document → EmailDraft (via intelligence)
-    draft_count = query_one("SELECT COUNT(id) as c FROM EmailDraft")['c'] or 0
+    dr_res = query_one("SELECT COUNT(id) as c FROM EmailDraft")
+    draft_count = dr_res['c'] if dr_res else 0
     node_counts['EmailDraft'] = draft_count
     if draft_count > 0:
         edges.append({'source': 'Document', 'target': 'EmailDraft', 'relationship': 'generates_draft', 'count': draft_count})
     
     # EmailDraft → ApprovalRequest
-    approval_count = query_one("SELECT COUNT(id) as c FROM ApprovalRequest")['c'] or 0
+    ar_res = query_one("SELECT COUNT(id) as c FROM ApprovalRequest")
+    approval_count = ar_res['c'] if ar_res else 0
     node_counts['ApprovalRequest'] = approval_count
     if approval_count > 0:
         edges.append({'source': 'EmailDraft', 'target': 'ApprovalRequest', 'relationship': 'requires_approval', 'count': approval_count})
     
     # CalendarEvent → WalletCard
-    wallet_count = query_one("SELECT COUNT(id) as c FROM WalletCard")['c'] or 0
+    wc_res = query_one("SELECT COUNT(id) as c FROM WalletCard")
+    wallet_count = wc_res['c'] if wc_res else 0
     node_counts['WalletCard'] = wallet_count
     if wallet_count > 0:
         edges.append({'source': 'CalendarEvent', 'target': 'WalletCard', 'relationship': 'creates_card', 'count': wallet_count})
     
     # CalendarEvent/WalletCard → Reminder
-    reminder_count = query_one("SELECT COUNT(id) as c FROM Reminder")['c'] or 0
+    r_res = query_one("SELECT COUNT(id) as c FROM Reminder")
+    reminder_count = r_res['c'] if r_res else 0
     node_counts['Reminder'] = reminder_count
     if reminder_count > 0:
         edges.append({'source': 'WalletCard', 'target': 'Reminder', 'relationship': 'triggers_reminder', 'count': reminder_count})
     
     # ConnectorAccount (root)
-    connector_count = query_one("SELECT COUNT(id) as c FROM ConnectorAccount")['c'] or 0
+    c_res = query_one("SELECT COUNT(id) as c FROM ConnectorAccount")
+    connector_count = c_res['c'] if c_res else 0
     node_counts['ConnectorAccount'] = connector_count
     if connector_count > 0:
         edges.append({'source': 'ConnectorAccount', 'target': 'Gmail/Outlook', 'relationship': 'authenticates', 'count': connector_count})
     
     # AuditLog (sink)
-    audit_count = query_one("SELECT COUNT(id) as c FROM AuditLog")['c'] or 0
+    a_res = query_one("SELECT COUNT(id) as c FROM AuditLog")
+    audit_count = a_res['c'] if a_res else 0
     node_counts['AuditLog'] = audit_count
     
     return {

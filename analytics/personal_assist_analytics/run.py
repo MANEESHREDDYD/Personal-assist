@@ -14,7 +14,7 @@ from personal_assist_analytics.ai_eval import evaluate_ai_outputs
 from personal_assist_analytics.ml_features import extract_all_ml_features
 from personal_assist_analytics.data_contracts import validate_contracts
 from personal_assist_analytics.lineage import build_lineage_graph
-from personal_assist_analytics.marts import build_all_marts
+from personal_assist_analytics.marts import build_analytics_marts
 from personal_assist_analytics.export import (
     export_metrics,
     generate_recommendations,
@@ -57,7 +57,7 @@ def main():
     lineage = build_lineage_graph()
     print(f"[+] Built lineage graph ({lineage['total_edges']} edges)")
 
-    marts = build_all_marts()
+    marts = build_analytics_marts()
     print(f"[+] Built {len(marts)} analytics marts")
 
     showcase = build_skill_showcase_summary(agentic, ai_eval, ml, contracts, lineage, marts)

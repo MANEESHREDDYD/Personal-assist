@@ -22,7 +22,8 @@
     "total_follow_ups": 18,
     "total_audit_logs": 540,
     "total_connector_accounts": 3,
-    "active_connections": 3
+    "active_connections": 3,
+    "attachments": 0
   },
   "qualityChecks": {
     "missing_calendar_external_ids": 0,
@@ -141,12 +142,37 @@
     }
   },
   "mlFeatureSummary": {
-    "urgency": { "score": "Medium", "raw": 11.5 },
-    "workload": { "score": "Moderate", "raw": 14.0 },
-    "document_risk": { "total_documents": 34, "high_risk_flagged": 5, "risk_rate": 14.71 },
-    "integration_reliability": { "score": "Excellent", "healthy": 3, "unhealthy": 0, "total": 3, "percent": 100.0 },
-    "automation_failure": { "total_runs": 120, "failed": 2, "failure_rate": 1.67 },
-    "approval_complexity": { "total_requests": 15, "denied": 1, "denial_rate": 6.67, "complexity": "Medium" }
+    "urgency": {
+      "score": "Medium",
+      "raw": 11.5
+    },
+    "workload": {
+      "score": "Moderate",
+      "raw": 14.0
+    },
+    "document_risk": {
+      "total_documents": 34,
+      "high_risk_flagged": 5,
+      "risk_rate": 14.71
+    },
+    "integration_reliability": {
+      "score": "Excellent",
+      "healthy": 3,
+      "unhealthy": 0,
+      "total": 3,
+      "percent": 100.0
+    },
+    "automation_failure": {
+      "total_runs": 120,
+      "failed": 2,
+      "failure_rate": 1.67
+    },
+    "approval_complexity": {
+      "total_requests": 15,
+      "denied": 1,
+      "denial_rate": 6.67,
+      "complexity": "Medium"
+    }
   },
   "dataContracts": {
     "summary": {
@@ -155,41 +181,160 @@
       "entities_with_violations": 0
     },
     "contracts": {
-      "InboxItem": { "total_rows": 142, "violations": [], "violation_count": 0, "status": "PASS" },
-      "Document": { "total_rows": 34, "violations": [], "violation_count": 0, "status": "PASS" },
-      "EmailDraft": { "total_rows": 12, "violations": [], "violation_count": 0, "status": "PASS" }
+      "InboxItem": {
+        "total_rows": 142,
+        "violations": [],
+        "violation_count": 0,
+        "status": "PASS"
+      },
+      "Document": {
+        "total_rows": 34,
+        "violations": [],
+        "violation_count": 0,
+        "status": "PASS"
+      },
+      "EmailDraft": {
+        "total_rows": 12,
+        "violations": [],
+        "violation_count": 0,
+        "status": "PASS"
+      }
     }
   },
   "lineageGraphSummary": {
     "edges": [
-      { "source": "Gmail/Outlook", "target": "InboxItem", "relationship": "ingests", "count": 142 },
-      { "source": "InboxItem", "target": "Document", "relationship": "extracts_attachment", "count": 34 },
-      { "source": "Document", "target": "EmailDraft", "relationship": "generates_draft", "count": 12 },
-      { "source": "EmailDraft", "target": "ApprovalRequest", "relationship": "requires_approval", "count": 15 },
-      { "source": "CalendarEvent", "target": "WalletCard", "relationship": "creates_card", "count": 18 }
+      {
+        "source": "Gmail/Outlook",
+        "target": "InboxItem",
+        "relationship": "ingests",
+        "count": 142
+      },
+      {
+        "source": "InboxItem",
+        "target": "Document",
+        "relationship": "extracts_attachment",
+        "count": 34
+      },
+      {
+        "source": "Document",
+        "target": "EmailDraft",
+        "relationship": "generates_draft",
+        "count": 12
+      },
+      {
+        "source": "EmailDraft",
+        "target": "ApprovalRequest",
+        "relationship": "requires_approval",
+        "count": 15
+      },
+      {
+        "source": "CalendarEvent",
+        "target": "WalletCard",
+        "relationship": "creates_card",
+        "count": 18
+      }
     ],
-    "node_counts": { "InboxItem": 142, "Document": 34, "EmailDraft": 12, "ApprovalRequest": 15 },
+    "node_counts": {
+      "InboxItem": 142,
+      "Document": 34,
+      "EmailDraft": 12,
+      "ApprovalRequest": 15
+    },
     "total_nodes": 9,
     "total_edges": 5,
     "audit_trail_entries": 540
   },
   "analyticsMarts": {
-    "inbox_mart": { "total_items": 142, "by_category": { "finance": 40, "scheduling": 35, "general": 67 } },
-    "document_mart": { "total_documents": 34, "by_status": { "completed": 28, "needs_review": 6 } },
-    "draft_mart": { "total_drafts": 12, "by_status": { "approved": 8, "draft": 3, "rejected": 1 } },
-    "integration_mart": { "total_accounts": 3, "by_provider": { "gmail": "connected", "outlook": "connected" } },
-    "automation_mart": { "total_rules": 4, "total_runs": 120, "runs_by_status": { "success": 118, "failed": 2 } },
-    "risk_mart": { "low": 7, "medium": 3, "high": 1, "unknown": 1 }
+    "inbox_mart": {
+      "total_items": 142,
+      "by_category": {
+        "finance": 40,
+        "scheduling": 35,
+        "general": 67
+      }
+    },
+    "document_mart": {
+      "total_documents": 34,
+      "by_status": {
+        "completed": 28,
+        "needs_review": 6
+      }
+    },
+    "draft_mart": {
+      "total_drafts": 12,
+      "by_status": {
+        "approved": 8,
+        "draft": 3,
+        "rejected": 1
+      }
+    },
+    "integration_mart": {
+      "total_accounts": 3,
+      "by_provider": {
+        "gmail": "connected",
+        "outlook": "connected"
+      }
+    },
+    "automation_mart": {
+      "total_rules": 4,
+      "total_runs": 120,
+      "runs_by_status": {
+        "success": 118,
+        "failed": 2
+      }
+    },
+    "risk_mart": {
+      "low": 7,
+      "medium": 3,
+      "high": 1,
+      "unknown": 1
+    }
   },
   "skillShowcaseSummary": {
-    "dataEngineering": { "demonstrated": true, "evidence": "SQL metric queries, lineage graph, data contract validation", "lineage_edges": 5, "entities_modeled": 9 },
-    "analyticsEngineering": { "demonstrated": true, "evidence": "Analytics marts built from local SQLite", "marts_built": 6 },
-    "dataScience": { "demonstrated": true, "evidence": "Deterministic feature engineering and scoring", "features_computed": 6 },
-    "mlAiEngineering": { "demonstrated": true, "evidence": "AI output evaluation with deterministic guardrails", "deterministic_checks_passed": 5 },
-    "genAi": { "demonstrated": true, "evidence": "Document summarization + draft generation via provider abstraction", "configured_provider": "rules", "uses_paid_api": false },
-    "agenticAi": { "demonstrated": true, "evidence": "Document intelligence -> local draft -> approval -> provider-side draft creation, with human-in-the-loop gates and a no-send safety policy", "approval_rate": 80.0, "no_send_compliance": 100.0, "provider_drafts_created": 5, "emails_sent": 0 },
-    "forwardDeployedEngineering": { "demonstrated": true, "evidence": "Local-first, zero-cost, no cloud dependency, no telemetry" },
-    "dataQuality": { "demonstrated": true, "evidence": "Contract enforcement across major entities", "total_violations": 0 }
+    "dataEngineering": {
+      "demonstrated": true,
+      "evidence": "SQL metric queries, lineage graph, data contract validation",
+      "lineage_edges": 5,
+      "entities_modeled": 9
+    },
+    "analyticsEngineering": {
+      "demonstrated": true,
+      "evidence": "Analytics marts built from local SQLite",
+      "marts_built": 6
+    },
+    "dataScience": {
+      "demonstrated": true,
+      "evidence": "Deterministic feature engineering and scoring",
+      "features_computed": 6
+    },
+    "mlAiEngineering": {
+      "demonstrated": true,
+      "evidence": "AI output evaluation with deterministic guardrails",
+      "deterministic_checks_passed": 5
+    },
+    "genAi": {
+      "demonstrated": true,
+      "evidence": "Document summarization + draft generation via provider abstraction",
+      "configured_provider": "rules",
+      "uses_paid_api": false
+    },
+    "agenticAi": {
+      "demonstrated": true,
+      "evidence": "Document intelligence -> local draft -> approval -> provider-side draft creation, with human-in-the-loop gates and a no-send safety policy",
+      "approval_rate": 80.0,
+      "no_send_compliance": 100.0,
+      "provider_drafts_created": 5,
+      "emails_sent": 0
+    },
+    "forwardDeployedEngineering": {
+      "demonstrated": true,
+      "evidence": "Local-first, zero-cost, no cloud dependency, no telemetry"
+    },
+    "dataQuality": {
+      "demonstrated": true,
+      "evidence": "Contract enforcement across major entities",
+      "total_violations": 0
+    }
   },
   "recommendations": [
     "Resolve high-risk drafts before export."

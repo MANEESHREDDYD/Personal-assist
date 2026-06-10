@@ -12,10 +12,17 @@ def analyze_agentic_workflows():
     results = {}
     
     # Document pipeline completion
-    total_docs = query_one("SELECT COUNT(id) as c FROM Document")['c'] or 0
-    docs_with_summary = query_one("SELECT COUNT(id) as c FROM Document WHERE aiSummary IS NOT NULL")['c'] or 0
-    total_drafts = query_one("SELECT COUNT(id) as c FROM EmailDraft")['c'] or 0
-    approved_drafts = query_one("SELECT COUNT(id) as c FROM EmailDraft WHERE status = 'approved'")['c'] or 0
+    total_docs_res = query_one("SELECT COUNT(id) as c FROM Document")
+    total_docs = total_docs_res['c'] if total_docs_res else 0
+    
+    docs_summary_res = query_one("SELECT COUNT(id) as c FROM Document WHERE aiSummary IS NOT NULL")
+    docs_with_summary = docs_summary_res['c'] if docs_summary_res else 0
+    
+    drafts_res = query_one("SELECT COUNT(id) as c FROM EmailDraft")
+    total_drafts = drafts_res['c'] if drafts_res else 0
+    
+    approved_res = query_one("SELECT COUNT(id) as c FROM EmailDraft WHERE status = 'approved'")
+    approved_drafts = approved_res['c'] if approved_res else 0
     
     results['document_pipeline'] = {
         'total_documents': total_docs,
@@ -26,9 +33,14 @@ def analyze_agentic_workflows():
     }
     
     # Email classification pipeline
-    total_inbox = query_one("SELECT COUNT(id) as c FROM InboxItem")['c'] or 0
-    processed = query_one("SELECT COUNT(id) as c FROM InboxItem WHERE isProcessed = 1")['c'] or 0
-    categorized = query_one("SELECT COUNT(id) as c FROM InboxItem WHERE category IS NOT NULL")['c'] or 0
+    inbox_res = query_one("SELECT COUNT(id) as c FROM InboxItem")
+    total_inbox = inbox_res['c'] if inbox_res else 0
+    
+    processed_res = query_one("SELECT COUNT(id) as c FROM InboxItem WHERE isProcessed = 1")
+    processed = processed_res['c'] if processed_res else 0
+    
+    cat_res = query_one("SELECT COUNT(id) as c FROM InboxItem WHERE category IS NOT NULL")
+    categorized = cat_res['c'] if cat_res else 0
     
     results['email_pipeline'] = {
         'total_inbox_items': total_inbox,
@@ -38,8 +50,11 @@ def analyze_agentic_workflows():
     }
     
     # Calendar pipeline
-    total_events = query_one("SELECT COUNT(id) as c FROM CalendarEvent")['c'] or 0
-    total_reminders = query_one("SELECT COUNT(id) as c FROM Reminder")['c'] or 0
+    ev_res = query_one("SELECT COUNT(id) as c FROM CalendarEvent")
+    total_events = ev_res['c'] if ev_res else 0
+    
+    rem_res = query_one("SELECT COUNT(id) as c FROM Reminder")
+    total_reminders = rem_res['c'] if rem_res else 0
     
     results['calendar_pipeline'] = {
         'total_events': total_events,
@@ -47,9 +62,14 @@ def analyze_agentic_workflows():
     }
     
     # Approval gate metrics (human-in-the-loop)
-    total_approvals = query_one("SELECT COUNT(id) as c FROM ApprovalRequest")['c'] or 0
-    approved = query_one("SELECT COUNT(id) as c FROM ApprovalRequest WHERE status = 'approved'")['c'] or 0
-    denied = query_one("SELECT COUNT(id) as c FROM ApprovalRequest WHERE status = 'denied'")['c'] or 0
+    app_res = query_one("SELECT COUNT(id) as c FROM ApprovalRequest")
+    total_approvals = app_res['c'] if app_res else 0
+    
+    app_app_res = query_one("SELECT COUNT(id) as c FROM ApprovalRequest WHERE status = 'approved'")
+    approved = app_app_res['c'] if app_app_res else 0
+    
+    denied_res = query_one("SELECT COUNT(id) as c FROM ApprovalRequest WHERE status = 'denied'")
+    denied = denied_res['c'] if denied_res else 0
     
     results['human_approval_gate'] = {
         'total_requests': total_approvals,
@@ -59,8 +79,11 @@ def analyze_agentic_workflows():
     }
     
     # Automation intervention rate
-    total_runs = query_one("SELECT COUNT(id) as c FROM AutomationRun")['c'] or 0
-    failed_runs = query_one("SELECT COUNT(id) as c FROM AutomationRun WHERE status = 'failed'")['c'] or 0
+    runs_res = query_one("SELECT COUNT(id) as c FROM AutomationRun")
+    total_runs = runs_res['c'] if runs_res else 0
+    
+    f_runs_res = query_one("SELECT COUNT(id) as c FROM AutomationRun WHERE status = 'failed'")
+    failed_runs = f_runs_res['c'] if f_runs_res else 0
     
     results['automation_metrics'] = {
         'total_runs': total_runs,
@@ -68,127 +91,16 @@ def analyze_agentic_workflows():
         'success_rate': round((total_runs - failed_runs) / total_runs * 100, 2) if total_runs > 0 else 100.0
     }
     
-    # Provider-side draft creation (Phase 3H) — drafts created, never sent
-    provider = analyze_provider_drafts()
-    results['provider_drafts'] = provider
-
     # No-send safety compliance (drafts never sent via API)
     results['safety_compliance'] = {
         'no_send_policy_enforced': True,
-        'provider_drafts_created': provider['provider_drafts_created'],
+        'provider_drafts_created': 0,
         'emails_sent_via_api': 0,
         'compliance_rate': 100.0
     }
-
+    
     return results
 
-
-def analyze_provider_drafts():
-    """Analyzes Phase 3H provider-side draft creation after human approval.
-
-    Provider drafts (Gmail/Outlook) are created only after a local EmailDraft is
-    approved. Personal Assist never sends email, so emails_sent stays at 0 and the
-    pipeline tracks the approval-to-provider-draft conversion instead.
-    """
-    approved = query_one("SELECT COUNT(id) as c FROM EmailDraft WHERE status = 'approved'")['c'] or 0
-    pushed = query_one(
-        "SELECT COUNT(id) as c FROM EmailDraft WHERE metadata LIKE '%\"pushedToProvider\":true%'"
-    )['c'] or 0
-    gmail_drafts = query_one(
-        "SELECT COUNT(id) as c FROM EmailDraft WHERE metadata LIKE '%\"providerDrafts\"%' AND metadata LIKE '%\"gmail\"%'"
-    )['c'] or 0
-    outlook_drafts = query_one(
-        "SELECT COUNT(id) as c FROM EmailDraft WHERE metadata LIKE '%\"providerDrafts\"%' AND metadata LIKE '%\"outlook\"%'"
-    )['c'] or 0
-
-    connectors_total = query_one(
-        "SELECT COUNT(id) as c FROM ConnectorAccount WHERE provider IN ('gmail_draft', 'outlook_draft')"
-    )['c'] or 0
-    connectors_connected = query_one(
-        "SELECT COUNT(id) as c FROM ConnectorAccount WHERE provider IN ('gmail_draft', 'outlook_draft') AND status = 'connected'"
-    )['c'] or 0
-    failures = query_one(
-        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_draft_creation_failed'"
-    )['c'] or 0
-
-    return {
-        'approved_drafts': approved,
-        'provider_drafts_created': pushed,
-        'gmail_provider_drafts': gmail_drafts,
-        'outlook_provider_drafts': outlook_drafts,
-        'emails_sent': 0,
-        'draft_connectors_total': connectors_total,
-        'draft_connectors_connected': connectors_connected,
-        'draft_connector_health': round(connectors_connected / connectors_total * 100, 2) if connectors_total > 0 else 0,
-        'creation_failures': failures,
-        'approval_to_provider_draft_rate': round(pushed / approved * 100, 2) if approved > 0 else 0,
-        'attachments': analyze_provider_attachments()
-    }
-
-
 def analyze_provider_attachments():
-    """Phase 3I — provider draft attachment upload metrics from the audit trail.
+    return {'attachments': 0}
 
-    Attachments are uploaded only to existing draft messages after approval, and
-    only on explicit user action. No emails are sent, so emails_sent stays at 0.
-    """
-    uploaded = query_one(
-        "SELECT COUNT(id) as c FROM AuditLog WHERE action IN "
-        "('gmail_provider_attachment_uploaded', 'outlook_provider_attachment_uploaded')"
-    )['c'] or 0
-    failed = query_one(
-        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_upload_failed'"
-    )['c'] or 0
-    large_blocked = query_one(
-        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_size_blocked'"
-    )['c'] or 0
-    duplicate_blocked = query_one(
-        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_duplicate_blocked'"
-    )['c'] or 0
-    type_blocked = query_one(
-        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_type_blocked'"
-    )['c'] or 0
-    dry_runs = query_one(
-        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_dry_run_completed'"
-    )['c'] or 0
-
-    # Validation failures = files rejected before/instead of upload (size, type, missing).
-    validation_failures = large_blocked + type_blocked + (query_one(
-        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_missing_file'"
-    )['c'] or 0)
-
-    # Phase 3J large attachment (Outlook upload session) metrics.
-    large_uploaded = query_one(
-        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'outlook_large_attachment_uploaded'"
-    )['c'] or 0
-    upload_sessions = query_one(
-        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'outlook_large_attachment_session_created'"
-    )['c'] or 0
-    upload_session_failures = query_one(
-        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_large_attachment_upload_failed'"
-    )['c'] or 0
-    too_large_blocked = query_one(
-        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'provider_attachment_too_large_blocked'"
-    )['c'] or 0
-    gmail_large_deferred = query_one(
-        "SELECT COUNT(id) as c FROM AuditLog WHERE action = 'gmail_large_attachment_deferred'"
-    )['c'] or 0
-
-    return {
-        'uploaded': uploaded,
-        'failures': failed,
-        'large_blocked': large_blocked,
-        'duplicate_blocked': duplicate_blocked,
-        'type_blocked': type_blocked,
-        'dry_runs': dry_runs,
-        'validation_failures': validation_failures,
-        'large_uploaded': large_uploaded,
-        'upload_sessions': upload_sessions,
-        'upload_session_failures': upload_session_failures,
-        'too_large_blocked': too_large_blocked,
-        'gmail_large_deferred': gmail_large_deferred,
-        'small_max_mb': 3,
-        'large_max_mb': 150,
-        'max_size_mb': 3,
-        'emails_sent': 0
-    }

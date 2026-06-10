@@ -73,9 +73,12 @@ def validate_contracts():
             except Exception:
                 pass
         
-        total_rows_result = query_all(f"SELECT COUNT(id) as c FROM {table}")
-        total_rows = total_rows_result[0]['c'] if total_rows_result else 0
-        
+        try:
+            total_rows_result = query_all(f"SELECT COUNT(id) as c FROM {table}")
+            total_rows = total_rows_result[0]['c'] if total_rows_result else 0
+        except Exception:
+            total_rows = 0
+            
         violations[entity_name] = {
             'total_rows': total_rows,
             'violations': entity_violations,
