@@ -124,9 +124,14 @@ const PHASES = [
     items: ["Timezone-aware availability engine (buffers, focus/lunch/do-not-schedule)", "Approval-gated calendar write requests with dry-run preview", "Execution creates local hold only; provider write unavailable until OAuth", "Calendly-style meeting types, booking links, routing engine, request queue", "test:scheduling 17/17 + test:booking 23/23; no send, no silent provider writes"]
   },
   {
-    title: "Phase 6C-6L: Scheduling Secretary, Planner, Projects, Agreements, Meetings (Planned)",
+    title: "Phase 6C: AI Scheduling Secretary (Completed)",
+    status: "completed",
+    items: ["Deterministic NL parser (intent, participants, duration, range, time-pref, follow-up)", "Candidate slot generation + ranking via the 6A engine", "Local reply drafts: propose-times / confirmation / reschedule / follow-up (never sent)", "Slot selection creates approval-gated calendar write request", "Inbox-to-schedule (read-only) + local follow-up tracking", "test:scheduling-secretary 33/33; no send, no silent provider writes"]
+  },
+  {
+    title: "Phase 6D-6L: Planner, Projects, Agreements, Meetings (Planned)",
     status: "pending",
-    items: ["Howie-style AI scheduling secretary", "Motion/Reclaim/Clockwise planner + focus optimizer", "AI project manager + workload forecasting", "DocuSign-style local agreement/e-signature workflow", "Meeting intelligence + deep role workspaces"]
+    items: ["Motion/Reclaim/Clockwise planner + focus optimizer", "AI project manager + workload forecasting", "DocuSign-style local agreement/e-signature workflow", "Meeting intelligence + deep role workspaces", "Command Center v2 + trending workflow suite"]
   },
   {
     title: "Phase 5B-5H: Role-Mode Deep Sub-Pages (In progress)",

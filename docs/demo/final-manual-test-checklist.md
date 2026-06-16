@@ -125,6 +125,20 @@ Booking (Calendly-style):
 - [ ] `npm run test:booking` passes; `bookingMetrics.auto_confirmations_sent = 0` and
       `provider_events_written_from_booking = 0` in the analytics JSON
 
+## 8c. AI scheduling secretary (Phase 6C)
+
+- [ ] `/assistant/scheduling` — enter "schedule 30 minutes with Alex next week" → **Parse request**
+- [ ] Conversation page shows parsed intent (schedule, 30 min, participant Alex, next-week range)
+- [ ] **Generate candidate slots** → ranked slots appear (from your working hours/buffers)
+- [ ] **Propose-times draft** → a local draft listing times, footer says "NOT sent"
+- [ ] **Save as local draft** → appears in `/drafts` (status draft)
+- [ ] Select a slot → **Create calendar write request** → links an approval-gated request
+- [ ] Approve + execute it in `/calendar/write-requests` → local hold only
+- [ ] **Track follow-up** → appears in `/assistant/scheduling/follow-ups`
+- [ ] `/assistant/scheduling/inbox` — "Schedule from this email" seeds a conversation (read-only)
+- [ ] `npm run test:scheduling-secretary` passes; analytics `schedulingSecretaryMetrics`
+      `emails_sent_by_secretary = 0` and `provider_events_written_by_secretary = 0`
+
 ## 9. Safety checks
 
 ```bash

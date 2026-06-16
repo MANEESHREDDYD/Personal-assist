@@ -29,13 +29,15 @@ import {
   CalendarClock,
   CalendarRange,
   Clock,
-  CalendarCheck
+  CalendarCheck,
+  Bot
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { name: "Home", href: "/", icon: LayoutDashboard },
   { name: "Roles", href: "/roles", icon: Layers },
   { name: "Command Center", href: "/command-center", icon: Command },
+  { name: "Scheduling Secretary", href: "/assistant/scheduling", icon: Bot },
   { name: "Scheduling", href: "/scheduling", icon: CalendarClock },
   { name: "Availability", href: "/availability", icon: Clock },
   { name: "Booking", href: "/booking", icon: CalendarCheck },

@@ -18,6 +18,7 @@ from personal_assist_analytics.marts import build_analytics_marts
 from personal_assist_analytics.role_metrics import analyze_role_usage
 from personal_assist_analytics.scheduling_metrics import analyze_scheduling
 from personal_assist_analytics.booking_metrics import analyze_booking
+from personal_assist_analytics.scheduling_secretary_metrics import analyze_scheduling_secretary
 from personal_assist_analytics.export import (
     export_metrics,
     generate_recommendations,
@@ -75,6 +76,10 @@ def main():
     print(f"[+] Analyzed booking ({booking['booking_requests_count']} requests, "
           f"{booking['provider_events_written_from_booking']} provider events from booking)")
 
+    secretary = analyze_scheduling_secretary()
+    print(f"[+] Analyzed scheduling secretary ({secretary['conversations_count']} conversations, "
+          f"{secretary['emails_sent_by_secretary']} emails sent)")
+
     showcase = build_skill_showcase_summary(agentic, ai_eval, ml, contracts, lineage, marts)
 
     report = {
@@ -92,6 +97,7 @@ def main():
         "roleUsageMetrics": role_usage,
         "schedulingMetrics": scheduling,
         "bookingMetrics": booking,
+        "schedulingSecretaryMetrics": secretary,
         "skillShowcaseSummary": showcase,
         "recommendations": generate_recommendations(counts, quality, risk, contracts, agentic),
     }

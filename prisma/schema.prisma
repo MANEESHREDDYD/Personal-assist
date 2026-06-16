@@ -721,3 +721,133 @@ model BookingReminderRule {
 
   @@index([meetingTypeId])
 }
+
+// ---------------------------------------------------------------------------
+// Phase 6C — Howie-style AI scheduling secretary
+// Parses NL scheduling requests, generates candidate slots (6A engine) and local
+// reply drafts, tracks waiting-on responses, and creates approval-gated
+// CalendarWriteRequests. Never sends email; never writes provider calendars.
+// ---------------------------------------------------------------------------
+
+model SchedulingConversation {
+  id            String   @id @default(cuid())
+  title         String
+  status        String   @default("parsed") // parsed, needs_review, slots_generated, draft_ready, waiting_on_recipient, ready_to_schedule, calendar_request_created, completed, canceled
+  intent        String   // schedule, propose_times, reschedule, cancel, clear_time, follow_up, hold_time
+  sourceType    String   @default("command") // command, inbox_thread, booking, role_command
+  sourceRef     String?  // e.g. inbox item id
+  calendarWriteRequestId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  instruction   SchedulingInstruction?
+  participants  SchedulingParticipant[]
+  candidateSlots SchedulingCandidateSlot[]
+  negotiation   SchedulingNegotiationState?
+  replyDrafts   SchedulingReplyDraft[]
+  followUpRules SchedulingFollowUpRule[]
+  decisions     SchedulingDecision[]
+
+  @@index([status])
+}
+
+model SchedulingInstruction {
+  id              String   @id @default(cuid())
+  conversationId  String   @unique
+  rawText         String
+  intent          String
+  durationMins    Int?
+  rangeStart      DateTime?
+  rangeEnd        DateTime?
+  timePreference  String?  // morning, afternoon, evening, any
+  topic           String?
+  locationPref    String?
+  urgency         String?  // low, normal, high
+  followUpHours   Int?
+  proposeCount    Int?     // e.g. "find 3 times"
+  parserConfidence Float   @default(0)
+  parsedJson      String?  // full parse result
+  createdAt       DateTime @default(now())
+
+  conversation    SchedulingConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model SchedulingParticipant {
+  id             String   @id @default(cuid())
+  conversationId String
+  name           String
+  email          String?
+  role           String?  // organizer, invitee, optional
+  createdAt      DateTime @default(now())
+
+  conversation   SchedulingConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+model SchedulingCandidateSlot {
+  id             String   @id @default(cuid())
+  conversationId String
+  start          DateTime
+  end            DateTime
+  score          Float    @default(0)
+  reason         String?
+  selected       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  conversation   SchedulingConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+model SchedulingNegotiationState {
+  id             String   @id @default(cuid())
+  conversationId String   @unique
+  state          String   @default("idle") // idle, proposed, waiting, confirmed, declined
+  waitingSince   DateTime?
+  lastDraftId    String?
+  notes          String?
+  updatedAt      DateTime @updatedAt
+
+  conversation   SchedulingConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model SchedulingReplyDraft {
+  id             String   @id @default(cuid())
+  conversationId String
+  kind           String   // propose_times, confirmation, reschedule, cancellation, follow_up
+  subject        String
+  body           String
+  emailDraftId   String?  // if saved into the local EmailDraft system
+  // Local only: nothing is sent.
+  createdAt      DateTime @default(now())
+
+  conversation   SchedulingConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+model SchedulingFollowUpRule {
+  id             String   @id @default(cuid())
+  conversationId String
+  intervalHours  Int      @default(24)
+  dueAt          DateTime
+  status         String   @default("pending") // pending, drafted, done, canceled
+  createdAt      DateTime @default(now())
+
+  conversation   SchedulingConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+model SchedulingDecision {
+  id             String   @id @default(cuid())
+  conversationId String
+  decision       String   // slot_selected, request_created, canceled
+  detail         String?
+  createdAt      DateTime @default(now())
+
+  conversation   SchedulingConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}

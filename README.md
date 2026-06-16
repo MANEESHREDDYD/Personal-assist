@@ -45,6 +45,14 @@ A local-first scheduling platform on the lines of Calendly / Howie / Reclaim:
 
 > Booking links are local-only on `localhost` until the app is deployed.
 
+- **AI scheduling secretary** (`/assistant/scheduling`, Phase 6C) — Howie-style. Type a request
+  like *"schedule 30 minutes with Alex next week"* or *"find 3 times next week for a product
+  review"*; a deterministic parser extracts intent/participants/duration/date-range/time-pref,
+  the 6A engine finds and ranks candidate slots, and it drafts propose-times / confirmation /
+  reschedule / follow-up replies (**local drafts, never sent**). Confirming a slot creates an
+  approval-gated calendar write request; follow-ups are tracked locally. Tested:
+  `npm run test:scheduling-secretary`.
+
 ## Technical Skills Demonstrated
 
 | Domain | Implementation |
