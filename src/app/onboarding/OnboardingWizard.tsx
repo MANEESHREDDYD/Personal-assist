@@ -105,7 +105,7 @@ export function OnboardingWizard() {
               }`}
             >
               <h3 className="font-bold text-white mb-1">Demo Mode (Recommended)</h3>
-              <p className="text-sm text-zinc-400">Pre-loads the database with mock documents, calendar events, and reminders to explore the app's capabilities immediately.</p>
+              <p className="text-sm text-zinc-400">Pre-loads the database with mock documents, calendar events, and reminders to explore the app&apos;s capabilities immediately.</p>
             </button>
             <button
               onClick={() => setMode("empty")}
@@ -114,7 +114,7 @@ export function OnboardingWizard() {
               }`}
             >
               <h3 className="font-bold text-white mb-1">Empty Workspace</h3>
-              <p className="text-sm text-zinc-400">Start with a clean slate. We'll only create a single starter item for you.</p>
+              <p className="text-sm text-zinc-400">Start with a clean slate. We&apos;ll only create a single starter item for you.</p>
             </button>
           </div>
           <div className="flex gap-3">

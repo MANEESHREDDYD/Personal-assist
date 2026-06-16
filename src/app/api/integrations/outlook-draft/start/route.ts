@@ -20,11 +20,11 @@ export async function GET() {
     await logAudit("outlook_draft_connect_started", "ConnectorAccount", "outlook_draft");
     const url = getAuthUrl(state);
     return NextResponse.redirect(url);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to start Outlook Draft auth", error);
     await logAudit("outlook_draft_connection_failed", "ConnectorAccount", "outlook_draft", {
-      error: error.message,
+      error: (error as Error).message,
     });
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ error: (error as Error).message }, { status: 400 });
   }
 }

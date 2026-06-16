@@ -83,7 +83,7 @@ END OF DRAFT
       },
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("TXT Export Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

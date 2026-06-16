@@ -17,6 +17,13 @@ interface LinkedDoc {
   attachedOutlook: boolean;
 }
 
+interface ValidationResult {
+  provider: string;
+  wouldUpload?: unknown[];
+  results?: { name?: string; documentId: string; status: string }[];
+  [key: string]: unknown;
+}
+
 function formatSize(bytes: number) {
   if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
   return `${Math.max(1, Math.round(bytes / 1024))} KB`;
@@ -41,7 +48,7 @@ export function ProviderAttachmentActions({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [uploading, setUploading] = useState<"gmail_draft" | "outlook_draft" | null>(null);
   const [validating, setValidating] = useState(false);
-  const [validation, setValidation] = useState<any[] | null>(null);
+  const [validation, setValidation] = useState<ValidationResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -87,7 +94,7 @@ export function ProviderAttachmentActions({
       if (hasGmail) providers.push("gmail_draft");
       if (hasOutlook) providers.push("outlook_draft");
 
-      const out: any[] = [];
+      const out: ValidationResult[] = [];
       for (const provider of providers) {
         const res = await fetch(`/api/drafts/${draftId}/provider-attachments?dryRun=true`, {
           method: "POST",
@@ -98,8 +105,8 @@ export function ProviderAttachmentActions({
         out.push({ provider, ...data });
       }
       setValidation(out);
-    } catch (e: any) {
-      setError(e.message || "Validation failed.");
+    } catch (e) {
+      setError((e as Error).message || "Validation failed.");
     } finally {
       setValidating(false);
     }
@@ -123,7 +130,7 @@ export function ProviderAttachmentActions({
       const data = await res.json();
       if (res.ok) {
         const summary = (data.results || [])
-          .map((r: any) => `${r.name || r.documentId}: ${String(r.status).replace(/_/g, " ")}`)
+          .map((r: { name?: string; documentId: string; status: string }) => `${r.name || r.documentId}: ${String(r.status).replace(/_/g, " ")}`)
           .join(" · ");
         setMessage(`${data.message || "Done."}${summary ? ` (${summary})` : ""}`);
         setSelected(new Set());
@@ -132,8 +139,8 @@ export function ProviderAttachmentActions({
       } else {
         setError(data.error || "Attachment upload failed.");
       }
-    } catch (e: any) {
-      setError(e.message || "Attachment upload failed.");
+    } catch (e) {
+      setError((e as Error).message || "Attachment upload failed.");
     } finally {
       setUploading(null);
     }
@@ -268,7 +275,7 @@ export function ProviderAttachmentActions({
               {Array.isArray(v.wouldUpload) ? v.wouldUpload.length : 0} would upload
               {Array.isArray(v.results) && v.results.length > 0 && (
                 <ul className="mt-0.5 ml-3 list-disc text-zinc-400">
-                  {v.results.map((r: any, i: number) => (
+                  {v.results.map((r, i: number) => (
                     <li key={i}>
                       {(r.name || r.documentId)}: {String(r.status).replace(/_/g, " ")}
                     </li>

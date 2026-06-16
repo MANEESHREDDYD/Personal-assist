@@ -20,7 +20,7 @@ export async function GET() {
           buffer = Buffer.from(process.env.ENCRYPTION_KEY, "utf-8");
         }
         if (buffer.length === 32) isEncryptionKeyValid = true;
-      } catch (e) {
+      } catch {
         // invalid
       }
     }
@@ -41,7 +41,7 @@ export async function GET() {
       lastSyncAt: account.lastSyncAt,
       lastError: account.lastError
     });
-  } catch (error: any) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch status" }, { status: 500 });
   }
 }

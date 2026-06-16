@@ -61,9 +61,9 @@ export async function GET(
         "Cache-Control": "private, no-store, max-age=0",
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error serving document file:", error);
-    await logAudit("document_file_access_failed", "System", "download", { details: error.message });
+    await logAudit("document_file_access_failed", "System", "download", { details: (error as Error).message });
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

@@ -76,16 +76,16 @@ export async function GET(request: Request) {
 
     return NextResponse.redirect(new URL("/settings?success=CalendarConnected", request.url));
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Calendar callback error:", error);
     await db.auditLog.create({
       data: {
         action: "google_calendar_connection_failed",
         entityType: "connector",
         entityId: "google_calendar",
-        details: JSON.stringify({ error: error.message })
+        details: JSON.stringify({ error: (error as Error).message })
       }
     });
-    return NextResponse.redirect(new URL("/settings?error=" + encodeURIComponent(error.message), request.url));
+    return NextResponse.redirect(new URL("/settings?error=" + encodeURIComponent((error as Error).message), request.url));
   }
 }

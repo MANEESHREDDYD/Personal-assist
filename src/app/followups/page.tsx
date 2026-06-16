@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { ListTodo, CheckCircle, AlertTriangle } from "lucide-react";
+import { ListTodo } from "lucide-react";
 import Link from "next/link";
 import { FollowUpClientActions } from "./FollowUpClientActions";
 

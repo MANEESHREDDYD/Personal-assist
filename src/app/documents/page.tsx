@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { FileText, Upload } from "lucide-react";
+import { FileText } from "lucide-react";
 import Link from "next/link";
 import { DocumentUploadForm } from "./DocumentUploadForm";
-import { DocumentActions } from "./DocumentActions";
 
 export const dynamic = "force-dynamic";
 

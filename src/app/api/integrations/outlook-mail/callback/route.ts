@@ -62,9 +62,9 @@ export async function GET(req: Request) {
     await logAudit("outlook_mail_connected", "ConnectorAccount", account.id, { email });
 
     return NextResponse.redirect(new URL("/settings", req.url));
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Outlook Mail OAuth error:", err);
-    await logAudit("outlook_mail_connection_failed", "System", "oauth", { details: err.message });
+    await logAudit("outlook_mail_connection_failed", "System", "oauth", { details: (err as Error).message });
     return NextResponse.redirect(new URL("/settings?error=oauth_failed", req.url));
   }
 }

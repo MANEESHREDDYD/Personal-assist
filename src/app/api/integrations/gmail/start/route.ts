@@ -7,8 +7,8 @@ export async function GET() {
   try {
     const url = getAuthUrl();
     return NextResponse.redirect(url);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to start Gmail auth", error);
-    return new NextResponse(error.message, { status: 400 });
+    return new NextResponse((error as Error).message, { status: 400 });
   }
 }

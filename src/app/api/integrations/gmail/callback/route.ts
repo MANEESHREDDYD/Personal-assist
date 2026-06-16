@@ -59,9 +59,9 @@ export async function GET(request: Request) {
     await logAudit("gmail_connected", "ConnectorAccount", "gmail", { email });
 
     return NextResponse.redirect(new URL("/settings?success=gmail_connected", request.url));
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Gmail callback error", error);
-    await logAudit("gmail_connection_failed", "ConnectorAccount", "gmail", { error: error.message });
+    await logAudit("gmail_connection_failed", "ConnectorAccount", "gmail", { error: (error as Error).message });
     return NextResponse.redirect(new URL("/settings?error=gmail_callback_failed", request.url));
   }
 }

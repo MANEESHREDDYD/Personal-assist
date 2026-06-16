@@ -16,7 +16,7 @@ export async function GET() {
   try {
     const url = getAuthUrl(state);
     return NextResponse.redirect(url);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: (error as Error).message }, { status: 400 });
   }
 }

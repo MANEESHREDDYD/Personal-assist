@@ -82,10 +82,10 @@ export async function GET(request: Request) {
     return NextResponse.redirect(
       new URL("/settings?success=gmail_draft_connected", request.url)
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Gmail Draft callback error", err);
     await logAudit("gmail_draft_connection_failed", "ConnectorAccount", "gmail_draft", {
-      error: err.message,
+      error: (err as Error).message,
     });
     return NextResponse.redirect(
       new URL("/settings?error=gmail_draft_callback_failed", request.url)

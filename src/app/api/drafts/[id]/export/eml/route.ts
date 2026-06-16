@@ -86,7 +86,7 @@ ${attachmentsList}
       },
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("EML Export Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

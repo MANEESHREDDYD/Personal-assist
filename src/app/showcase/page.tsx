@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { Terminal, Database, Code, ShieldCheck, Activity, BrainCircuit, GitBranch, BarChart3, Bot, Workflow, Server, Lock, PenSquare, AlertTriangle } from "lucide-react";
+import type { ReactNode } from "react";
+import { Database, Code, ShieldCheck, Activity, BrainCircuit, GitBranch, BarChart3, Bot, Workflow, Server, Lock, PenSquare, AlertTriangle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -528,7 +529,7 @@ export default async function ShowcasePage() {
   );
 }
 
-function MetricCard({ title, value }: { title: string; value: any }) {
+function MetricCard({ title, value }: { title: string; value: ReactNode }) {
   return (
     <div className="bg-white/5 border border-white/10 p-4 rounded-xl text-center">
       <p className="text-xs text-zinc-500 mb-1">{title}</p>
@@ -537,7 +538,7 @@ function MetricCard({ title, value }: { title: string; value: any }) {
   );
 }
 
-function Section({ title, icon, children }: { title: string; icon: any; children: any }) {
+function Section({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
   return (
     <section className="space-y-4">
       <h2 className="text-2xl font-bold text-white border-b border-white/10 pb-2 flex items-center gap-2">

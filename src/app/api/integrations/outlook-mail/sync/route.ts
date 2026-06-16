@@ -45,7 +45,7 @@ export async function POST(request: Request) {
             refreshTokenEncrypted: tokenData.refresh_token ? encryptToken(tokenData.refresh_token) : account.refreshTokenEncrypted
           }
         });
-      } catch (err: any) {
+      } catch {
         await prisma.connectorAccount.update({
           where: { id: account.id },
           data: { status: "error", lastError: "Token refresh failed" }
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
       let details = null;
       try {
         details = await fetchMessageDetails(accessToken, msg.id);
-      } catch (e) {
+      } catch {
         console.warn(`Failed to fetch details for msg ${msg.id}, using list view data.`);
       }
 
@@ -222,7 +222,7 @@ export async function POST(request: Request) {
     await logAudit("outlook_mail_sync_completed", "ConnectorAccount", account.id, { imported, skipped });
 
     return NextResponse.json({ success: true, imported, skipped });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Outlook Mail sync error", error);
     
     const account = await prisma.connectorAccount.findFirst({
@@ -231,14 +231,14 @@ export async function POST(request: Request) {
     if (account) {
       await prisma.connectorAccount.update({
         where: { id: account.id },
-        data: { lastError: error.message, status: "error" }
+        data: { lastError: (error as Error).message, status: "error" }
       });
-      await logAudit("outlook_mail_sync_failed", "ConnectorAccount", account.id, { error: error.message });
+      await logAudit("outlook_mail_sync_failed", "ConnectorAccount", account.id, { error: (error as Error).message });
       
       await prisma.notification.create({
         data: {
           title: "Outlook Mail Sync Failed",
-          message: error.message,
+          message: (error as Error).message,
           type: "system",
           severity: "error",
           status: "unread"

@@ -42,7 +42,7 @@ export async function POST(request: Request) {
             tokenExpiry: expiry
           }
         });
-      } catch (err: any) {
+      } catch {
         await prisma.connectorAccount.update({
           where: { id: account.id },
           data: { status: "error", lastError: "Token refresh failed" }
@@ -183,7 +183,7 @@ export async function POST(request: Request) {
     await logAudit("gmail_sync_completed", "ConnectorAccount", account.id, { imported, skipped });
 
     return NextResponse.json({ success: true, imported, skipped });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Gmail sync error", error);
     
     const account = await prisma.connectorAccount.findFirst({
@@ -192,14 +192,14 @@ export async function POST(request: Request) {
     if (account) {
       await prisma.connectorAccount.update({
         where: { id: account.id },
-        data: { lastError: error.message, status: "error" }
+        data: { lastError: (error as Error).message, status: "error" }
       });
-      await logAudit("gmail_sync_failed", "ConnectorAccount", account.id, { error: error.message });
+      await logAudit("gmail_sync_failed", "ConnectorAccount", account.id, { error: (error as Error).message });
       
       await prisma.notification.create({
         data: {
           title: "Gmail Sync Failed",
-          message: error.message,
+          message: (error as Error).message,
           type: "system",
           severity: "error",
           status: "unread"

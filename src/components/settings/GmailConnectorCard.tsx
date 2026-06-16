@@ -56,7 +56,7 @@ export function GmailConnectorCard() {
         alert(`Sync failed: ${data.error}`);
       }
       await fetchStatus();
-    } catch (e) {
+    } catch {
       alert("Failed to sync");
     } finally {
       setSyncing(false);

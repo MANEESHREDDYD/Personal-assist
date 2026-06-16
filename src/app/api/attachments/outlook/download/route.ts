@@ -179,9 +179,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, document: doc });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Outlook attachment download error:", error);
-    await logAudit("attachment_download_failed", "System", "download", { details: error.message });
-    return NextResponse.json({ error: error.message || "Failed to download attachment" }, { status: 500 });
+    await logAudit("attachment_download_failed", "System", "download", { details: (error as Error).message });
+    return NextResponse.json({ error: (error as Error).message || "Failed to download attachment" }, { status: 500 });
   }
 }

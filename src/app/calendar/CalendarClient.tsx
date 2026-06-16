@@ -2,10 +2,18 @@
 
 import { useState } from "react";
 import { importICS } from "../actions/calendar";
-import { Calendar, Upload, Loader2, Clock, CheckCircle, AlertTriangle, ArrowRight } from "lucide-react";
+import { Calendar, Upload, Loader2, Clock, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
-export function CalendarClient({ events }: { events: any[] }) {
+interface CalendarEventItem {
+  id: string;
+  title: string;
+  startDate?: Date | string | null;
+  source?: string | null;
+  location?: string | null;
+}
+
+export function CalendarClient({ events }: { events: CalendarEventItem[] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -88,8 +96,8 @@ export function CalendarClient({ events }: { events: any[] }) {
   );
 }
 
-function EventCard({ event, past = false }: { event: any, past?: boolean }) {
-  const startDate = new Date(event.startDate).toLocaleString();
+function EventCard({ event, past = false }: { event: CalendarEventItem, past?: boolean }) {
+  const startDate = new Date(event.startDate!).toLocaleString();
   
   return (
     <div className={`glass-card p-5 rounded-2xl border-l-4 ${past ? 'border-l-zinc-600 opacity-70' : 'border-l-purple-500'}`}>

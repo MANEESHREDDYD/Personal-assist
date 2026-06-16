@@ -288,13 +288,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, imported, updated, skipped });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Outlook Calendar Sync Error:", error);
     
     await db.notification.create({
       data: {
         title: "Outlook Calendar Sync Failed",
-        message: error.message,
+        message: (error as Error).message,
         type: "system_alert",
         severity: "error",
         status: "unread"
@@ -306,7 +306,7 @@ export async function POST(request: Request) {
         action: "outlook_calendar_sync_failed",
         entityType: "connector",
         entityId: "outlook_calendar",
-        details: JSON.stringify({ error: error.message })
+        details: JSON.stringify({ error: (error as Error).message })
       }
     });
 
@@ -316,10 +316,10 @@ export async function POST(request: Request) {
     if (account) {
       await db.connectorAccount.update({
         where: { id: account.id },
-        data: { lastError: error.message }
+        data: { lastError: (error as Error).message }
       });
     }
 
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }

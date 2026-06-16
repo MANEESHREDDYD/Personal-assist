@@ -23,7 +23,7 @@ export async function POST() {
     );
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Outlook Draft disconnect error", error);
     return NextResponse.json(
       { error: "Failed to disconnect Outlook Draft" },

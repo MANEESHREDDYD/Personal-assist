@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     await logAudit("gmail_disconnected", "ConnectorAccount", account.id);
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Gmail disconnect error", error);
     return NextResponse.json({ error: "Failed to disconnect Gmail" }, { status: 500 });
   }

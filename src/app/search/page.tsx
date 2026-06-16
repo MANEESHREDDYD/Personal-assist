@@ -6,7 +6,7 @@ import { globalSearch } from "../actions/search";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<{cards: any[], docs: any[], inbox: any[], contacts: any[]} | null>(null);
+  const [results, setResults] = useState<Awaited<ReturnType<typeof globalSearch>> | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {

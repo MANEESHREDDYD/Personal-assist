@@ -54,8 +54,8 @@ export function AttachmentList({ inboxItemId, messageId, provider, attachments }
       
       // Successfully downloaded, trigger a page reload to update UI state
       window.location.reload();
-    } catch (err: any) {
-      setErrorMessages((prev) => ({ ...prev, [att.id]: err.message }));
+    } catch (err: unknown) {
+      setErrorMessages((prev) => ({ ...prev, [att.id]: (err as Error).message }));
     } finally {
       setDownloadingIds((prev) => {
         const next = new Set(prev);

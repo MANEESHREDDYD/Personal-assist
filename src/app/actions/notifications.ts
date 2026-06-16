@@ -10,7 +10,7 @@ export async function getUnreadNotifications() {
       where: { status: "unread" },
       orderBy: { createdAt: 'desc' }
     });
-  } catch (error) {
+  } catch {
     return [];
   }
 }

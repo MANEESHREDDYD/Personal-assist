@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { User, Mail, Phone, Building, Calendar, PlusCircle, ArrowLeft } from "lucide-react";
+import { Mail, Phone, Building, Calendar, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
