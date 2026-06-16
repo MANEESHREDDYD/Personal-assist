@@ -37,6 +37,12 @@ Personal Assist is a **data engineering and AI workflow system** that happens to
 
 ## Getting Started
 
+> **Testing the product?** Follow the complete, user-facing
+> [**Final Manual Product Test Checklist**](docs/demo/final-manual-test-checklist.md) —
+> local setup, core app, documents, inbox, drafts, the provider workflow (with and without
+> OAuth), and safety checks. Live Gmail/Outlook verification there is optional and requires
+> your own test OAuth credentials.
+
 ### 1. Installation
 
 ```bash
