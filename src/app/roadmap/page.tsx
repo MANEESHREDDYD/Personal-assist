@@ -99,9 +99,24 @@ const PHASES = [
     items: ["Outlook Graph upload sessions (> 3 MB, <= 150 MB)", "Chunked Content-Range PUT uploads", "Gmail large attachments deferred (conservative)", "> 150 MB blocked; size class + upload mode", "12-case test harness, no-send preserved"]
   },
   {
-    title: "Phase 3J.1: Live Provider Verification Results Capture (Active)",
-    status: "active",
+    title: "Phase 3J.1: Live Provider Verification Results Capture (Completed)",
+    status: "completed",
     items: ["Redacted live-verification evidence folder + rules", "Live Gmail/Outlook checklist + results template", "Demo-evidence hygiene guard (security:demo-evidence)", "Showcase live-verification status (pending until recorded)", "No private data or false live claims"]
+  },
+  {
+    title: "Phase 3J.1.2: OAuth Test Setup + Safe Dev Server (Completed)",
+    status: "completed",
+    items: ["Placeholder-only .env.example + OAuth setup guide", "verify:live-provider-env preflight (no secrets printed)", "Managed dev:safe / dev:stop scripts (.tmp PID)", ".env, tokens, screenshots stay out of git"]
+  },
+  {
+    title: "TypeScript Strictness Cleanup (Completed)",
+    status: "completed",
+    items: ["ESLint warnings reduced 334 -> 37", "0 errors; build + type-check green", "any -> typed interfaces / unknown narrowing", "Type-only, behavior-preserving across backend + UI"]
+  },
+  {
+    title: "Live Gmail/Outlook Provider Verification (Active - pending your OAuth credentials)",
+    status: "active",
+    items: ["Add ENCRYPTION_KEY + Google/Microsoft test OAuth to local .env", "Run verify:live-provider-env until READY", "Connect draft connectors; create Gmail/Outlook drafts", "Confirm nothing sent; record sanitized results", "No live success is claimed until real evidence exists"]
   },
   {
     title: "Phase 3J.2: Provider Upload Robustness Improvements (Planned)",
@@ -129,7 +144,9 @@ export default function RoadmapPage() {
           Product Roadmap
         </h1>
         <p className="text-zinc-400 text-lg">
-          Personal Assist is currently in Phase 2 (Local MVP). Here is where we are going.
+          Personal Assist is a complete local-first product through Phase 3J. The local demo,
+          analytics pipeline, no-send guard, and provider attachment workflow are ready; live
+          Gmail/Outlook verification is pending until you configure your own OAuth credentials.
         </p>
       </div>
 
