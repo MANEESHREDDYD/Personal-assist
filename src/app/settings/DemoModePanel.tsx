@@ -2,20 +2,11 @@
 
 import { useState } from "react";
 import { Trash2, AlertTriangle, Play } from "lucide-react";
-import { resetDatabaseSafely, seedDemoNotifications, seedDemoApprovals, seedDemoCalendar, seedDemoWorkflow, generateDemoStockBrief } from "../actions/demo";
+import { resetDatabaseSafely } from "../actions/demo";
 
 export function DemoModePanel() {
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-
-  const handleAction = async (actionFn: () => Promise<{ success: boolean; error?: string }>) => {
-    setLoading(true);
-    const result = await actionFn();
-    if (!result.success) {
-      alert("Error: " + result.error);
-    }
-    setLoading(false);
-  };
 
   const handleReset = async () => {
     setLoading(true);

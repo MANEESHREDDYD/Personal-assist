@@ -14,7 +14,12 @@ import * as outlookDraft from "@/lib/integrations/outlookDraft";
 export type DraftProvider = "gmail_draft" | "outlook_draft";
 
 export async function getValidAccessToken(account: unknown, provider: DraftProvider): Promise<string> {
-  const acc = account as { accessTokenEncrypted?: string; tokenExpiry?: Date | string };
+  const acc = account as {
+    id: string;
+    accessTokenEncrypted?: string;
+    refreshTokenEncrypted?: string;
+    tokenExpiry?: Date | string;
+  };
   const accessToken = acc.accessTokenEncrypted
     ? decryptToken(acc.accessTokenEncrypted)
     : "";
@@ -24,11 +29,11 @@ export async function getValidAccessToken(account: unknown, provider: DraftProvi
 
   if (!needsRefresh) return accessToken;
 
-  if (!account.refreshTokenEncrypted) {
+  if (!acc.refreshTokenEncrypted) {
     throw new Error("Token expired and no refresh token is available. Reconnect the connector.");
   }
 
-  const refreshToken = decryptToken(account.refreshTokenEncrypted);
+  const refreshToken = decryptToken(acc.refreshTokenEncrypted);
   const lib = provider === "gmail_draft" ? gmailDraft : outlookDraft;
   const refreshed = await lib.refreshAccessToken(refreshToken);
 
@@ -38,7 +43,7 @@ export async function getValidAccessToken(account: unknown, provider: DraftProvi
   }
 
   await prisma.connectorAccount.update({
-    where: { id: account.id },
+    where: { id: acc.id },
     data: {
       accessTokenEncrypted: encryptToken(refreshed.access_token),
       ...(refreshed.refresh_token && {

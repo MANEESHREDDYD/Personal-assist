@@ -3,8 +3,18 @@
 import { useState, useEffect } from "react";
 import { Calendar, CheckCircle, RefreshCw, AlertCircle, Trash2, Power } from "lucide-react";
 
+interface StatusData {
+  connected: boolean;
+  configured: boolean;
+  encryptionKeyPresent: boolean;
+  email?: string;
+  lastSyncAt?: string;
+  lastError?: string;
+  [key: string]: unknown;
+}
+
 export function GoogleCalendarConnectorCard() {
-  const [status, setStatus] = useState<Record<string, unknown> | null>(null);
+  const [status, setStatus] = useState<StatusData | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncDays, setSyncDays] = useState("30");
@@ -58,8 +68,8 @@ export function GoogleCalendarConnectorCard() {
       if (!res.ok) throw new Error(data.error || "Sync failed");
       setSyncResult(`Imported: ${data.imported}, Updated: ${data.updated}, Skipped: ${data.skipped}`);
       await fetchStatus();
-    } catch (e: any) {
-      setSyncResult(`Error: ${e.message}`);
+    } catch (e) {
+      setSyncResult(`Error: ${(e as Error).message}`);
     } finally {
       setSyncing(false);
     }

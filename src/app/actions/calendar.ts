@@ -19,10 +19,10 @@ export async function importICS(formData: FormData) {
       if (Object.prototype.hasOwnProperty.call(parsed, k)) {
         const ev = parsed[k];
         if (ev && ev.type === 'VEVENT') {
-          const summary = ev.summary ? (typeof ev.summary === 'string' ? ev.summary : (ev.summary as any).val) : "Untitled Event";
-          const location = ev.location ? (typeof ev.location === 'string' ? ev.location : (ev.location as any).val) : "";
-          const description = ev.description ? (typeof ev.description === 'string' ? ev.description : (ev.description as any).val) : "";
-          const meetingLink = ev.url ? (typeof ev.url === 'string' ? ev.url : (ev.url as any).val) : "";
+          const summary = ev.summary ? (typeof ev.summary === 'string' ? ev.summary : (ev.summary as { val: string }).val) : "Untitled Event";
+          const location = ev.location ? (typeof ev.location === 'string' ? ev.location : (ev.location as { val: string }).val) : "";
+          const description = ev.description ? (typeof ev.description === 'string' ? ev.description : (ev.description as { val: string }).val) : "";
+          const meetingLink = ev.url ? (typeof ev.url === 'string' ? ev.url : (ev.url as { val: string }).val) : "";
 
           // Check if event already exists to prevent duplicate imports (basic check on title and start time)
           const existing = await prisma.calendarEvent.findFirst({
@@ -33,8 +33,8 @@ export async function importICS(formData: FormData) {
           });
 
           if (!existing) {
-            const organizer = ev.organizer ? (typeof ev.organizer === 'string' ? ev.organizer : (ev.organizer as any).val) : null;
-            const attendees = ev.attendee ? (Array.isArray(ev.attendee) ? ev.attendee.map((a: Record<string, unknown> | string) => typeof a === 'string' ? a : a.val).join(", ") : (typeof ev.attendee === 'string' ? ev.attendee : (ev.attendee as any).val)) : null;
+            const organizer = ev.organizer ? (typeof ev.organizer === 'string' ? ev.organizer : (ev.organizer as { val: string }).val) : null;
+            const attendees = ev.attendee ? (Array.isArray(ev.attendee) ? ev.attendee.map((a: Record<string, unknown> | string) => typeof a === 'string' ? a : a.val).join(", ") : (typeof ev.attendee === 'string' ? ev.attendee : (ev.attendee as { val: string }).val)) : null;
 
             // Create Calendar Event
             const calEvent = await prisma.calendarEvent.create({

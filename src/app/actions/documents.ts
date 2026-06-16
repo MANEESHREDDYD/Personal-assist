@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
-import { saveFile, getFile } from "@/lib/storage";
+import { saveFile } from "@/lib/storage";
 import { revalidatePath } from "next/cache";
 import { getAIProvider } from "@/lib/ai/provider";
 import { extractText } from "@/lib/documentExtraction";
@@ -22,7 +22,7 @@ export async function uploadDocument(formData: FormData) {
     const extractedText = await extractText(filename, file.type, file.name);
     
     let textFilePath = null;
-    const metadataObj: any = { filename };
+    const metadataObj: Record<string, unknown> = { filename };
     
     if (extractedText) {
       if (extractedText.length > 50000) {
@@ -112,7 +112,7 @@ export async function mockSummarizeDocument(documentId: string) {
         const UPLOADS_DIR = path.join(process.cwd(), "data", "uploads");
         try {
           extractedText = await fs.readFile(path.join(UPLOADS_DIR, meta.extractedTextFile), "utf-8");
-        } catch(e) {}
+        } catch {}
       }
     }
 
@@ -141,7 +141,7 @@ export async function mockSummarizeDocument(documentId: string) {
     revalidatePath("/documents");
     revalidatePath("/wallet");
     return { success: true };
-  } catch (e) {
+  } catch {
     return { success: false };
   }
 }
@@ -159,7 +159,7 @@ export async function mockPrepareForSignature(documentId: string) {
     await logAudit("document_prepared_signature", "Document", documentId, { status: "needs_signature" });
     revalidatePath("/documents");
     return { success: true };
-  } catch (e) {
+  } catch {
     return { success: false };
   }
 }
@@ -179,7 +179,7 @@ export async function mockCreateApprovalRequest(documentId: string, docName: str
     revalidatePath("/documents");
     revalidatePath("/approvals");
     return { success: true };
-  } catch (e) {
+  } catch {
     return { success: false };
   }
 }

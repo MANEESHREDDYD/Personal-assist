@@ -124,7 +124,7 @@ export default function SearchPage() {
 
           {Object.values(results).every(arr => arr.length === 0) && (
             <div className="glass-card rounded-2xl p-12 text-center">
-              <p className="text-zinc-400">No results found for "{query}".</p>
+              <p className="text-zinc-400">No results found for &quot;{query}&quot;.</p>
             </div>
           )}
         </div>

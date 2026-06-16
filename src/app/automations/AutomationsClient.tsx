@@ -61,7 +61,7 @@ export function AutomationsClient({ rules, recentRuns }: { rules: any[], recentR
         <div className="divide-y divide-zinc-800">
           {rules.length === 0 ? (
             <div className="p-8 text-center text-zinc-500">
-              No rules configured. Click "Reset Default Rules" to load the recommended local automations.
+              No rules configured. Click &quot;Reset Default Rules&quot; to load the recommended local automations.
             </div>
           ) : rules.map((rule) => (
             <div key={rule.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -107,7 +107,7 @@ export function AutomationsClient({ rules, recentRuns }: { rules: any[], recentR
         <div className="divide-y divide-zinc-800">
           {recentRuns.length === 0 ? (
             <div className="p-8 text-center text-zinc-500">
-              No automation runs yet. Start the worker or click "Run Automations Now".
+              No automation runs yet. Start the worker or click &quot;Run Automations Now&quot;.
             </div>
           ) : recentRuns.map((run) => (
              <div key={run.id} className="p-4 flex items-center justify-between text-sm">

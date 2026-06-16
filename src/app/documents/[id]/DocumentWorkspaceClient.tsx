@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, CheckCircle, Clock, XCircle, PenTool, GitMerge, FileSignature, Play, Plus, Trash2, Send, Brain, Calendar, Mail, FileWarning, Wallet, Bell, Loader2 } from "lucide-react";
+import { FileText, CheckCircle, Clock, XCircle, PenTool, GitMerge, FileSignature, Play, Plus, Trash2, Send, Brain, Calendar, Mail, FileWarning, Wallet } from "lucide-react";
 import { generateDocumentEdit, acceptDocumentEdit, rejectDocumentEdit } from "@/app/actions/documentEdits";
 import { addSigner, removeSigner, addSignatureField, createMockSigningRequest, simulateSignerViewed, simulateSignerSigned, simulateSignerDeclined } from "@/app/actions/signing";
-import { generateMockApproval } from "@/app/actions/approvals";
-import { 
+import {
   extractDocumentProperties, 
   generateDocumentDraft, 
   createExtractedReminder, 
@@ -13,17 +12,81 @@ import {
   createExtractedWalletCard 
 } from "@/app/actions/documentIntelligence";
 
+interface DocumentRecord {
+  id: string;
+  originalName: string;
+  status: string;
+  size: number;
+  mimeType: string;
+  aiSummary?: string | null;
+}
+
+interface DocVersion {
+  id: string;
+  versionNumber: number;
+  title: string;
+  type: string;
+  createdBy: string;
+  createdAt: string | Date;
+  content?: string | null;
+  metadata?: string | null;
+}
+
+interface SignerRecord {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+}
+
+interface FieldRecord {
+  id: string;
+  label: string | null;
+  type: string;
+  signerId?: string | null;
+}
+
+interface InboxContext {
+  id: string;
+  subject: string;
+  sender: string;
+}
+
+interface RelatedDraft {
+  id: string;
+  subject?: string | null;
+  type: string;
+  status: string;
+  metadata?: string | null;
+}
+
+interface RelatedRecord {
+  id: string;
+  title?: string;
+  description?: string;
+}
+
+interface ExtractedData {
+  action_items?: string[];
+  deadlines?: { date: string; description: string }[];
+  parties?: { name: string; role: string }[];
+  risks?: string[];
+  payment_terms?: string;
+  signatures?: string;
+  [key: string]: unknown;
+}
+
 interface Props {
-  document: any;
-  versions: any[];
-  signers: any[];
-  fields: any[];
-  sourceInboxItem?: any;
-  relatedDrafts?: any[];
-  relatedCards?: any[];
-  relatedFollowUps?: any[];
-  relatedApprovals?: any[];
-  metadataObj?: any;
+  document: DocumentRecord;
+  versions: DocVersion[];
+  signers: SignerRecord[];
+  fields: FieldRecord[];
+  sourceInboxItem?: InboxContext | null;
+  relatedDrafts?: RelatedDraft[];
+  relatedCards?: RelatedRecord[];
+  relatedFollowUps?: RelatedRecord[];
+  relatedApprovals?: RelatedRecord[];
+  metadataObj?: { source?: string;[key: string]: unknown };
 }
 
 export function DocumentWorkspaceClient({ document, versions, signers, fields, sourceInboxItem, relatedDrafts, relatedCards, relatedFollowUps, relatedApprovals, metadataObj }: Props) {
@@ -39,13 +102,13 @@ export function DocumentWorkspaceClient({ document, versions, signers, fields, s
   const [newFieldType, setNewFieldType] = useState("signature");
 
   // Intelligence State
-  const [extractedData, setExtractedData] = useState<any>({});
-  
-  async function handleExtract(property: any) {
+  const [extractedData, setExtractedData] = useState<ExtractedData>({});
+
+  async function handleExtract(property: "action_items" | "deadlines" | "parties" | "payment_terms" | "signatures" | "risks") {
     setLoadingAction(`extract_${property}`);
     const res = await extractDocumentProperties(document.id, property);
     if (res.success) {
-      setExtractedData((prev: any) => ({ ...prev, [property]: res.result }));
+      setExtractedData((prev) => ({ ...prev, [property]: res.result }));
     }
     setLoadingAction(null);
   }
@@ -56,11 +119,11 @@ export function DocumentWorkspaceClient({ document, versions, signers, fields, s
     setLoadingAction(null);
   }
 
-  async function handleQuickAction(action: string, payload: any) {
+  async function handleQuickAction(action: string, payload: { date?: string; desc?: string; item?: string; title?: string; content?: string }) {
     setLoadingAction(`quick_${action}`);
-    if (action === "reminder") await createExtractedReminder(document.id, payload.date, payload.desc);
-    if (action === "followup") await createExtractedFollowUp(document.id, payload.item);
-    if (action === "wallet") await createExtractedWalletCard(document.id, payload.title, payload.content);
+    if (action === "reminder") await createExtractedReminder(document.id, payload.date as string, payload.desc as string);
+    if (action === "followup") await createExtractedFollowUp(document.id, payload.item as string);
+    if (action === "wallet") await createExtractedWalletCard(document.id, payload.title as string, payload.content as string);
     setLoadingAction(null);
   }
 
@@ -255,7 +318,7 @@ export function DocumentWorkspaceClient({ document, versions, signers, fields, s
                   </div>
                   {extractedData.deadlines ? (
                     <ul className="space-y-2 text-sm">
-                      {extractedData.deadlines.map((d: any, i: number) => (
+                      {extractedData.deadlines.map((d, i: number) => (
                         <li key={i} className="flex justify-between items-start gap-2 bg-black/20 p-2 rounded">
                           <div>
                             <div className="font-bold text-orange-300">{d.date}</div>
@@ -280,7 +343,7 @@ export function DocumentWorkspaceClient({ document, versions, signers, fields, s
                   </div>
                   {extractedData.parties ? (
                     <ul className="space-y-2 text-sm">
-                      {extractedData.parties.map((p: any, i: number) => (
+                      {extractedData.parties.map((p, i: number) => (
                         <li key={i} className="bg-black/20 p-2 rounded flex items-center gap-2">
                           <span className="font-bold text-zinc-200">{p.name}</span>
                           <span className="text-xs text-zinc-500 bg-zinc-800 px-1.5 py-0.5 rounded">{p.role}</span>
@@ -364,7 +427,7 @@ export function DocumentWorkspaceClient({ document, versions, signers, fields, s
                     <div className="pt-4 border-t border-white/10">
                       <h4 className="font-bold text-white text-sm mb-3">Generated Drafts</h4>
                       <div className="space-y-2">
-                        {relatedDrafts.map((draft: any) => (
+                        {relatedDrafts.map((draft) => (
                           <div key={draft.id} className="p-3 bg-black/20 rounded-lg flex justify-between items-center text-sm border border-white/5">
                              <div className="truncate pr-4">
                                 <div className="text-white font-medium truncate">{draft.subject || "No Subject"}</div>
@@ -386,17 +449,17 @@ export function DocumentWorkspaceClient({ document, versions, signers, fields, s
                 <div className="glass-card rounded-2xl p-6 border border-white/10">
                   <h3 className="text-lg font-bold text-white mb-4">Related Records</h3>
                   <div className="space-y-3">
-                    {relatedCards && relatedCards.map((c: any) => (
+                    {relatedCards && relatedCards.map((c) => (
                       <div key={c.id} className="p-2 bg-white/5 rounded text-sm flex items-center gap-2 text-zinc-300">
                         <Wallet className="w-4 h-4 text-zinc-500" /> {c.title}
                       </div>
                     ))}
-                    {relatedFollowUps && relatedFollowUps.map((f: any) => (
+                    {relatedFollowUps && relatedFollowUps.map((f) => (
                       <div key={f.id} className="p-2 bg-white/5 rounded text-sm flex items-center gap-2 text-zinc-300">
                         <CheckCircle className="w-4 h-4 text-zinc-500" /> {f.title}
                       </div>
                     ))}
-                    {relatedApprovals && relatedApprovals.map((a: any) => (
+                    {relatedApprovals && relatedApprovals.map((a) => (
                       <div key={a.id} className="p-2 bg-white/5 rounded text-sm flex items-center gap-2 text-zinc-300">
                         <CheckCircle className="w-4 h-4 text-zinc-500" /> Approval: {a.description}
                       </div>
@@ -413,7 +476,7 @@ export function DocumentWorkspaceClient({ document, versions, signers, fields, s
 
         {activeTab === "versions" && (
           <div className="space-y-4">
-            {versions.map((v: any) => (
+            {versions.map((v) => (
               <div key={v.id} className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-2">
                 <div className="flex justify-between items-center">
                   <h4 className="text-white font-bold">v{v.versionNumber} - {v.title}</h4>
@@ -466,7 +529,7 @@ export function DocumentWorkspaceClient({ document, versions, signers, fields, s
 
         {activeTab === "redline" && (
           <div className="space-y-4">
-             {versions.filter((v: any) => v.metadata && JSON.parse(v.metadata).status === 'proposed').map((v: any) => (
+             {versions.filter((v) => v.metadata && JSON.parse(v.metadata).status === 'proposed').map((v) => (
                 <div key={v.id} className="p-5 rounded-xl border border-blue-500/30 bg-blue-500/5">
                    <div className="flex justify-between items-start mb-4">
                       <div>
@@ -495,7 +558,7 @@ export function DocumentWorkspaceClient({ document, versions, signers, fields, s
                    </div>
                 </div>
              ))}
-             {versions.filter((v: any) => v.metadata && JSON.parse(v.metadata).status === 'proposed').length === 0 && (
+             {versions.filter((v) => v.metadata && JSON.parse(v.metadata).status === 'proposed').length === 0 && (
                 <div className="text-center p-8 text-zinc-500">No proposed edits to review. Head to Edit Studio to generate some.</div>
              )}
           </div>

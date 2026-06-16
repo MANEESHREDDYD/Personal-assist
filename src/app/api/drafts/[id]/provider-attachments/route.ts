@@ -25,6 +25,21 @@ import {
 
 export const dynamic = "force-dynamic";
 
+interface ProviderDraftRecord {
+  draftId?: string;
+  messageId?: string;
+  attachments?: { documentId: string }[];
+  [key: string]: unknown;
+}
+
+interface DraftContent {
+  to: string | null;
+  cc: string | null;
+  bcc: string | null;
+  subject: string | null;
+  body: string | null;
+}
+
 const PROVIDER_SUPPORT = {
   gmail: "small files (≤ 3 MB) via MIME rebuild; large files deferred",
   outlook: "small (≤ 3 MB) via simple upload; large (> 3 MB, ≤ 150 MB) via upload session; > 150 MB blocked",
@@ -72,7 +87,7 @@ export async function GET(
     }
 
     const meta = parseMetadata(draft.metadata);
-    const providerDrafts = (meta.providerDrafts as any) || {};
+    const providerDrafts = (meta.providerDrafts as Record<string, ProviderDraftRecord>) || {};
     const linkedIds = getLinkedDocumentIds(draft, meta);
 
     const gmailAttached: string[] = (providerDrafts.gmail?.attachments || []).map((a: { documentId: string }) => a.documentId);
@@ -109,7 +124,7 @@ export async function GET(
       providerSupport: PROVIDER_SUPPORT,
       documents,
     });
-  } catch (error: unknown) {
+  } catch {
     return NextResponse.json({ error: "Failed to load linked documents" }, { status: 500 });
   }
 }
@@ -137,7 +152,10 @@ export async function POST(
     if (!vr.ok) {
       return NextResponse.json({ error: vr.error }, { status: vr.httpStatus });
     }
-    const { providerKey, label, draft, meta, providerDrafts, providerDraft, existing } = vr;
+    const { providerKey, label, meta, providerDrafts } = vr;
+    const draft = vr.draft as DraftContent;
+    const providerDraft = (vr.providerDraft as ProviderDraftRecord) || {};
+    const existing = (vr.existing as { documentId: string }[]) || [];
 
     // Load + verify the connector. Dry-run does not require a live connection.
     const account = await prisma.connectorAccount.findFirst({ where: { provider } });
@@ -252,7 +270,7 @@ export async function POST(
       // attachments and the original approved draft content. (All gmail uploads
       // here are small/simple — large gmail files are reported as deferred above.)
       const preserved: { filename: string; contentType: string; content: Buffer }[] = [];
-      for (const rec of (existing as any[]) || []) {
+      for (const rec of existing) {
         const loaded = await loadDocBuffer(rec.documentId);
         if (loaded) preserved.push({ filename: loaded.doc.originalName, contentType: loaded.doc.mimeType, content: loaded.buffer });
       }
@@ -265,8 +283,8 @@ export async function POST(
 
       await updateGmailDraftWithAttachments(
         accessToken,
-        (providerDraft as any).draftId,
-        { to: (draft as any).to, cc: (draft as any).cc, bcc: (draft as any).bcc, subject: (draft as any).subject, body: (draft as any).body },
+        providerDraft.draftId!,
+        { to: draft.to, cc: draft.cc, bcc: draft.bcc, subject: draft.subject, body: draft.body },
         [...preserved, ...fresh.map((f) => ({ filename: f.doc.originalName, contentType: f.doc.mimeType, content: f.buffer }))]
       );
 
@@ -302,7 +320,7 @@ export async function POST(
           if (u.uploadMode === "upload_session") {
             await logAudit("provider_large_attachment_upload_started", "EmailDraft", draftId, { provider, documentId: u.documentId, size: buffer.length });
             await logAudit("outlook_large_attachment_session_created", "EmailDraft", draftId, { documentId: u.documentId });
-            const { attachmentId, chunks } = await attachLargeFileToOutlookDraft(accessToken, (providerDraft as any).messageId, {
+            const { attachmentId, chunks } = await attachLargeFileToOutlookDraft(accessToken, providerDraft.messageId!, {
               name: doc.originalName,
               contentType: doc.mimeType,
               content: buffer,
@@ -323,7 +341,7 @@ export async function POST(
             });
             results.push({ documentId: u.documentId, name: doc.originalName, status: "attached" });
           } else {
-            const { attachmentId } = await attachFileToOutlookDraft(accessToken, (providerDraft as any).messageId, {
+            const { attachmentId } = await attachFileToOutlookDraft(accessToken, providerDraft.messageId!, {
               name: doc.originalName,
               contentType: doc.mimeType,
               contentBytes: buffer.toString("base64"),
@@ -371,8 +389,8 @@ export async function POST(
 
     // Update EmailDraft metadata.
     const updatedProviderDraft = {
-      ...(providerDraft as any),
-      attachments: [...((existing as any[]) || []), ...newRecords],
+      ...providerDraft,
+      attachments: [...existing, ...newRecords],
       attachmentStatus: "attached",
       attachmentsUpdatedAt: uploadedAt,
     };
@@ -395,14 +413,14 @@ export async function POST(
       if (usedUploadSession) {
         await notify(
           "Large attachment uploaded to Outlook draft",
-          `${attachedCount} attachment(s) added to your Outlook draft for "${(draft as any).subject}" (large files via upload session). Review and send manually from Outlook.`,
+          `${attachedCount} attachment(s) added to your Outlook draft for "${draft.subject}" (large files via upload session). Review and send manually from Outlook.`,
           "success",
           draftId
         );
       } else {
         await notify(
           `Attachment uploaded to ${label} draft`,
-          `${attachedCount} attachment(s) added to your ${label} draft for "${(draft as any).subject}". Review and send manually from ${label}.`,
+          `${attachedCount} attachment(s) added to your ${label} draft for "${draft.subject}". Review and send manually from ${label}.`,
           "success",
           draftId
         );

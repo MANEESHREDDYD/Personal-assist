@@ -1,4 +1,4 @@
-import { Settings, Database, Bot, Zap, Mail, Calendar as CalendarIcon, Server, Terminal } from "lucide-react";
+import { Settings, Database, Zap, Calendar as CalendarIcon, Server, Terminal } from "lucide-react";
 import { getAIPrefs } from "../actions/settings";
 import { AISettings } from "./AISettings";
 import { DemoModePanel } from "./DemoModePanel";
@@ -71,14 +71,14 @@ export default async function SettingsPage() {
         buffer = Buffer.from(process.env.ENCRYPTION_KEY, "utf-8");
       }
       if (buffer.length === 32) isEncryptionKeyValid = true;
-    } catch (e) {}
+    } catch {}
   }
 
   // DB Test
   let dbStatus = "Ok";
   try {
      await prisma.userPreference.count();
-  } catch(e) {
+  } catch {
      dbStatus = "Error";
   }
 
@@ -88,7 +88,7 @@ export default async function SettingsPage() {
     const uploadDir = path.join(process.cwd(), "data", "uploads");
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
     fs.accessSync(uploadDir, fs.constants.W_OK);
-  } catch(e) {
+  } catch {
     uploadStatus = "Error";
   }
 
@@ -121,7 +121,7 @@ export default async function SettingsPage() {
       const stats = fs.statSync(metricsFile);
       analyticsTimestamp = stats.mtime.toLocaleString();
     }
-  } catch(e) {}
+  } catch {}
 
   return (
     <div className="p-8 max-w-5xl mx-auto w-full space-y-8">

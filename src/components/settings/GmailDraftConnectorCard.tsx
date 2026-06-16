@@ -12,8 +12,18 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+interface StatusData {
+  connected: boolean;
+  configured: boolean;
+  redirectConfigured: boolean;
+  encryptionKeyPresent: boolean;
+  email?: string;
+  lastError?: string;
+  [key: string]: unknown;
+}
+
 export function GmailDraftConnectorCard() {
-  const [status, setStatus] = useState<Record<string, unknown> | null>(null);
+  const [status, setStatus] = useState<StatusData | null>(null);
   const [loading, setLoading] = useState(true);
 
 

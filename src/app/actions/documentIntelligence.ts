@@ -198,7 +198,7 @@ export async function createExtractedReminder(documentId: string, date: string, 
     await logAudit("document_reminder_created", "Reminder", reminder.id, { documentId });
     revalidatePath(`/documents/${documentId}`);
     return { success: true, reminder };
-  } catch (e) {
+  } catch {
     return { success: false };
   }
 }
@@ -217,7 +217,7 @@ export async function createExtractedFollowUp(documentId: string, actionItem: st
     await logAudit("document_followup_created", "FollowUp", fu.id, { documentId });
     revalidatePath(`/documents/${documentId}`);
     return { success: true, fu };
-  } catch (e) {
+  } catch {
     return { success: false };
   }
 }
@@ -237,7 +237,7 @@ export async function createExtractedWalletCard(documentId: string, title: strin
     revalidatePath(`/documents/${documentId}`);
     revalidatePath("/wallet");
     return { success: true, card };
-  } catch (e) {
+  } catch {
     return { success: false };
   }
 }

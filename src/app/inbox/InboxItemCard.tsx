@@ -15,8 +15,14 @@ interface Props {
 
 export function InboxItemCard({ item, relatedDocs, relatedDrafts }: Props) {
   const [showCorrection, setShowCorrection] = useState(false);
-  const meta = parseMetadata(item.metadata);
-  const confidenceScore = meta.confidenceScore as number | undefined;
+  const meta = parseMetadata<{
+    attachmentsMeta?: { id: string; filename: string; contentType: string; size: number; status: string; localDocumentId?: string; localFilename?: string }[];
+    messageId?: string;
+    provider?: "gmail" | "outlook_mail";
+    confidenceScore?: number;
+    [key: string]: unknown;
+  }>(item.metadata);
+  const confidenceScore = meta.confidenceScore;
   
   const isLowConfidence = confidenceScore !== undefined && confidenceScore < 0.8;
 
@@ -57,7 +63,7 @@ export function InboxItemCard({ item, relatedDocs, relatedDrafts }: Props) {
             <AttachmentList 
               inboxItemId={item.id}
               messageId={meta.messageId || (item.externalId ? item.externalId.split(':')[1] : "")}
-              provider={meta.provider}
+              provider={meta.provider!}
               attachments={meta.attachmentsMeta}
             />
           </div>

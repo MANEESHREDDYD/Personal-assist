@@ -18,15 +18,15 @@ import { ProviderAttachmentActions } from "./ProviderAttachmentActions";
  * Creates a Gmail or Outlook draft after explicit user action. Personal Assist
  * never sends email — the user must review and send manually from their provider.
  */
-export function ProviderDraftActions({ draft }: { draft: any }) {
+export function ProviderDraftActions({ draft }: { draft: { id: string; metadata?: string | null } }) {
   const router = useRouter();
   const meta = parseMetadata(draft.metadata);
-  const existing = (meta.providerDrafts as any) || {};
+  const existing = (meta.providerDrafts as Record<string, { webLink?: string;[key: string]: unknown }>) || {};
   const hasGmailDraft = !!existing.gmail;
   const hasOutlookDraft = !!existing.outlook;
 
-  const [gmailStatus, setGmailStatus] = useState<any>(null);
-  const [outlookStatus, setOutlookStatus] = useState<any>(null);
+  const [gmailStatus, setGmailStatus] = useState<{ connected?: boolean } | null>(null);
+  const [outlookStatus, setOutlookStatus] = useState<{ connected?: boolean } | null>(null);
   const [loading, setLoading] = useState<"gmail_draft" | "outlook_draft" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -63,8 +63,8 @@ export function ProviderDraftActions({ draft }: { draft: any }) {
       } else {
         setError(data.error || "Failed to create provider draft.");
       }
-    } catch (e: any) {
-      setError(e.message || "Failed to create provider draft.");
+    } catch (e) {
+      setError((e as Error).message || "Failed to create provider draft.");
     } finally {
       setLoading(null);
     }

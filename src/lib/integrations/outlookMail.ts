@@ -170,7 +170,7 @@ export function extractBodyText(bodyObj: OutlookBody | null | undefined): { text
   if (bodyObj.contentType === "text") {
     return { text: bodyObj.content || "", source: "text" };
   } else if (bodyObj.contentType === "html") {
-    return { text: stripHtmlToText(bodyObj.content), source: "html" };
+    return { text: stripHtmlToText(bodyObj.content || ""), source: "html" };
   }
   
   return { text: "", source: "unknown" };

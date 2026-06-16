@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/prisma";
-import { Mail, Edit, Check, Copy, Archive } from "lucide-react";
+import { Mail } from "lucide-react";
 import Link from "next/link";
 import { DraftClientActions } from "./DraftClientActions";
 
 export const dynamic = "force-dynamic";
 
-export default async function DraftsPage({ searchParams }: { searchParams: { sourceId?: string, type?: string, to?: string } }) {
+export default async function DraftsPage() {
   const drafts = await prisma.emailDraft.findMany({
     orderBy: { createdAt: 'desc' }
   });

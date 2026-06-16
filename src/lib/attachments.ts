@@ -76,7 +76,7 @@ export function getLinkedDocumentIds(
 ): string[] {
   const ids = new Set<string>();
   if (draft.relatedDocId) ids.add(draft.relatedDocId);
-  if (meta?.sourceDocumentId) ids.add(meta.sourceDocumentId);
+  if (typeof meta?.sourceDocumentId === "string") ids.add(meta.sourceDocumentId);
   if (Array.isArray(meta?.attachedDocumentIds)) {
     for (const id of meta.attachedDocumentIds) {
       if (typeof id === "string" && id) ids.add(id);

@@ -36,7 +36,7 @@ export default async function DocumentDetailPage({ params }: { params: { id: str
       if (parts.length > 1) {
         metadataObj = JSON.parse(parts[1]);
       }
-    } catch (e) {
+    } catch {
       // Ignore parse errors
     }
   }

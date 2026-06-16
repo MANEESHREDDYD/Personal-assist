@@ -183,7 +183,7 @@ export async function validateProviderAttachmentRequest(input: {
   }
 
   const meta = parseMetadata(draft.metadata);
-  const providerDrafts = meta.providerDrafts || {};
+  const providerDrafts = (meta.providerDrafts as Record<string, unknown>) || {};
   const providerDraft = providerDrafts[providerKey];
   if (!providerDraft) {
     return {
@@ -201,8 +201,8 @@ export async function validateProviderAttachmentRequest(input: {
   }
 
   const linkedIds = getLinkedDocumentIds(draft, meta);
-  const existing: unknown[] = (providerDraft as { attachments?: unknown[] }).attachments || [];
-  const existingDocIds = new Set(existing.map((a: { documentId: string }) => a.documentId));
+  const existing = (providerDraft as { attachments?: { documentId: string }[] }).attachments || [];
+  const existingDocIds = new Set(existing.map((a) => a.documentId));
 
   const outcomes: DocOutcome[] = [];
   for (const documentId of documentIds) {
