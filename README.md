@@ -53,6 +53,15 @@ A local-first scheduling platform on the lines of Calendly / Howie / Reclaim:
   approval-gated calendar write request; follow-ups are tracked locally. Tested:
   `npm run test:scheduling-secretary`.
 
+- **Smart planner & focus optimizer** (`/planner`, Phase 6D) — Motion/Reclaim/Clockwise-style.
+  Capture tasks (priority, due date, estimate) and habits, set a weekly focus policy, then run
+  the local optimizer: it schedules tasks into open time (due-date + priority order), proposes
+  deep-work focus blocks, places habits in preferred windows, detects fragmented/overloaded days
+  and context-switch load, and proposes moving flexible meetings — **never automatically**. Each
+  proposal is reviewed; approving creates an approval-gated calendar write request (local hold on
+  execute). Weekly review surfaces meeting load, focus coverage, and a workload/burnout heuristic.
+  Tested: `npm run test:planner`.
+
 ## Technical Skills Demonstrated
 
 | Domain | Implementation |

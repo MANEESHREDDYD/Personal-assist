@@ -851,3 +851,198 @@ model SchedulingDecision {
 
   @@index([conversationId])
 }
+
+// ---------------------------------------------------------------------------
+// Phase 6D — Smart planner + focus optimizer (Motion/Reclaim/Clockwise-style)
+// Schedules tasks/habits/focus into open time locally. Calendar changes are
+// CalendarWriteRequests; executing creates local holds only. No provider writes,
+// no silent meeting moves, no notifications.
+// ---------------------------------------------------------------------------
+
+model PlannerTask {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  priority      Int      @default(3) // 1 (highest) .. 5 (lowest)
+  dueDate       DateTime?
+  estimateMins  Int      @default(30)
+  status        String   @default("todo") // todo, scheduled, in_progress, done, canceled
+  role          String?
+  projectRef    String?  // placeholder link until project module exists
+  tagsJson      String?
+  energyLevel   String   @default("medium") // low, medium, high
+  requiresFocus Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  schedules     PlannerTaskSchedule[]
+
+  @@index([status])
+  @@index([dueDate])
+}
+
+model PlannerTaskSchedule {
+  id        String   @id @default(cuid())
+  taskId    String
+  start     DateTime
+  end       DateTime
+  source    String   @default("optimizer") // optimizer, manual
+  status    String   @default("planned") // planned, held, done
+  createdAt DateTime @default(now())
+
+  task      PlannerTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([start])
+}
+
+model Habit {
+  id            String   @id @default(cuid())
+  name          String
+  frequency     String   @default("daily") // daily, weekdays, weekly
+  durationMins  Int      @default(30)
+  windowStartMin Int     @default(360)  // preferred window (mins from midnight)
+  windowEndMin  Int      @default(1320)
+  minPerWeek    Int      @default(1)
+  maxPerWeek    Int      @default(7)
+  streak        Int      @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  schedules     HabitSchedule[]
+
+  @@index([active])
+}
+
+model HabitSchedule {
+  id        String   @id @default(cuid())
+  habitId   String
+  start     DateTime
+  end       DateTime
+  status    String   @default("planned") // planned, done, skipped
+  createdAt DateTime @default(now())
+
+  habit     Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@index([habitId])
+  @@index([start])
+}
+
+model FocusBlock {
+  id        String   @id @default(cuid())
+  title     String   @default("Deep work")
+  start     DateTime
+  end       DateTime
+  status    String   @default("proposed") // proposed, held, done
+  source    String   @default("optimizer")
+  createdAt DateTime @default(now())
+
+  @@index([start])
+}
+
+model BreakBlock {
+  id        String   @id @default(cuid())
+  title     String   @default("Break")
+  start     DateTime
+  end       DateTime
+  kind      String   @default("break") // break, lunch
+  createdAt DateTime @default(now())
+
+  @@index([start])
+}
+
+model FlexibleMeeting {
+  id        String   @id @default(cuid())
+  title     String
+  start     DateTime
+  end       DateTime
+  flexible  Boolean  @default(true)
+  sourceRef String?  // calendar event/hold id
+  createdAt DateTime @default(now())
+
+  @@index([start])
+}
+
+model TimeBudget {
+  id           String   @id @default(cuid())
+  category     String   // focus, meetings, admin, learning
+  weeklyHours  Float    @default(0)
+  singleton    String?  @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model EnergyProfile {
+  id            String   @id @default(cuid())
+  peakStartMin  Int      @default(540)  // morning peak by default
+  peakEndMin    Int      @default(720)
+  lowStartMin   Int      @default(840)
+  lowEndMin     Int      @default(960)
+  singleton     String   @unique @default("default")
+  updatedAt     DateTime @updatedAt
+}
+
+model RoutineTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  itemsJson   String   // JSON of routine items (e.g. morning routine)
+  createdAt   DateTime @default(now())
+}
+
+model PlannerPreference {
+  id                  String   @id @default(cuid())
+  weeklyFocusGoalHrs  Float    @default(10)
+  minFocusBlockMins   Int      @default(90)
+  preferFocusMornings Boolean  @default(true)
+  noBackToBack        Boolean  @default(true)
+  recoveryAfterLongMtgMins Int @default(15)
+  maxMeetingHoursDay  Float    @default(6)
+  singleton           String   @unique @default("default")
+  updatedAt           DateTime @updatedAt
+}
+
+model OptimizationRun {
+  id            String   @id @default(cuid())
+  scope         String   @default("day") // day, week
+  rangeStart    DateTime
+  rangeEnd      DateTime
+  summaryJson   String?  // metrics: meeting load, fragmented days, focus coverage, context-switch
+  status        String   @default("completed") // completed, applied, canceled
+  createdAt     DateTime @default(now())
+
+  proposals     OptimizationProposal[]
+
+  @@index([createdAt])
+}
+
+model OptimizationProposal {
+  id            String   @id @default(cuid())
+  runId         String
+  kind          String   // schedule_task, schedule_habit, focus_block, break_block, move_flexible_meeting
+  title         String
+  start         DateTime
+  end           DateTime
+  refId         String?  // task/habit/meeting id
+  rationale     String?
+  score         Float    @default(0)
+  status        String   @default("proposed") // proposed, approved, rejected, applied
+  calendarWriteRequestId String?
+  createdAt     DateTime @default(now())
+
+  run           OptimizationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([status])
+}
+
+model WeeklyReview {
+  id            String   @id @default(cuid())
+  rangeStart    DateTime
+  rangeEnd      DateTime
+  summary       String
+  metricsJson   String?
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+}

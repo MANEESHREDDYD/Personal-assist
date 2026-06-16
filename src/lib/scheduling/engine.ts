@@ -247,6 +247,34 @@ export function buildCalendarWritePreview(input: {
   };
 }
 
+/**
+ * Returns contiguous free intervals (working windows minus buffered busy), honoring
+ * minNotice. Unlike computeFreeSlots this does NOT slice into fixed-duration slots —
+ * it is the basis for variable-duration packing (tasks, focus blocks, habits).
+ */
+export function computeFreeIntervals(opts: Omit<SlotOptions, "durationMins"> & { durationMins?: number }): Interval[] {
+  const tz = opts.timezone || "UTC";
+  const offset = opts.offsetMinutesFor || ((ms: number) => tzOffsetMinutes(tz, ms));
+  void offset;
+  const bufBefore = (opts.bufferBeforeMins ?? 0) * MIN_MS;
+  const bufAfter = (opts.bufferAfterMins ?? 0) * MIN_MS;
+  const now = opts.now ?? Date.now();
+  const earliest = now + (opts.minNoticeMins ?? 0) * MIN_MS;
+
+  const busyBuffered = mergeIntervals(
+    opts.busy.map((b) => ({ start: b.start - bufBefore, end: b.end + bufAfter }))
+  );
+  const windows = workingWindows({ ...opts, durationMins: opts.durationMins ?? 0 } as SlotOptions);
+  const free: Interval[] = [];
+  for (const w of windows) {
+    for (const piece of subtract(w, busyBuffered)) {
+      const start = Math.max(piece.start, earliest);
+      if (piece.end > start) free.push({ start, end: piece.end });
+    }
+  }
+  return mergeIntervals(free).sort((a, b) => a.start - b.start);
+}
+
 /** Finds free slots of the requested duration honoring buffers, notice, and per-day caps. */
 export function computeFreeSlots(opts: SlotOptions): Slot[] {
   const tz = opts.timezone || "UTC";

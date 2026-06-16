@@ -119,7 +119,7 @@ export const ROLES: Record<RoleId, RoleDefinition> = {
       { name: "Document summary", description: "Summarize a personal document", prompt: "Summarize this document in plain language (no medical/financial advice): {context}" },
       { name: "Travel checklist", description: "Build a trip checklist", prompt: "Create a travel checklist for this trip: {context}" },
     ],
-    commandSuggestions: ["Plan my week", "Summarize this document", "Create bill reminders", "Prepare travel checklist", "Draft a polite email"],
+    commandSuggestions: ["Plan my day", "Plan my week", "Schedule my overdue tasks", "Protect 10 hours of focus time", "Create a weekly review", "Summarize this document", "Draft a polite email"],
   },
   engineer: {
     id: "engineer",
@@ -208,7 +208,7 @@ export const ROLES: Record<RoleId, RoleDefinition> = {
       { name: "Feedback draft", description: "Constructive feedback note", prompt: "Draft constructive, specific feedback (situation, behavior, impact, next step) for: {context}" },
       { name: "Delegation plan", description: "Distribute work fairly", prompt: "Create a delegation plan balancing workload across the team: {context}" },
     ],
-    commandSuggestions: ["Prepare my 1:1s", "Create team weekly update", "Draft feedback", "Summarize meeting actions", "Identify overloaded team members", "Create delegation plan"],
+    commandSuggestions: ["Prepare my 1:1s", "Create team weekly update", "Draft feedback", "Plan my week", "Suggest what to move", "Find my most fragmented day", "Identify overloaded team members", "Create delegation plan"],
   },
   team_lead: {
     id: "team_lead",

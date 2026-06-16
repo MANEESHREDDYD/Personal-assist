@@ -139,6 +139,21 @@ Booking (Calendly-style):
 - [ ] `npm run test:scheduling-secretary` passes; analytics `schedulingSecretaryMetrics`
       `emails_sent_by_secretary = 0` and `provider_events_written_by_secretary = 0`
 
+## 8d. Smart planner & focus optimizer (Phase 6D)
+
+- [ ] `/tasks` — create a few tasks with priority/due/estimate
+- [ ] `/habits` — create a habit (e.g. daily reading, 07:00–09:00)
+- [ ] `/focus` — set weekly focus goal + min block; save
+- [ ] `/optimizer` — **Run day optimization** → opens the run with proposals
+      (scheduled tasks, focus blocks, habits; flexible-meeting moves if overloaded)
+- [ ] Run summary shows meeting load, planned focus, tasks scheduled/unscheduled, burnout risk
+- [ ] **Approve** a proposal → confirm a calendar write request is created (`/calendar/write-requests`)
+- [ ] **Reject** a proposal → confirm no calendar write request is created
+- [ ] Approve + execute the write request → local hold only; appears in `/planner/day`
+- [ ] `/weekly-review` — **Generate weekly review** → focus coverage, fragmented days, risk
+- [ ] `npm run test:planner` passes; analytics `plannerMetrics`
+      `provider_events_written_by_planner = 0` and `emails_sent_by_planner = 0`
+
 ## 9. Safety checks
 
 ```bash

@@ -129,9 +129,14 @@ const PHASES = [
     items: ["Deterministic NL parser (intent, participants, duration, range, time-pref, follow-up)", "Candidate slot generation + ranking via the 6A engine", "Local reply drafts: propose-times / confirmation / reschedule / follow-up (never sent)", "Slot selection creates approval-gated calendar write request", "Inbox-to-schedule (read-only) + local follow-up tracking", "test:scheduling-secretary 33/33; no send, no silent provider writes"]
   },
   {
-    title: "Phase 6D-6L: Planner, Projects, Agreements, Meetings (Planned)",
+    title: "Phase 6D: Smart Planner & Focus Optimizer (Completed)",
+    status: "completed",
+    items: ["Tasks/habits/focus models + local optimization engine", "Schedules tasks into open time (due-date + priority), protects focus", "Detects fragmented/overloaded days + context-switch + burnout heuristic", "Proposes flexible-meeting moves (never automatic)", "Approving a proposal creates an approval-gated calendar write request", "test:planner 19/19; no provider writes, no email"]
+  },
+  {
+    title: "Phase 6E-6L: Projects, Agreements, Meetings (Planned)",
     status: "pending",
-    items: ["Motion/Reclaim/Clockwise planner + focus optimizer", "AI project manager + workload forecasting", "DocuSign-style local agreement/e-signature workflow", "Meeting intelligence + deep role workspaces", "Command Center v2 + trending workflow suite"]
+    items: ["AI project manager + workload forecasting", "DocuSign-style local agreement/e-signature workflow", "Meeting intelligence + deep role workspaces", "Command Center v2 + trending workflow suite", "Analytics/showcase upgrade + competitor checklist"]
   },
   {
     title: "Phase 5B-5H: Role-Mode Deep Sub-Pages (In progress)",

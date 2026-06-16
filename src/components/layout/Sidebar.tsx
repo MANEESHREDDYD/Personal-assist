@@ -30,7 +30,9 @@ import {
   CalendarRange,
   Clock,
   CalendarCheck,
-  Bot
+  Bot,
+  Wand2,
+  ListChecks
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -41,7 +43,10 @@ const NAV_ITEMS = [
   { name: "Scheduling", href: "/scheduling", icon: CalendarClock },
   { name: "Availability", href: "/availability", icon: Clock },
   { name: "Booking", href: "/booking", icon: CalendarCheck },
-  { name: "Planner", href: "/calendar/planner", icon: CalendarRange },
+  { name: "Smart Planner", href: "/planner", icon: CalendarRange },
+  { name: "Tasks", href: "/tasks", icon: ListChecks },
+  { name: "Optimizer", href: "/optimizer", icon: Wand2 },
+  { name: "Calendar Holds", href: "/calendar/planner", icon: Clock },
   { name: "Life Wallet", href: "/wallet", icon: Wallet },
   { name: "Unified Inbox", href: "/inbox", icon: Inbox },
   { name: "Documents", href: "/documents", icon: FileText },
