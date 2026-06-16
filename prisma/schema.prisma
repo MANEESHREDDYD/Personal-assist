@@ -387,3 +387,164 @@ model RoleOnboardingAnswer {
 
   @@index([role])
 }
+
+// ---------------------------------------------------------------------------
+// Phase 6A — Calendar Write + Availability Engine
+// Foundation for Calendly/Howie/Reclaim/Clockwise/Motion-style scheduling.
+// All provider calendar writes are approval-gated and previewed; nothing is
+// written to an external calendar silently and no attendee is notified.
+// ---------------------------------------------------------------------------
+
+model WorkingHoursProfile {
+  id        String   @id @default(cuid())
+  name      String   @default("Default")
+  timezone  String   @default("UTC") // IANA tz, e.g. "America/New_York"
+  isActive  Boolean  @default(true)
+  // JSON: [{ day: 0-6, enabled: bool, startMinute: int, endMinute: int }]
+  daysJson  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SchedulingPreference {
+  id                  String   @id @default(cuid())
+  bufferBeforeMins    Int      @default(0)
+  bufferAfterMins     Int      @default(0)
+  maxMeetingsPerDay   Int      @default(8)
+  maxMeetingHoursDay  Float    @default(6)
+  minNoticeMins       Int      @default(120)
+  lunchStartMinute    Int?     // minutes from midnight, local
+  lunchEndMinute      Int?
+  slotGranularityMins Int      @default(30)
+  singleton           String   @unique @default("default")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model AvailabilityRule {
+  id          String   @id @default(cuid())
+  label       String
+  kind        String   // do_not_schedule, preferred_window, break
+  dayOfWeek   Int?     // 0-6, null = every day
+  startMinute Int
+  endMinute   Int
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([kind])
+}
+
+model SchedulingWindow {
+  id          String    @id @default(cuid())
+  label       String
+  rangeStart  DateTime
+  rangeEnd    DateTime
+  createdAt   DateTime  @default(now())
+}
+
+model FocusPolicy {
+  id                 String   @id @default(cuid())
+  weeklyFocusGoalHrs Float    @default(10)
+  minBlockMins       Int      @default(90)
+  protectFocus       Boolean  @default(true)
+  preferMornings     Boolean  @default(true)
+  singleton          String   @unique @default("default")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model ConflictResolutionPolicy {
+  id          String   @id @default(cuid())
+  strategy    String   @default("propose_alternatives") // propose_alternatives, keep_first, manual
+  allowDoubleBooking Boolean @default(false)
+  singleton   String   @unique @default("default")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TimeBlock {
+  id          String   @id @default(cuid())
+  title       String
+  kind        String   // focus, break, lunch, meeting, task, hold
+  start       DateTime
+  end         DateTime
+  source      String   @default("local") // local, optimizer, planner
+  flexible    Boolean  @default(false)
+  metadata    String?
+  createdAt   DateTime @default(now())
+
+  @@index([start])
+  @@index([kind])
+}
+
+model CalendarHold {
+  id          String   @id @default(cuid())
+  title       String
+  start       DateTime
+  end         DateTime
+  status      String   @default("held") // held, released, promoted
+  reason      String?
+  relatedRequestId String?
+  createdAt   DateTime @default(now())
+
+  @@index([start])
+}
+
+model ProviderCalendarTarget {
+  id           String   @id @default(cuid())
+  provider     String   // google_calendar, outlook_calendar
+  calendarId   String   @default("primary")
+  displayName  String?
+  configured   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@unique([provider, calendarId])
+}
+
+model CalendarWriteRequest {
+  id            String    @id @default(cuid())
+  action        String    // create_event, move_event, cancel_event
+  title         String
+  start         DateTime
+  end           DateTime
+  timezone      String    @default("UTC")
+  attendeesJson String?   // JSON array of {name,email}
+  provider      String?   // google_calendar, outlook_calendar, or null = local-only
+  notifyAttendees Boolean @default(false)
+  status        String    @default("pending_approval") // pending_approval, approved, rejected, executed, provider_unavailable
+  approvedAt    DateTime?
+  executedAt    DateTime?
+  resultSummary String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  preview       CalendarWritePreview?
+
+  @@index([status])
+}
+
+model CalendarWritePreview {
+  id               String   @id @default(cuid())
+  requestId        String   @unique
+  conflictsJson    String   // JSON array of conflicting blocks
+  hasConflicts     Boolean  @default(false)
+  providerAvailable Boolean @default(false)
+  notifyAttendees  Boolean  @default(false)
+  impactSummary    String
+  createdAt        DateTime @default(now())
+
+  request          CalendarWriteRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+}
+
+model SuggestedSlot {
+  id          String   @id @default(cuid())
+  start       DateTime
+  end         DateTime
+  score       Float    @default(0)
+  reason      String?
+  forPurpose  String?  // meeting, focus, task
+  consumed    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([start])
+}

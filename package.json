@@ -22,7 +22,8 @@
     "security:no-send": "node scripts/check-no-send-policy.mjs",
     "security:demo-evidence": "node scripts/check-demo-evidence-hygiene.mjs",
     "demo:provider-draft-fixture": "tsx scripts/create-demo-provider-draft-fixture.ts",
-    "test:provider-attachments": "tsx scripts/test-provider-attachments.ts"
+    "test:provider-attachments": "tsx scripts/test-provider-attachments.ts",
+    "test:scheduling": "tsx scripts/test-scheduling.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

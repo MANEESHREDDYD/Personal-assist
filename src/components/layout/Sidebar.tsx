@@ -25,13 +25,19 @@ import {
   Search,
   Terminal,
   Layers,
-  Command
+  Command,
+  CalendarClock,
+  CalendarRange,
+  Clock
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { name: "Home", href: "/", icon: LayoutDashboard },
   { name: "Roles", href: "/roles", icon: Layers },
   { name: "Command Center", href: "/command-center", icon: Command },
+  { name: "Scheduling", href: "/scheduling", icon: CalendarClock },
+  { name: "Availability", href: "/availability", icon: Clock },
+  { name: "Planner", href: "/calendar/planner", icon: CalendarRange },
   { name: "Life Wallet", href: "/wallet", icon: Wallet },
   { name: "Unified Inbox", href: "/inbox", icon: Inbox },
   { name: "Documents", href: "/documents", icon: FileText },

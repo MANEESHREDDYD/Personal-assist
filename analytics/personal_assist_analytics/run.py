@@ -16,6 +16,7 @@ from personal_assist_analytics.data_contracts import validate_contracts
 from personal_assist_analytics.lineage import build_lineage_graph
 from personal_assist_analytics.marts import build_analytics_marts
 from personal_assist_analytics.role_metrics import analyze_role_usage
+from personal_assist_analytics.scheduling_metrics import analyze_scheduling
 from personal_assist_analytics.export import (
     export_metrics,
     generate_recommendations,
@@ -65,6 +66,10 @@ def main():
     print(f"[+] Analyzed role usage ({role_usage['supported_roles']} roles supported, "
           f"{role_usage['activated_role_profiles']} activated)")
 
+    scheduling = analyze_scheduling()
+    print(f"[+] Analyzed scheduling ({scheduling['calendar_write_requests']} write requests, "
+          f"{scheduling['external_provider_events_written']} external events written)")
+
     showcase = build_skill_showcase_summary(agentic, ai_eval, ml, contracts, lineage, marts)
 
     report = {
@@ -80,6 +85,7 @@ def main():
         "lineageGraphSummary": lineage,
         "analyticsMarts": marts,
         "roleUsageMetrics": role_usage,
+        "schedulingMetrics": scheduling,
         "skillShowcaseSummary": showcase,
         "recommendations": generate_recommendations(counts, quality, risk, contracts, agentic),
     }
