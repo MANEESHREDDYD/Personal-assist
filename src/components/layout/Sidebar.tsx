@@ -23,11 +23,15 @@ import {
   ListTodo,
   Zap,
   Search,
-  Terminal
+  Terminal,
+  Layers,
+  Command
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { name: "Home", href: "/", icon: LayoutDashboard },
+  { name: "Roles", href: "/roles", icon: Layers },
+  { name: "Command Center", href: "/command-center", icon: Command },
   { name: "Life Wallet", href: "/wallet", icon: Wallet },
   { name: "Unified Inbox", href: "/inbox", icon: Inbox },
   { name: "Documents", href: "/documents", icon: FileText },

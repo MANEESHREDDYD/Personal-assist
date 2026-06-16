@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { logAudit } from "@/lib/audit";
 import { generateDashboardBrief } from "./dashboard";
+import { isRoleId } from "@/lib/roles/registry";
 
 export async function checkOnboardingStatus() {
   const pref = await prisma.userPreference.findUnique({
@@ -14,7 +15,8 @@ export async function checkOnboardingStatus() {
 
 export async function completeOnboarding(
   mode: "empty" | "demo",
-  aiProvider: string
+  aiProvider: string,
+  role: string = "public_personal"
 ) {
   try {
     // Save AI provider
@@ -22,6 +24,19 @@ export async function completeOnboarding(
       where: { key: "AI_PROVIDER" },
       update: { value: aiProvider },
       create: { key: "AI_PROVIDER", value: aiProvider }
+    });
+
+    // Establish the active role (Personal Assist OS adapts to the chosen role).
+    const safeRole = isRoleId(role) ? role : "public_personal";
+    await prisma.userPreference.upsert({
+      where: { key: "ACTIVE_ROLE" },
+      update: { value: safeRole },
+      create: { key: "ACTIVE_ROLE", value: safeRole }
+    });
+    await prisma.userRoleProfile.upsert({
+      where: { role: safeRole },
+      update: { isActive: true },
+      create: { role: safeRole, isActive: true, onboardedAt: new Date() }
     });
 
     // Handle data generation

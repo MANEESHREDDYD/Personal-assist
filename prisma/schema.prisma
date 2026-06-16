@@ -304,3 +304,86 @@ model ConnectorAccount {
 
   @@unique([provider, email])
 }
+
+// ---------------------------------------------------------------------------
+// Phase 5A — Role-based Personal Assist OS foundation
+// One shared platform with role-specific layers. Roles:
+// student, public_personal, engineer, it_professional, manager, team_lead,
+// director, vp, founder, ceo, vc_investor
+// ---------------------------------------------------------------------------
+
+model UserRoleProfile {
+  id           String    @id @default(cuid())
+  role         String    @unique // one profile per role
+  displayName  String?
+  isActive     Boolean   @default(false)
+  onboardedAt  DateTime?
+  metadata     String?   // stringified JSON
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([isActive])
+}
+
+model RolePreference {
+  id        String   @id @default(cuid())
+  role      String
+  key       String
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([role, key])
+}
+
+model RoleDashboardConfig {
+  id         String   @id @default(cuid())
+  role       String   @unique
+  layoutJson String?  // stringified JSON of dashboard layout overrides
+  updatedAt  DateTime @updatedAt
+}
+
+model RoleWorkflowTemplate {
+  id             String   @id @default(cuid())
+  role           String
+  name           String
+  description    String?
+  category       String?
+  promptTemplate String   // local AI prompt template (no send, draft-only)
+  createdAt      DateTime @default(now())
+
+  @@index([role])
+}
+
+model RoleGoal {
+  id          String    @id @default(cuid())
+  role        String
+  title       String
+  description String?
+  status      String    @default("active") // active, done, archived
+  targetDate  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([role])
+}
+
+model RoleSkillArea {
+  id          String   @id @default(cuid())
+  role        String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@index([role])
+}
+
+model RoleOnboardingAnswer {
+  id        String   @id @default(cuid())
+  role      String
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+
+  @@index([role])
+}
