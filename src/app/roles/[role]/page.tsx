@@ -7,6 +7,13 @@ import { getActiveRole, setActiveRole } from "@/app/actions/roles";
 
 export const dynamic = "force-dynamic";
 
+// Routes that exist today. Role dashboard cards pointing elsewhere are rendered as
+// informational "guided via Command Center" cards instead of broken links.
+const EXISTING_ROUTES = new Set<string>([
+  "/documents", "/calendar", "/drafts", "/approvals", "/inbox",
+  "/reminders", "/contacts", "/followups", "/command-center", "/audit", "/search",
+]);
+
 export default async function RoleDashboardPage({ params }: { params: Promise<{ role: string }> }) {
   const { role } = await params;
   if (!isRoleId(role)) notFound();
@@ -57,21 +64,21 @@ export default async function RoleDashboardPage({ params }: { params: Promise<{ 
         <h2 className="text-lg font-bold text-white mb-3">Workspaces</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {def.dashboardCards.map((card) => {
-            const inner = (
-              <>
+            const liveRoute = card.href && EXISTING_ROUTES.has(card.href);
+            const target = liveRoute
+              ? card.href!
+              : `/command-center?role=${def.id}&cmd=${encodeURIComponent(card.title)}`;
+            return (
+              <Link key={card.title} href={target} className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/30 transition-all">
                 <div className="font-semibold text-white flex items-center justify-between">
                   {card.title}
-                  {card.href && <ArrowRight className="w-4 h-4 text-zinc-500" />}
+                  <ArrowRight className="w-4 h-4 text-zinc-500" />
                 </div>
                 <p className="text-xs text-zinc-400 mt-1">{card.description}</p>
-              </>
-            );
-            return card.href ? (
-              <Link key={card.title} href={card.href} className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/30 transition-all">
-                {inner}
+                {!liveRoute && (
+                  <p className="text-[10px] text-blue-400/80 mt-2 uppercase tracking-wider">Guided via Command Center</p>
+                )}
               </Link>
-            ) : (
-              <div key={card.title} className="p-4 rounded-xl bg-white/5 border border-white/10">{inner}</div>
             );
           })}
         </div>

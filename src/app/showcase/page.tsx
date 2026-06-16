@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
 import type { ReactNode } from "react";
-import { Database, Code, ShieldCheck, Activity, BrainCircuit, GitBranch, BarChart3, Bot, Workflow, Server, Lock, PenSquare, AlertTriangle } from "lucide-react";
+import { Database, Code, ShieldCheck, Activity, BrainCircuit, GitBranch, BarChart3, Bot, Workflow, Server, Lock, PenSquare, AlertTriangle, Layers } from "lucide-react";
+import { ROLES, ROLE_GROUPS, ROLE_IDS } from "@/lib/roles/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -184,6 +185,34 @@ export default async function ShowcasePage() {
           <MetricCard title="Lineage Edges" value={metrics.lineageGraphSummary?.total_edges ?? "-"} />
         </div>
       )}
+
+      {/* 0. Role-Based Personal Assist OS */}
+      <Section title="Role-Based Personal Assist OS" icon={<Layers size={20} />}>
+        <p className="text-zinc-300 text-sm mb-4">
+          One local-first platform with role-specific layers. {ROLE_IDS.length} roles adapt the
+          dashboard, quick actions, local AI workflows, and command suggestions. Every role keeps
+          the same safety guarantees: no email send, no silent calendar writes, approval-gated
+          external actions.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {ROLE_GROUPS.map((group) => (
+            <div key={group.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+              <h4 className="text-xs uppercase tracking-wider text-zinc-500 font-bold mb-2">{group.label}</h4>
+              <ul className="space-y-1.5 text-sm">
+                {ROLE_IDS.filter((id) => ROLES[id].group === group.id).map((id) => (
+                  <li key={id} className="text-zinc-300">
+                    <strong className="text-white">{ROLES[id].label}</strong> — {ROLES[id].tagline}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <p className="text-[11px] text-zinc-500 mt-3">
+          Career positioning: Data Engineering · AI/GenAI · Agentic AI · Backend · Full Stack ·
+          Product Engineering · Forward-Deployed Engineering · Security/Privacy.
+        </p>
+      </Section>
 
       {/* 1. Data Engineering System */}
       <Section title="Data Engineering System" icon={<Database size={20} />}>
