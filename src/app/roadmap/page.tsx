@@ -114,7 +114,17 @@ const PHASES = [
     items: ["ESLint warnings reduced 334 -> 37", "0 errors; build + type-check green", "any -> typed interfaces / unknown narrowing", "Type-only, behavior-preserving across backend + UI"]
   },
   {
-    title: "Live Gmail/Outlook Provider Verification (Active - pending your OAuth credentials)",
+    title: "Phase 5A/5I: Role-Based Personal Assist OS (Completed)",
+    status: "completed",
+    items: ["11 roles: student, personal, engineer, IT, manager, team lead, director, VP, founder, CEO, VC", "Role registry powers dashboards, quick actions, workflows, commands", "Universal command center proposes local actions (draft/plan/summary/checklist/memo)", "Approval-gated, no send, no silent calendar writes", "Switch roles anytime in Settings -> Role Profile"]
+  },
+  {
+    title: "Phase 5B-5H: Role-Mode Deep Sub-Pages (In progress)",
+    status: "active",
+    items: ["Registry-driven role dashboards are live for every role", "Dedicated per-feature sub-pages + models added incrementally", "Student / engineer / manager / executive / founder / VC modes", "Each remains local-first and approval-gated"]
+  },
+  {
+    title: "Live Gmail/Outlook Provider Verification (Pending your OAuth credentials)",
     status: "active",
     items: ["Add ENCRYPTION_KEY + Google/Microsoft test OAuth to local .env", "Run verify:live-provider-env until READY", "Connect draft connectors; create Gmail/Outlook drafts", "Confirm nothing sent; record sanitized results", "No live success is claimed until real evidence exists"]
   },
