@@ -28,7 +28,8 @@ import {
   Command,
   CalendarClock,
   CalendarRange,
-  Clock
+  Clock,
+  CalendarCheck
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -37,6 +38,7 @@ const NAV_ITEMS = [
   { name: "Command Center", href: "/command-center", icon: Command },
   { name: "Scheduling", href: "/scheduling", icon: CalendarClock },
   { name: "Availability", href: "/availability", icon: Clock },
+  { name: "Booking", href: "/booking", icon: CalendarCheck },
   { name: "Planner", href: "/calendar/planner", icon: CalendarRange },
   { name: "Life Wallet", href: "/wallet", icon: Wallet },
   { name: "Unified Inbox", href: "/inbox", icon: Inbox },

@@ -102,6 +102,29 @@ Microsoft Entra setup.
 - [ ] Confirm **nothing** in Sent for either provider
 - [ ] Update sanitized [`live-provider-results.md`](live-verification/live-provider-results.md) (pass/fail/not-tested, placeholders only)
 
+## 8b. Scheduling & booking (Phase 6A–6B)
+
+Scheduling:
+- [ ] `/availability` — set timezone + working hours; save
+- [ ] `/availability/rules` — add a do-not-schedule or lunch window
+- [ ] `/scheduling` — set buffers/notice/max-per-day; **Preview** finds free slots respecting them
+- [ ] Click **Propose write** on a slot → a request appears in `/calendar/write-requests` (pending)
+- [ ] Approve then **Execute** → a local hold is created; status shows executed/local
+- [ ] `/calendar/planner` — the hold and meeting-load appear; `npm run test:scheduling` passes
+- [ ] Confirm **no** external calendar event was created and **no** notification was sent
+
+Booking (Calendly-style):
+- [ ] `/booking/admin/meeting-types` — create a meeting type (e.g. "Intro Call", 30 min)
+- [ ] Add a required question and a routing rule
+- [ ] Open the local booking link `/booking/[slug]` → **View available times**
+- [ ] Pick a slot, fill name + answers, **Request this time**
+- [ ] `/booking/requests` — the request is **pending**; open detail to see answers + routing
+- [ ] **Approve** → confirm a linked **calendar write request** is created and a **local
+      confirmation draft** appears (subject says "Confirmed", body says "NOT sent")
+- [ ] **Reject** another request → confirm **no** calendar write request is created
+- [ ] `npm run test:booking` passes; `bookingMetrics.auto_confirmations_sent = 0` and
+      `provider_events_written_from_booking = 0` in the analytics JSON
+
 ## 9. Safety checks
 
 ```bash

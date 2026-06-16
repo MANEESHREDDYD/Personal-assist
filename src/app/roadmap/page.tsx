@@ -119,6 +119,16 @@ const PHASES = [
     items: ["11 roles: student, personal, engineer, IT, manager, team lead, director, VP, founder, CEO, VC", "Role registry powers dashboards, quick actions, workflows, commands", "Universal command center proposes local actions (draft/plan/summary/checklist/memo)", "Approval-gated, no send, no silent calendar writes", "Switch roles anytime in Settings -> Role Profile"]
   },
   {
+    title: "Phase 6A/6B: Scheduling Engine + Booking Links (Completed)",
+    status: "completed",
+    items: ["Timezone-aware availability engine (buffers, focus/lunch/do-not-schedule)", "Approval-gated calendar write requests with dry-run preview", "Execution creates local hold only; provider write unavailable until OAuth", "Calendly-style meeting types, booking links, routing engine, request queue", "test:scheduling 17/17 + test:booking 23/23; no send, no silent provider writes"]
+  },
+  {
+    title: "Phase 6C-6L: Scheduling Secretary, Planner, Projects, Agreements, Meetings (Planned)",
+    status: "pending",
+    items: ["Howie-style AI scheduling secretary", "Motion/Reclaim/Clockwise planner + focus optimizer", "AI project manager + workload forecasting", "DocuSign-style local agreement/e-signature workflow", "Meeting intelligence + deep role workspaces"]
+  },
+  {
     title: "Phase 5B-5H: Role-Mode Deep Sub-Pages (In progress)",
     status: "active",
     items: ["Registry-driven role dashboards are live for every role", "Dedicated per-feature sub-pages + models added incrementally", "Student / engineer / manager / executive / founder / VC modes", "Each remains local-first and approval-gated"]

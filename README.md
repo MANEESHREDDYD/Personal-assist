@@ -26,6 +26,25 @@ adapt to you. Switch anytime in **Settings → Role Profile**.
 > external write actions are **approval-gated**, and drafts stay local drafts until you send
 > them yourself.
 
+## Scheduling & Booking (Phase 6A–6B)
+
+A local-first scheduling platform on the lines of Calendly / Howie / Reclaim:
+
+- **Availability engine** (`/availability`, `/scheduling`) — timezone-aware working hours,
+  buffers, lunch/break/do-not-schedule protection, free-slot finder, conflict detection, and
+  meeting-load. Pure + unit-tested: `npm run test:scheduling`.
+- **Approval-gated calendar writes** (`/calendar/write-requests`) — every proposed write is
+  previewed (conflicts, provider availability, notify flag) and requires approval. Execution
+  creates a **local hold only**; provider execution stays unavailable until a calendar-write
+  connector + OAuth exist. **No silent provider events, no attendee notifications.**
+- **Calendly-style booking links** (`/booking`) — meeting types with duration/location/
+  questions/routing, local booking links at `/booking/[slug]`, a routing engine, and a
+  booking-request approval queue (`/booking/requests`). Approving a request creates an
+  approval-gated calendar write request and a **local** confirmation draft — **nothing is
+  sent and no provider event is written automatically.** Tested: `npm run test:booking`.
+
+> Booking links are local-only on `localhost` until the app is deployed.
+
 ## Technical Skills Demonstrated
 
 | Domain | Implementation |

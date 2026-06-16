@@ -548,3 +548,176 @@ model SuggestedSlot {
 
   @@index([start])
 }
+
+// ---------------------------------------------------------------------------
+// Phase 6B — Calendly-style booking links + routing
+// Booking requests are captured locally. Approval creates an approval-gated
+// CalendarWriteRequest (Phase 6A) — never a silent provider event, never an
+// automatic confirmation email.
+// ---------------------------------------------------------------------------
+
+model MeetingType {
+  id               String   @id @default(cuid())
+  title            String
+  slug             String   @unique
+  description      String?
+  durationMins     Int      @default(30)
+  bufferBeforeMins Int      @default(0)
+  bufferAfterMins  Int      @default(0)
+  locationType     String   @default("custom") // google_meet, teams, zoom, phone, in_person, custom
+  locationValue    String?
+  active           Boolean  @default(true)
+  rangeStart       DateTime?
+  rangeEnd         DateTime?
+  minNoticeMins    Int      @default(120)
+  maxPerDay        Int      @default(5)
+  color            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  questions        BookingQuestion[]
+  routingRules     BookingRoutingRule[]
+  requests         BookingRequest[]
+  reminderRules    BookingReminderRule[]
+
+  @@index([active])
+}
+
+model BookingPage {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String?
+  ownerName   String?
+  timezone    String   @default("UTC")
+  published   Boolean  @default(true)
+  meetingTypeIdsJson String? // JSON array of MeetingType ids surfaced on this page
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BookingQuestion {
+  id            String   @id @default(cuid())
+  meetingTypeId String
+  label         String
+  type          String   @default("short_text") // short_text, long_text, email, phone, select, checkbox
+  required      Boolean  @default(false)
+  optionsJson   String?  // JSON array for select
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  meetingType   MeetingType @relation(fields: [meetingTypeId], references: [id], onDelete: Cascade)
+
+  @@index([meetingTypeId])
+}
+
+model BookingRoutingRule {
+  id            String   @id @default(cuid())
+  meetingTypeId String
+  label         String
+  // Match: when answer to `questionLabel` <op> `value` => route to `routeTo`
+  questionLabel String?
+  op            String   @default("equals") // equals, contains, not_equals
+  value         String?
+  routeTo       String   // free-form routing target (owner/queue/note)
+  priority      Int      @default(0)
+  enabled       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  meetingType   MeetingType @relation(fields: [meetingTypeId], references: [id], onDelete: Cascade)
+
+  @@index([meetingTypeId])
+}
+
+model BookingRequest {
+  id             String   @id @default(cuid())
+  meetingTypeId  String
+  slotStart      DateTime
+  slotEnd        DateTime
+  timezone       String   @default("UTC")
+  status         String   @default("pending") // pending, approved, rejected, cancelled
+  answersJson    String?  // JSON map of question label -> answer
+  routedTo       String?
+  routingReason  String?
+  calendarWriteRequestId String?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  meetingType    MeetingType @relation(fields: [meetingTypeId], references: [id], onDelete: Cascade)
+  invitees       BookingInvitee[]
+  confirmationDrafts BookingConfirmationDraft[]
+  rescheduleRequests BookingRescheduleRequest[]
+  cancelRequests BookingCancelRequest[]
+
+  @@index([status])
+  @@index([meetingTypeId])
+}
+
+model BookingInvitee {
+  id              String   @id @default(cuid())
+  bookingRequestId String
+  name            String
+  email           String?
+  phone           String?
+  isPrimary       Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  bookingRequest  BookingRequest @relation(fields: [bookingRequestId], references: [id], onDelete: Cascade)
+
+  @@index([bookingRequestId])
+}
+
+model BookingRescheduleRequest {
+  id               String   @id @default(cuid())
+  bookingRequestId String
+  proposedStart    DateTime
+  proposedEnd      DateTime
+  reason           String?
+  status           String   @default("pending") // pending, approved, rejected
+  createdAt        DateTime @default(now())
+
+  bookingRequest   BookingRequest @relation(fields: [bookingRequestId], references: [id], onDelete: Cascade)
+
+  @@index([bookingRequestId])
+}
+
+model BookingCancelRequest {
+  id               String   @id @default(cuid())
+  bookingRequestId String
+  reason           String?
+  status           String   @default("pending") // pending, approved, rejected
+  createdAt        DateTime @default(now())
+
+  bookingRequest   BookingRequest @relation(fields: [bookingRequestId], references: [id], onDelete: Cascade)
+
+  @@index([bookingRequestId])
+}
+
+model BookingConfirmationDraft {
+  id               String   @id @default(cuid())
+  bookingRequestId String
+  kind             String   @default("confirmation") // confirmation, reminder, follow_up
+  subject          String
+  body             String
+  // Drafts are local only: nothing is sent. User copies/exports/manually sends.
+  delivered        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  bookingRequest   BookingRequest @relation(fields: [bookingRequestId], references: [id], onDelete: Cascade)
+
+  @@index([bookingRequestId])
+}
+
+model BookingReminderRule {
+  id            String   @id @default(cuid())
+  meetingTypeId String
+  offsetMins    Int      @default(60) // minutes before slot
+  kind          String   @default("reminder") // reminder, follow_up
+  enabled       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  meetingType   MeetingType @relation(fields: [meetingTypeId], references: [id], onDelete: Cascade)
+
+  @@index([meetingTypeId])
+}
