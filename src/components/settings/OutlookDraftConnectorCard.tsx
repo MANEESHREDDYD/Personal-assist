@@ -12,13 +12,19 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-export function OutlookDraftConnectorCard() {
-  const [status, setStatus] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+interface StatusData {
+  connected: boolean;
+  configured: boolean;
+  redirectConfigured: boolean;
+  encryptionKeyPresent: boolean;
+  email?: string;
+  lastError?: string;
+  [key: string]: unknown;
+}
 
-  useEffect(() => {
-    fetchStatus();
-  }, []);
+export function OutlookDraftConnectorCard() {
+  const [status, setStatus] = useState<StatusData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   async function fetchStatus() {
     try {
@@ -31,6 +37,12 @@ export function OutlookDraftConnectorCard() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchStatus();
+  }, []);
+
 
   async function handleDisconnect() {
     setLoading(true);

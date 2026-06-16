@@ -13,7 +13,7 @@ interface Props {
   card: WalletCard;
 }
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, React.ElementType> = {
   document: FileText,
   payment: CreditCard,
   travel: Plane,

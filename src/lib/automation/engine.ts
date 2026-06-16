@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
-import { getAIProvider } from "@/lib/ai/provider";
 
 export async function runAutomations() {
   console.log(`[Automation Engine] Running at ${new Date().toISOString()}`);
@@ -44,9 +43,10 @@ export async function runAutomations() {
       }
 
       success = true;
-    } catch (e: any) {
-      console.error(`[Automation Engine] Rule ${rule.name} failed:`, e);
-      errorMessage = e.message;
+    } catch (e: unknown) {
+      const err = e as Error;
+      console.error(`[Automation Engine] Rule ${rule.name} failed:`, err);
+      errorMessage = err?.message || "Unknown error";
     }
 
     // Determine next run time. 

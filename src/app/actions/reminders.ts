@@ -11,7 +11,7 @@ export async function updateReminderStatus(id: string, status: string) {
 
     if (status === "completed" && reminder.recurrenceRule) {
       // Calculate next trigger
-      let nextTrigger = new Date(reminder.nextTriggerAt || reminder.dueDate || new Date());
+      const nextTrigger = new Date(reminder.nextTriggerAt || reminder.dueDate || new Date());
       if (reminder.recurrenceRule === "daily") {
          nextTrigger.setDate(nextTrigger.getDate() + 1);
       } else if (reminder.recurrenceRule === "weekly") {
@@ -47,9 +47,7 @@ export async function updateReminderStatus(id: string, status: string) {
     }
     revalidatePath("/reminders");
     return { success: true };
-  } catch (error) {
-    return { success: false };
-  }
+  } catch { return { success: false }; }
 }
 
 export async function snoozeReminder(id: string) {
@@ -63,7 +61,5 @@ export async function snoozeReminder(id: string) {
     await logAudit("reminder_snoozed", "Reminder", id, { snoozedUntil });
     revalidatePath("/reminders");
     return { success: true };
-  } catch (error) {
-    return { success: false };
-  }
+  } catch { return { success: false }; }
 }

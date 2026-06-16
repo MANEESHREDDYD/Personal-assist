@@ -13,12 +13,13 @@ import * as outlookDraft from "@/lib/integrations/outlookDraft";
 
 export type DraftProvider = "gmail_draft" | "outlook_draft";
 
-export async function getValidAccessToken(account: any, provider: DraftProvider): Promise<string> {
-  const accessToken = account.accessTokenEncrypted
-    ? decryptToken(account.accessTokenEncrypted)
+export async function getValidAccessToken(account: unknown, provider: DraftProvider): Promise<string> {
+  const acc = account as { accessTokenEncrypted?: string; tokenExpiry?: Date | string };
+  const accessToken = acc.accessTokenEncrypted
+    ? decryptToken(acc.accessTokenEncrypted)
     : "";
 
-  const expiry = account.tokenExpiry ? new Date(account.tokenExpiry).getTime() : 0;
+  const expiry = acc.tokenExpiry ? new Date(acc.tokenExpiry).getTime() : 0;
   const needsRefresh = !accessToken || expiry < Date.now() + 60_000;
 
   if (!needsRefresh) return accessToken;

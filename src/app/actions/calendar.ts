@@ -34,7 +34,7 @@ export async function importICS(formData: FormData) {
 
           if (!existing) {
             const organizer = ev.organizer ? (typeof ev.organizer === 'string' ? ev.organizer : (ev.organizer as any).val) : null;
-            const attendees = ev.attendee ? (Array.isArray(ev.attendee) ? ev.attendee.map((a: any) => typeof a === 'string' ? a : a.val).join(", ") : (typeof ev.attendee === 'string' ? ev.attendee : (ev.attendee as any).val)) : null;
+            const attendees = ev.attendee ? (Array.isArray(ev.attendee) ? ev.attendee.map((a: Record<string, unknown> | string) => typeof a === 'string' ? a : a.val).join(", ") : (typeof ev.attendee === 'string' ? ev.attendee : (ev.attendee as any).val)) : null;
 
             // Create Calendar Event
             const calEvent = await prisma.calendarEvent.create({

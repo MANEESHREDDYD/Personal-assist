@@ -21,7 +21,7 @@ import { ProviderAttachmentActions } from "./ProviderAttachmentActions";
 export function ProviderDraftActions({ draft }: { draft: any }) {
   const router = useRouter();
   const meta = parseMetadata(draft.metadata);
-  const existing = meta.providerDrafts || {};
+  const existing = (meta.providerDrafts as any) || {};
   const hasGmailDraft = !!existing.gmail;
   const hasOutlookDraft = !!existing.outlook;
 

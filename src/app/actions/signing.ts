@@ -12,9 +12,7 @@ export async function addSigner(documentId: string, name: string, email: string,
     await logAudit("signer_added", "Document", documentId, { signerId: signer.id, email });
     revalidatePath(`/documents/${documentId}`);
     return { success: true, signer };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
+  } catch (error: unknown) { return { success: false, error: (error as Error)?.message || "Unknown error" }; }
 }
 
 export async function removeSigner(documentId: string, signerId: string) {
@@ -25,9 +23,7 @@ export async function removeSigner(documentId: string, signerId: string) {
     await logAudit("signer_removed", "Document", documentId, { signerId });
     revalidatePath(`/documents/${documentId}`);
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
+  } catch (error: unknown) { return { success: false, error: (error as Error)?.message || "Unknown error" }; }
 }
 
 export async function addSignatureField(documentId: string, signerId: string, type: string, label: string, pageNumber: number = 1) {
@@ -38,9 +34,7 @@ export async function addSignatureField(documentId: string, signerId: string, ty
     await logAudit("signature_field_added", "Document", documentId, { fieldId: field.id });
     revalidatePath(`/documents/${documentId}`);
     return { success: true, field };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
+  } catch (error: unknown) { return { success: false, error: (error as Error)?.message || "Unknown error" }; }
 }
 
 export async function createMockSigningRequest(documentId: string) {
@@ -92,9 +86,7 @@ export async function createMockSigningRequest(documentId: string) {
     await logAudit("mock_signing_request_created", "Document", documentId, {});
     revalidatePath(`/documents/${documentId}`);
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
+  } catch (error: unknown) { return { success: false, error: (error as Error)?.message || "Unknown error" }; }
 }
 
 export async function simulateSignerViewed(signerId: string, documentId: string) {
@@ -106,9 +98,7 @@ export async function simulateSignerViewed(signerId: string, documentId: string)
     await logAudit("mock_signer_viewed", "Document", documentId, { signerId });
     revalidatePath(`/documents/${documentId}`);
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
+  } catch (error: unknown) { return { success: false, error: (error as Error)?.message || "Unknown error" }; }
 }
 
 export async function simulateSignerSigned(signerId: string, documentId: string) {
@@ -170,9 +160,7 @@ export async function simulateSignerSigned(signerId: string, documentId: string)
 
     revalidatePath(`/documents/${documentId}`);
     return { success: true, allSigned };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
+  } catch (error: unknown) { return { success: false, error: (error as Error)?.message || "Unknown error" }; }
 }
 
 export async function simulateSignerDeclined(signerId: string, documentId: string, reason: string = "Declined in mock") {
@@ -198,7 +186,5 @@ export async function simulateSignerDeclined(signerId: string, documentId: strin
 
     revalidatePath(`/documents/${documentId}`);
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
+  } catch (error: unknown) { return { success: false, error: (error as Error)?.message || "Unknown error" }; }
 }

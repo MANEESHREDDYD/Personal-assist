@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { AIProvider } from "./provider";
 
 export class RulesProvider implements AIProvider {
@@ -26,7 +27,7 @@ export class RulesProvider implements AIProvider {
   }
 
   async extractEntities(text: string) {
-    const entities: Record<string, any> = {};
+    const entities: Record<string, string> = {};
     
     // Extract dates
     const dateMatch = text.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* \d{1,2}(st|nd|rd|th)?,? \d{4}\b/i);
@@ -70,17 +71,19 @@ export class RulesProvider implements AIProvider {
     return { detected: false };
   }
 
-  async generateBrief(type: string, context: any) {
+  async generateBrief(type: string, context: unknown) {
+    const ctx = (context || {}) as Record<string, unknown>;
     if (type === "stock_start") {
-      return `Informational Only. Not financial advice. Today's watchlist has ${context?.stocks?.length || 0} active tickers. Make sure to check any earnings today.`;
+      const stocks = ctx.stocks as unknown[] | undefined;
+      return `Informational Only. Not financial advice. Today's watchlist has ${stocks?.length || 0} active tickers. Make sure to check any earnings today.`;
     }
     if (type === "stock_end") {
       return `Informational Only. Not financial advice. The market has closed. Watchlist summary complete.`;
     }
     if (type === "daily_start") {
-      return `Rule-Based Daily Brief:\n- Pending Approvals: ${context?.pendingApprovals || 0}\n- Documents Needing Review: ${context?.documentsReview || 0}\n- Today's Meetings: ${context?.meetings || 0}`;
+      return `Rule-Based Daily Brief:\n- Pending Approvals: ${ctx.pendingApprovals || 0}\n- Documents Needing Review: ${ctx.documentsReview || 0}\n- Today's Meetings: ${ctx.meetings || 0}`;
     }
-    return `End-of-Day Brief:\n- Completed Items: ${context?.completedItems || 0}\n- Pending Approvals: ${context?.pendingApprovals || 0}`;
+    return `End-of-Day Brief:\n- Completed Items: ${ctx.completedItems || 0}\n- Pending Approvals: ${ctx.pendingApprovals || 0}`;
   }
 
   async editDocument(text: string, instructions: string) {
@@ -110,7 +113,7 @@ export class RulesProvider implements AIProvider {
     return dates;
   }
 
-  async extractParties(text: string): Promise<{ name: string; role: string }[]> {
+  async extractParties(_text: string): Promise<{ name: string; role: string }[]> {
     return [{ name: "Unknown Party", role: "Extracted via Rules placeholder" }];
   }
 

@@ -88,7 +88,7 @@ export async function POST(
     }
 
     const meta = parseMetadata(draft.metadata);
-    const providerDrafts = meta.providerDrafts || {};
+    const providerDrafts = (meta.providerDrafts as Record<string, unknown>) || {};
 
     // 6. Block duplicate provider draft creation.
     if (providerDrafts[providerKey]) {
@@ -134,7 +134,7 @@ export async function POST(
       body: draft.body,
     };
 
-    let providerDraftRecord: Record<string, any>;
+    let providerDraftRecord: Record<string, unknown>;
     if (provider === "gmail_draft") {
       const result = await gmailDraft.createGmailDraft(accessToken, fields);
       providerDraftRecord = {
@@ -189,21 +189,22 @@ export async function POST(
       providerDraft: providerDraftRecord,
       message: `${label} draft created. Personal Assist does not send emails — review and send it manually from ${label}.`,
     });
-  } catch (error: any) {
-    console.error("Provider draft creation failed", error?.message);
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Provider draft creation failed", err?.message);
     await logAudit("provider_draft_creation_failed", "EmailDraft", draftId || "unknown", {
-      error: error?.message,
+      error: err?.message,
     });
     if (draftId) {
       await notify(
         "Provider draft creation failed",
-        `Could not create the provider draft: ${error?.message || "Unknown error"}.`,
+        `Could not create the provider draft: ${err?.message || "Unknown error"}.`,
         "error",
         draftId
       );
     }
     return NextResponse.json(
-      { error: error?.message || "Failed to create provider draft." },
+      { error: err?.message || "Failed to create provider draft." },
       { status: 502 }
     );
   }

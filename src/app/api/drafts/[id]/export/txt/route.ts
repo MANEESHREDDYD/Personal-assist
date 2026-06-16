@@ -18,7 +18,7 @@ export async function GET(
     }
 
     const meta = parseMetadata(draft.metadata);
-    const relatedDocIds = meta.attachedDocumentIds || [];
+    const relatedDocIds = (meta.attachedDocumentIds as string[]) || [];
     let attachmentsList = "No attachments selected.";
 
     if (relatedDocIds.length > 0) {

@@ -3,17 +3,23 @@
 import { useState, useEffect } from "react";
 import { Calendar, CheckCircle2, XCircle, RefreshCw, AlertTriangle, Settings, Lock, LogOut } from "lucide-react";
 
+interface StatusData {
+  connected: boolean;
+  configured: boolean;
+  encryptionKeyPresent: boolean;
+  email?: string;
+  lastSyncAt?: string;
+  lastError?: string;
+  [key: string]: unknown;
+}
+
 export default function OutlookCalendarConnectorCard() {
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<StatusData | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncDays, setSyncDays] = useState("30");
   const [syncResult, setSyncResult] = useState<{ imported: number, updated: number, skipped: number } | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchStatus();
-  }, []);
 
   async function fetchStatus() {
     try {
@@ -26,6 +32,13 @@ export default function OutlookCalendarConnectorCard() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchStatus();
+  }, []);
+
+
 
   async function handleSync() {
     setSyncing(true);
@@ -41,8 +54,9 @@ export default function OutlookCalendarConnectorCard() {
       if (!res.ok) throw new Error(data.error || "Sync failed");
       setSyncResult({ imported: data.imported, updated: data.updated, skipped: data.skipped });
       await fetchStatus();
-    } catch (e: any) {
-      setSyncError(e.message);
+    } catch (e: unknown) {
+      const err = e as Error;
+      setSyncError(err?.message || "An unknown error occurred");
     } finally {
       setSyncing(false);
     }

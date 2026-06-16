@@ -28,16 +28,16 @@ export async function completeOnboarding(
     if (mode === "empty") {
       // Create one starter item
       const starterCard = await prisma.walletCard.create({
-         data: {
-            type: "task",
-            title: "Explore Personal Assist",
-            category: "Getting Started",
-            status: "Pending",
-            source: "System",
-            metadata: JSON.stringify({ note: "Welcome to your local workspace!" })
-         }
+        data: {
+          type: "task",
+          title: "Explore Personal Assist",
+          category: "Getting Started",
+          status: "Pending",
+          source: "System",
+          metadata: JSON.stringify({ note: "Welcome to your local workspace!" })
+        }
       });
-      await logAudit("card_created", "WalletCard", starterCard.id, { message: "Starter item created" });
+      await logAudit("card_created", "WalletCard", starterCard.id, { message: "Starter item created." });
 
       // Generate a starter brief
       await generateDashboardBrief("daily_start");
@@ -47,7 +47,7 @@ export async function completeOnboarding(
       // Let's rely on the user running npm run db:reset for now, or just seed the starter items.
       // Actually, if they chose Demo Mode here, I should generate a small demo scenario so it's not totally empty.
       
-      const starterCard = await prisma.walletCard.create({
+      await prisma.walletCard.create({
          data: {
             type: "document",
             title: "Welcome_Guide.pdf",
@@ -83,7 +83,5 @@ export async function resetOnboarding() {
     });
     revalidatePath("/");
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
+  } catch (error: unknown) { return { success: false, error: (error as Error)?.message || "Unknown error" }; }
 }

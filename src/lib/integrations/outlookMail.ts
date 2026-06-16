@@ -115,17 +115,29 @@ export async function fetchMessageDetails(accessToken: string, messageId: string
   return res.json();
 }
 
-export function extractEmailAddresses(recipientObj: any): { name: string, email: string }[] {
+export interface OutlookRecipient {
+  emailAddress?: { name?: string; address?: string };
+}
+
+export function extractEmailAddresses(recipientObj: unknown): { name: string, email: string }[] {
   if (!recipientObj || !Array.isArray(recipientObj)) return [];
-  return recipientObj.map(r => ({
+  return (recipientObj as OutlookRecipient[]).map(r => ({
     name: r.emailAddress?.name || "",
     email: r.emailAddress?.address || ""
   })).filter(r => !!r.email);
 }
 
-export function extractAttachmentMetadata(attachments: any[]): any[] {
+export interface OutlookAttachment {
+  id: string;
+  name: string;
+  contentType: string;
+  size: number;
+  isInline: boolean;
+}
+
+export function extractAttachmentMetadata(attachments: unknown): { id: string; filename: string; contentType: string; size: number; isInline: boolean; status: string }[] {
   if (!attachments || !Array.isArray(attachments)) return [];
-  return attachments.map(a => ({
+  return (attachments as OutlookAttachment[]).map(a => ({
     id: a.id,
     filename: a.name,
     contentType: a.contentType,
@@ -147,7 +159,12 @@ export function stripHtmlToText(html: string): string {
   return text.trim();
 }
 
-export function extractBodyText(bodyObj: any): { text: string, source: string } {
+export interface OutlookBody {
+  contentType?: string;
+  content?: string;
+}
+
+export function extractBodyText(bodyObj: OutlookBody | null | undefined): { text: string, source: string } {
   if (!bodyObj) return { text: "", source: "none" };
   
   if (bodyObj.contentType === "text") {
@@ -159,7 +176,24 @@ export function extractBodyText(bodyObj: any): { text: string, source: string } 
   return { text: "", source: "unknown" };
 }
 
-export async function parseOutlookMessage(message: any, details?: any) {
+export interface OutlookMessage {
+  id: string;
+  conversationId?: string;
+  internetMessageId?: string;
+  subject?: string;
+  from?: OutlookRecipient;
+  toRecipients?: OutlookRecipient[];
+  ccRecipients?: OutlookRecipient[];
+  receivedDateTime: string;
+  sentDateTime: string;
+  bodyPreview?: string;
+  hasAttachments?: boolean;
+  importance?: string;
+  isRead?: boolean;
+  webLink?: string;
+}
+
+export async function parseOutlookMessage(message: OutlookMessage, details?: { body?: OutlookBody; attachments?: OutlookAttachment[] }) {
   const sender = message.from?.emailAddress ? {
     name: message.from.emailAddress.name || "",
     email: message.from.emailAddress.address || ""
@@ -169,7 +203,7 @@ export async function parseOutlookMessage(message: any, details?: any) {
   const ccRecipients = extractEmailAddresses(message.ccRecipients);
 
   let bodyData = { text: "", source: "preview" };
-  let attachmentsMeta: any[] = [];
+  let attachmentsMeta: { id: string; filename: string; contentType: string; size: number; isInline: boolean; status: string }[] = [];
   
   if (details) {
     if (details.body) {

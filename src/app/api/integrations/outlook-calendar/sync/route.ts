@@ -107,9 +107,9 @@ export async function POST(request: Request) {
       }
 
       // Parse dates
-      let startDateStr = event.start?.dateTime;
-      let endDateStr = event.end?.dateTime;
-      let isAllDay = !!event.isAllDay;
+      const startDateStr = event.start?.dateTime;
+      const endDateStr = event.end?.dateTime;
+      const isAllDay = !!event.isAllDay;
 
       if (!startDateStr) {
         skipped++;

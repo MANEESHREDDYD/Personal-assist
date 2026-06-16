@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { WalletCardItem } from "@/components/wallet/WalletCardItem";
 import { WalletListClient } from "@/components/wallet/WalletListClient";
 import Link from "next/link";
 import { LucideIcon } from "lucide-react";
@@ -42,7 +41,7 @@ export async function FilteredWalletPage({ type, title, description, icon: Icon 
           <Icon className="w-16 h-16 text-zinc-600 mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">No {title.toLowerCase()} found</h3>
           <p className="text-zinc-400 mb-6 max-w-md">
-            You don't have any {title.toLowerCase()} added yet.
+            You don&apos;t have any {title.toLowerCase()} added yet.
           </p>
           <Link
             href="/add"

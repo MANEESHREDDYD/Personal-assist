@@ -22,7 +22,7 @@ export async function uploadDocument(formData: FormData) {
     const extractedText = await extractText(filename, file.type, file.name);
     
     let textFilePath = null;
-    let metadataObj: any = { filename };
+    const metadataObj: any = { filename };
     
     if (extractedText) {
       if (extractedText.length > 50000) {

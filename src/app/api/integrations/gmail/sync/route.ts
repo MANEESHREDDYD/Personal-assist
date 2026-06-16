@@ -138,8 +138,8 @@ export async function POST(request: Request) {
               category: classification.category,
               status: "active",
               source: `inbox:${inboxItem.id}`,
-              date: entities.date ? new Date(entities.date) : null,
-              amount: entities.amount,
+              date: entities.date ? new Date(entities.date as string) : null,
+              amount: entities.amount as number,
               aiSummary: summary,
               nextAction: classification.nextAction
             }

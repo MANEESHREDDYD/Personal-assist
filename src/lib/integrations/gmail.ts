@@ -108,16 +108,55 @@ function stripHtml(html: string) {
   return html.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim();
 }
 
-export function parseGmailMessage(message: any) {
+export interface GmailHeader {
+  name: string;
+  value: string;
+}
+
+export interface GmailPart {
+  filename?: string;
+  mimeType?: string;
+  body?: {
+    attachmentId?: string;
+    size?: number;
+    data?: string;
+  };
+  parts?: GmailPart[];
+}
+
+export interface GmailMessage {
+  id: string;
+  threadId: string;
+  snippet?: string;
+  payload?: {
+    headers?: GmailHeader[];
+  } & GmailPart;
+}
+
+export function parseGmailMessage(message: GmailMessage) {
   const payload = message.payload;
-  const headers = payload.headers;
+  if (!payload) {
+    return {
+      id: message.id,
+      threadId: message.threadId,
+      subject: "No Subject",
+      from: "Unknown",
+      to: "Unknown",
+      date: new Date().toISOString(),
+      snippet: message.snippet,
+      body: message.snippet || "",
+      hasAttachments: false,
+      attachmentsMeta: []
+    };
+  }
+  const headers = payload.headers || [];
   
   let subject = "No Subject";
   let from = "Unknown";
   let to = "Unknown";
   let date = new Date().toISOString();
 
-  headers.forEach((h: any) => {
+  headers.forEach((h: GmailHeader) => {
     if (h.name.toLowerCase() === "subject") subject = h.value;
     if (h.name.toLowerCase() === "from") from = h.value;
     if (h.name.toLowerCase() === "to") to = h.value;
@@ -126,9 +165,9 @@ export function parseGmailMessage(message: any) {
 
   let plainTextBody = "";
   let htmlBody = "";
-  let attachmentsMeta: any[] = [];
+  const attachmentsMeta: { id: string; filename: string; contentType?: string; size?: number; status: string }[] = [];
 
-  function extractBody(part: any) {
+  function extractBody(part: GmailPart | undefined) {
     if (!part) return;
     
     if (part.filename && part.body && part.body.attachmentId) {

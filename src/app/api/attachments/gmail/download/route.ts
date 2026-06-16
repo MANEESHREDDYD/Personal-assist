@@ -102,7 +102,7 @@ export async function POST(req: Request) {
 
     const extractedText = await extractText(localFilename, attachmentMeta.contentType || "", attachmentMeta.filename || "");
     let textFilePath = null;
-    let docMetadata: any = {
+    const docMetadata: any = {
       source: "gmail_attachment",
       sourceProvider: "gmail",
       sourceMessageId: messageId,

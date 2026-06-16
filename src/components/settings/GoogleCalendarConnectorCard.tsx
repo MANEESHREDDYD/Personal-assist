@@ -1,18 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Calendar, CheckCircle, XCircle, RefreshCw, AlertCircle, Trash2, Power } from "lucide-react";
+import { Calendar, CheckCircle, RefreshCw, AlertCircle, Trash2, Power } from "lucide-react";
 
 export function GoogleCalendarConnectorCard() {
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncDays, setSyncDays] = useState("30");
-  const [syncResult, setSyncResult] = useState<any>(null);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchStatus();
-  }, []);
 
   const fetchStatus = async () => {
     try {
@@ -25,6 +22,11 @@ export function GoogleCalendarConnectorCard() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchStatus();
+  }, []);
 
   const handleConnect = () => {
     window.location.href = "/api/integrations/google-calendar/start";

@@ -13,9 +13,7 @@ export async function enableRule(id: string) {
     await logAudit("automation_rule_enabled", "AutomationRule", id, {});
     revalidatePath("/automations");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+  } catch (e: unknown) { return { success: false, error: (e as Error)?.message || "Unknown error" }; }
 }
 
 export async function disableRule(id: string) {
@@ -24,9 +22,7 @@ export async function disableRule(id: string) {
     await logAudit("automation_rule_disabled", "AutomationRule", id, {});
     revalidatePath("/automations");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+  } catch (e: unknown) { return { success: false, error: (e as Error)?.message || "Unknown error" }; }
 }
 
 export async function runNow() {
@@ -36,9 +32,7 @@ export async function runNow() {
     revalidatePath("/automations");
     revalidatePath("/dashboard");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+  } catch (e: unknown) { return { success: false, error: (e as Error)?.message || "Unknown error" }; }
 }
 
 export async function resetDefaultRules() {
@@ -68,7 +62,5 @@ export async function resetDefaultRules() {
     await logAudit("automation_rules_reset", "System", "default_rules", {});
     revalidatePath("/automations");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+  } catch (e: unknown) { return { success: false, error: (e as Error)?.message || "Unknown error" }; }
 }

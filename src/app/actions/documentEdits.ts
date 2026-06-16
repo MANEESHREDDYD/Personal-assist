@@ -66,9 +66,9 @@ export async function generateDocumentEdit(documentId: string, actionType: strin
     revalidatePath(`/documents/${documentId}`);
     
     return { success: true, versionId: newVersion.id, content: editedContent };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to generate document edit:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error)?.message || "Unknown error" };
   }
 }
 
@@ -93,9 +93,7 @@ export async function acceptDocumentEdit(documentId: string, versionId: string) 
     await logAudit("document_change_accepted", "Document", documentId, { versionId });
     revalidatePath(`/documents/${documentId}`);
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
+  } catch (error: unknown) { return { success: false, error: (error as Error)?.message || "Unknown error" }; }
 }
 
 export async function rejectDocumentEdit(documentId: string, versionId: string) {
@@ -114,7 +112,5 @@ export async function rejectDocumentEdit(documentId: string, versionId: string) 
     await logAudit("document_change_rejected", "Document", documentId, { versionId });
     revalidatePath(`/documents/${documentId}`);
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
+  } catch (error: unknown) { return { success: false, error: (error as Error)?.message || "Unknown error" }; }
 }

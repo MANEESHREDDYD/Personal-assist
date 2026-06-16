@@ -3,17 +3,24 @@
 import { useState, useEffect } from "react";
 import { Mail, CheckCircle2, XCircle, RefreshCw, AlertTriangle, Settings, Lock, LogOut } from "lucide-react";
 
+interface StatusData {
+  connected: boolean;
+  configured: boolean;
+  redirectConfigured: boolean;
+  encryptionKeyPresent: boolean;
+  email?: string;
+  lastSyncAt?: string;
+  lastError?: string;
+  [key: string]: unknown;
+}
+
 export function OutlookMailConnectorCard() {
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<StatusData | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncLimit, setSyncLimit] = useState("10");
   const [syncResult, setSyncResult] = useState<{ imported: number; skipped: number } | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchStatus();
-  }, []);
 
   async function fetchStatus() {
     try {
@@ -26,6 +33,13 @@ export function OutlookMailConnectorCard() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchStatus();
+  }, []);
+
+
 
   async function handleDisconnect() {
     setLoading(true);
@@ -58,8 +72,9 @@ export function OutlookMailConnectorCard() {
         setSyncError(data.error || "Sync failed.");
       }
       await fetchStatus();
-    } catch (e: any) {
-      setSyncError(e.message || "Failed to sync");
+    } catch (e: unknown) {
+      const err = e as Error;
+      setSyncError(err?.message || "Failed to sync");
     } finally {
       setSyncing(false);
     }

@@ -72,13 +72,15 @@ export function isSafeStoredFilename(filename: string): boolean {
  */
 export function getLinkedDocumentIds(
   draft: { relatedDocId?: string | null },
-  meta: Record<string, any>
+  meta: Record<string, unknown>
 ): string[] {
   const ids = new Set<string>();
   if (draft.relatedDocId) ids.add(draft.relatedDocId);
   if (meta?.sourceDocumentId) ids.add(meta.sourceDocumentId);
   if (Array.isArray(meta?.attachedDocumentIds)) {
-    for (const id of meta.attachedDocumentIds) if (id) ids.add(id);
+    for (const id of meta.attachedDocumentIds) {
+      if (typeof id === "string" && id) ids.add(id);
+    }
   }
   return Array.from(ids);
 }

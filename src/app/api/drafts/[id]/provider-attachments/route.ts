@@ -72,11 +72,11 @@ export async function GET(
     }
 
     const meta = parseMetadata(draft.metadata);
-    const providerDrafts = meta.providerDrafts || {};
+    const providerDrafts = (meta.providerDrafts as any) || {};
     const linkedIds = getLinkedDocumentIds(draft, meta);
 
-    const gmailAttached: string[] = (providerDrafts.gmail?.attachments || []).map((a: any) => a.documentId);
-    const outlookAttached: string[] = (providerDrafts.outlook?.attachments || []).map((a: any) => a.documentId);
+    const gmailAttached: string[] = (providerDrafts.gmail?.attachments || []).map((a: { documentId: string }) => a.documentId);
+    const outlookAttached: string[] = (providerDrafts.outlook?.attachments || []).map((a: { documentId: string }) => a.documentId);
 
     const docs = linkedIds.length
       ? await prisma.document.findMany({ where: { id: { in: linkedIds } } })
@@ -109,7 +109,7 @@ export async function GET(
       providerSupport: PROVIDER_SUPPORT,
       documents,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json({ error: "Failed to load linked documents" }, { status: 500 });
   }
 }
@@ -157,7 +157,7 @@ export async function POST(
 
     // Split validated outcomes into uploadable docs and reported blocks. In real
     // mode, emit the per-block audit logs / notifications.
-    const blockedResults: any[] = [];
+    const blockedResults: { documentId: string; name?: string; status: string; sizeClass?: string; uploadMode?: string }[] = [];
     const toUpload: {
       documentId: string;
       name?: string;
@@ -243,8 +243,8 @@ export async function POST(
     // Upload to the provider draft.
     const accessToken = await getValidAccessToken(account, provider);
     const uploadedAt = new Date().toISOString();
-    const results: any[] = [...blockedResults];
-    const newRecords: any[] = [];
+    const results: { documentId: string; name?: string; status: string; error?: string }[] = [...blockedResults];
+    const newRecords: { documentId: string; filename?: string; size?: number; contentType?: string; uploadedAt?: string; providerAttachmentId?: string | null; status: string; uploadMode?: string; sizeClass?: string; error?: string }[] = [];
     let usedUploadSession = false;
 
     if (provider === "gmail_draft") {
@@ -252,12 +252,12 @@ export async function POST(
       // attachments and the original approved draft content. (All gmail uploads
       // here are small/simple — large gmail files are reported as deferred above.)
       const preserved: { filename: string; contentType: string; content: Buffer }[] = [];
-      for (const rec of existing!) {
+      for (const rec of (existing as any[]) || []) {
         const loaded = await loadDocBuffer(rec.documentId);
         if (loaded) preserved.push({ filename: loaded.doc.originalName, contentType: loaded.doc.mimeType, content: loaded.buffer });
       }
 
-      const fresh: { u: any; doc: any; buffer: Buffer }[] = [];
+      const fresh: { u: { documentId: string; name?: string; size?: number; contentType?: string; uploadMode?: string; sizeClass?: string; }; doc: { originalName: string; mimeType: string }; buffer: Buffer }[] = [];
       for (const u of toUpload) {
         const loaded = await loadDocBuffer(u.documentId);
         if (loaded) fresh.push({ u, doc: loaded.doc, buffer: loaded.buffer });
@@ -265,8 +265,8 @@ export async function POST(
 
       await updateGmailDraftWithAttachments(
         accessToken,
-        providerDraft.draftId,
-        { to: draft.to, cc: draft.cc, bcc: draft.bcc, subject: draft.subject, body: draft.body },
+        (providerDraft as any).draftId,
+        { to: (draft as any).to, cc: (draft as any).cc, bcc: (draft as any).bcc, subject: (draft as any).subject, body: (draft as any).body },
         [...preserved, ...fresh.map((f) => ({ filename: f.doc.originalName, contentType: f.doc.mimeType, content: f.buffer }))]
       );
 
@@ -302,7 +302,7 @@ export async function POST(
           if (u.uploadMode === "upload_session") {
             await logAudit("provider_large_attachment_upload_started", "EmailDraft", draftId, { provider, documentId: u.documentId, size: buffer.length });
             await logAudit("outlook_large_attachment_session_created", "EmailDraft", draftId, { documentId: u.documentId });
-            const { attachmentId, chunks } = await attachLargeFileToOutlookDraft(accessToken, providerDraft.messageId, {
+            const { attachmentId, chunks } = await attachLargeFileToOutlookDraft(accessToken, (providerDraft as any).messageId, {
               name: doc.originalName,
               contentType: doc.mimeType,
               content: buffer,
@@ -323,7 +323,7 @@ export async function POST(
             });
             results.push({ documentId: u.documentId, name: doc.originalName, status: "attached" });
           } else {
-            const { attachmentId } = await attachFileToOutlookDraft(accessToken, providerDraft.messageId, {
+            const { attachmentId } = await attachFileToOutlookDraft(accessToken, (providerDraft as any).messageId, {
               name: doc.originalName,
               contentType: doc.mimeType,
               contentBytes: buffer.toString("base64"),
@@ -341,11 +341,12 @@ export async function POST(
             });
             results.push({ documentId: u.documentId, name: doc.originalName, status: "attached" });
           }
-        } catch (e: any) {
+        } catch (e: unknown) {
+          const err = e as Error;
           const failAction = u.uploadMode === "upload_session" ? "provider_large_attachment_upload_failed" : "provider_attachment_upload_failed";
-          await logAudit(failAction, "EmailDraft", draftId, { provider, documentId: u.documentId, error: e?.message });
+          await logAudit(failAction, "EmailDraft", draftId, { provider, documentId: u.documentId, error: err?.message });
           if (u.uploadMode === "upload_session") {
-            await notify("Large attachment upload failed", `Could not upload "${doc.originalName}" to your Outlook draft: ${e?.message || "Unknown error"}.`, "error", draftId);
+            await notify("Large attachment upload failed", `Could not upload "${doc.originalName}" to your Outlook draft: ${err?.message || "Unknown error"}.`, "error", draftId);
           }
           newRecords.push({
             documentId: u.documentId,
@@ -355,9 +356,9 @@ export async function POST(
             uploadedAt,
             status: "failed",
             uploadMode: u.uploadMode,
-            error: e?.message,
+            error: err?.message,
           });
-          results.push({ documentId: u.documentId, name: doc.originalName, status: "failed" });
+          results.push({ documentId: u.documentId, name: doc.originalName, status: "failed", error: err?.message });
         }
       }
       if (newRecords.some((r) => r.status === "attached")) {
@@ -370,8 +371,8 @@ export async function POST(
 
     // Update EmailDraft metadata.
     const updatedProviderDraft = {
-      ...providerDraft,
-      attachments: [...existing!, ...newRecords],
+      ...(providerDraft as any),
+      attachments: [...((existing as any[]) || []), ...newRecords],
       attachmentStatus: "attached",
       attachmentsUpdatedAt: uploadedAt,
     };
@@ -394,14 +395,14 @@ export async function POST(
       if (usedUploadSession) {
         await notify(
           "Large attachment uploaded to Outlook draft",
-          `${attachedCount} attachment(s) added to your Outlook draft for "${draft.subject}" (large files via upload session). Review and send manually from Outlook.`,
+          `${attachedCount} attachment(s) added to your Outlook draft for "${(draft as any).subject}" (large files via upload session). Review and send manually from Outlook.`,
           "success",
           draftId
         );
       } else {
         await notify(
           `Attachment uploaded to ${label} draft`,
-          `${attachedCount} attachment(s) added to your ${label} draft for "${draft.subject}". Review and send manually from ${label}.`,
+          `${attachedCount} attachment(s) added to your ${label} draft for "${(draft as any).subject}". Review and send manually from ${label}.`,
           "success",
           draftId
         );
@@ -416,21 +417,22 @@ export async function POST(
       results,
       message: `Attachments updated on your ${label} draft. Personal Assist does not send emails — review and send manually from ${label}.`,
     });
-  } catch (error: any) {
-    console.error("Provider attachment upload failed", error?.message);
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Provider attachment upload failed", err?.message);
     await logAudit("provider_attachment_upload_failed", "EmailDraft", draftId || "unknown", {
-      error: error?.message,
+      error: err?.message,
     });
     if (draftId) {
       await notify(
         "Attachment upload failed",
-        `Could not upload attachments: ${error?.message || "Unknown error"}.`,
+        `Could not upload attachments: ${err?.message || "Unknown error"}.`,
         "error",
         draftId
       );
     }
     return NextResponse.json(
-      { error: error?.message || "Failed to upload attachments." },
+      { error: err?.message || "Failed to upload attachments." },
       { status: 502 }
     );
   }

@@ -16,8 +16,8 @@ export async function processMockEmail(formData: FormData) {
     const textToAnalyze = (subject + " " + body);
     
     const classification = await ai.classifyText(textToAnalyze);
-    let category = classification.category;
-    let confidenceScore = classification.confidence;
+    const category = classification.category;
+    const confidenceScore = classification.confidence;
     
     const extractedEntities = await ai.extractEntities(textToAnalyze);
 
@@ -38,7 +38,7 @@ export async function processMockEmail(formData: FormData) {
       await prisma.reminder.create({
         data: {
           title: `Follow up on: ${subject}`,
-          description: extractedEntities.followUpReason,
+          description: (extractedEntities.followUpReason as string) || "Follow-up",
           status: "pending",
         }
       });
@@ -58,7 +58,7 @@ export async function processMockEmail(formData: FormData) {
       },
     });
 
-    const card = await prisma.walletCard.create({
+    await prisma.walletCard.create({
       data: {
         type: walletType,
         title: subject,

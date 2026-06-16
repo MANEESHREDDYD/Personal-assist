@@ -18,7 +18,7 @@ export async function createDraft(data: {
     const ai = await getAIProvider();
 
     let finalBody = data.body || "";
-    let finalSubject = data.subject || "New Draft";
+    const finalSubject = data.subject || "New Draft";
     let aiGenerated = false;
 
     // Optional: Use AI to draft the body if it's empty and we have context
@@ -173,9 +173,7 @@ export async function reopenDraft(id: string) {
     await logAudit("draft_reopened", "EmailDraft", id);
     revalidatePath("/drafts");
     return { success: true };
-  } catch (error) {
-    return { success: false };
-  }
+  } catch { return { success: false }; }
 }
 
 export async function logClipboardAction(id: string, actionName: string) {

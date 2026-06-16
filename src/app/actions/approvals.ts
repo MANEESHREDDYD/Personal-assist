@@ -63,10 +63,7 @@ export async function processApproval(id: string, status: string) {
     
     revalidatePath("/approvals");
     return { success: true };
-  } catch (error) {
-    console.error("Failed to process approval", error);
-    return { success: false };
-  }
+  } catch (error) { console.error("Failed to process approval", error); return { success: false }; }
 }
 
 export async function generateMockApproval() {
@@ -86,7 +83,5 @@ export async function generateMockApproval() {
 
     revalidatePath("/approvals");
     return { success: true };
-  } catch (error) {
-    return { success: false };
-  }
+  } catch { return { success: false }; }
 }

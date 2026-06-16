@@ -70,11 +70,11 @@ export interface RequestValidation {
   error?: string;
   providerKey?: "gmail" | "outlook";
   label?: string;
-  draft?: any;
-  meta?: Record<string, any>;
-  providerDrafts?: Record<string, any>;
-  providerDraft?: any;
-  existing?: any[];
+  draft?: unknown;
+  meta?: Record<string, unknown>;
+  providerDrafts?: Record<string, unknown>;
+  providerDraft?: unknown;
+  existing?: unknown[];
   outcomes: DocOutcome[];
 }
 
@@ -149,8 +149,8 @@ export async function evaluateDocument(
  */
 export async function validateProviderAttachmentRequest(input: {
   draftId: string;
-  provider: any;
-  documentIds: any;
+  provider: unknown;
+  documentIds: unknown;
 }): Promise<RequestValidation> {
   const provider = input.provider as ProviderValue;
   if (provider !== "gmail_draft" && provider !== "outlook_draft") {
@@ -201,8 +201,8 @@ export async function validateProviderAttachmentRequest(input: {
   }
 
   const linkedIds = getLinkedDocumentIds(draft, meta);
-  const existing: any[] = providerDraft.attachments || [];
-  const existingDocIds = new Set(existing.map((a) => a.documentId));
+  const existing: unknown[] = (providerDraft as { attachments?: unknown[] }).attachments || [];
+  const existingDocIds = new Set(existing.map((a: { documentId: string }) => a.documentId));
 
   const outcomes: DocOutcome[] = [];
   for (const documentId of documentIds) {

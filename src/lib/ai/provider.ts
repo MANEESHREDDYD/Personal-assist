@@ -1,12 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { prisma } from "@/lib/prisma";
 
 export interface AIProvider {
   name: string;
   classifyText(text: string): Promise<{ category: string; confidence: number; nextAction?: string }>;
-  extractEntities(text: string): Promise<Record<string, any>>;
+  extractEntities(text: string): Promise<Record<string, unknown>>;
   summarizeDocument(text: string): Promise<string>;
   detectFollowUps(text: string): Promise<{ detected: boolean; reason?: string; dueDate?: Date }>;
-  generateBrief(type: string, context: any): Promise<string>;
+  generateBrief(type: string, context: unknown): Promise<string>;
   editDocument(text: string, instructions: string): Promise<string>;
   extractActionItems(text: string): Promise<string[]>;
   extractDeadlines(text: string): Promise<{ date: string; description: string }[]>;
@@ -27,7 +28,7 @@ export async function getAIProvider(): Promise<AIProvider> {
     if (pref) {
       providerName = pref.value;
     }
-  } catch (e) {
+  } catch (_e: unknown) {
     // Database might not be ready during build or tests
   }
 

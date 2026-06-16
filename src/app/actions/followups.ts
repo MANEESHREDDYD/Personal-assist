@@ -15,9 +15,7 @@ export async function updateFollowUpStatus(id: string, status: string) {
     revalidatePath("/followups");
     
     return { success: true };
-  } catch (error) {
-    return { success: false };
-  }
+  } catch { return { success: false }; }
 }
 
 export async function createFollowUp(data: { title: string; reason?: string; priority?: string; source?: string; relatedContactId?: string }) {
@@ -37,7 +35,5 @@ export async function createFollowUp(data: { title: string; reason?: string; pri
     revalidatePath("/followups");
     
     return { success: true, id: fw.id };
-  } catch (error) {
-    return { success: false };
-  }
+  } catch { return { success: false }; }
 }

@@ -3,7 +3,7 @@
 import { WalletCard } from "@prisma/client";
 import { useState, useMemo } from "react";
 import { WalletCardItem } from "./WalletCardItem";
-import { Search, Filter, ArrowUpDown } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface Props {
   initialCards: WalletCard[];

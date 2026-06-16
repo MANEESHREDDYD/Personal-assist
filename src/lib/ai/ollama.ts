@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { AIProvider } from "./provider";
 import { RulesProvider } from "./rules";
 import { prisma } from "@/lib/prisma";
@@ -16,7 +17,7 @@ export class OllamaProvider implements AIProvider {
       
       if (prefUrl) baseUrl = prefUrl.value;
       if (prefModel) model = prefModel.value;
-    } catch(e) {}
+    } catch(_e: unknown) {}
 
     return { baseUrl, model };
   }
@@ -26,7 +27,7 @@ export class OllamaProvider implements AIProvider {
       const { baseUrl } = await this.getConfig();
       const res = await fetch(`${baseUrl}/api/tags`, { method: "GET", signal: AbortSignal.timeout(2000) });
       return res.ok;
-    } catch (e) {
+    } catch (_e: unknown) {
       return false;
     }
   }
@@ -83,7 +84,7 @@ export class OllamaProvider implements AIProvider {
     return this.rulesFallback.detectFollowUps(text);
   }
 
-  async generateBrief(type: string, context: any) {
+  async generateBrief(type: string, context: unknown) {
     const prompt = `Write a short 3-sentence daily life brief based on this context: ${JSON.stringify(context)}. Tone: Professional and helpful assistant.`;
     const result = await this.generate(prompt);
     if (!result) return this.rulesFallback.generateBrief(type, context);

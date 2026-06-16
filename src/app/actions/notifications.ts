@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { logAudit } from "@/lib/audit";
+
 import { revalidatePath } from "next/cache";
 
 export async function getUnreadNotifications() {
@@ -23,7 +23,5 @@ export async function markNotificationRead(id: string) {
     });
     revalidatePath("/");
     return { success: true };
-  } catch (error) {
-    return { success: false };
-  }
+  } catch { return { success: false }; }
 }

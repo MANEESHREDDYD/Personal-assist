@@ -78,10 +78,10 @@ export default async function ApprovalsPage() {
                     const meta = parseMetadata(req.metadata);
                     return (
                       <div className="flex gap-4 mt-2">
-                        {meta.documentId && (
-                          <a href={`/documents/${meta.documentId}`} className="text-xs text-blue-400 hover:underline">View Source Document</a>
+                        {!!meta.documentId && (
+                          <a href={`/documents/${meta.documentId as string}`} className="text-xs text-blue-400 hover:underline">View Source Document</a>
                         )}
-                        {meta.draftId && (
+                        {!!meta.draftId && (
                           <a href={`/drafts`} className="text-xs text-blue-400 hover:underline">View Local Draft</a>
                         )}
                       </div>
@@ -149,10 +149,10 @@ export default async function ApprovalsPage() {
                     const meta = parseMetadata(req.metadata);
                     return (
                       <div className="flex gap-4 mt-2">
-                        {meta.documentId && (
-                          <a href={`/documents/${meta.documentId}`} className="text-xs text-blue-400 hover:underline">View Source Document</a>
+                        {!!meta.documentId && (
+                          <a href={`/documents/${meta.documentId as string}`} className="text-xs text-blue-400 hover:underline">View Source Document</a>
                         )}
-                        {meta.draftId && (
+                        {!!meta.draftId && (
                           <div className="space-y-1">
                             <div className="flex gap-4">
                               <a href={`/drafts`} className="text-xs text-blue-400 hover:underline">Open Draft</a>

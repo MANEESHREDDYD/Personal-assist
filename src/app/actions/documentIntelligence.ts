@@ -42,6 +42,7 @@ export async function extractDocumentProperties(documentId: string, property: "a
     const ai = await getAIProvider();
     await logAudit("document_intelligence_started", "Document", documentId, { task: property });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = null;
 
     switch (property) {

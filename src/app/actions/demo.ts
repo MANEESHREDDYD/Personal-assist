@@ -29,9 +29,7 @@ export async function resetDatabaseSafely() {
     revalidatePath("/settings");
 
     return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+  } catch (e: unknown) { return { success: false, error: (e as Error)?.message || "Unknown error" }; }
 }
 
 export async function seedDemoNotifications() {
@@ -45,9 +43,7 @@ export async function seedDemoNotifications() {
     await logAudit("demo_data_generated", "Notification", "demo", {});
     revalidatePath("/");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+  } catch (e: unknown) { return { success: false, error: (e as Error)?.message || "Unknown error" }; }
 }
 
 export async function seedDemoApprovals() {
@@ -65,9 +61,7 @@ export async function seedDemoApprovals() {
     await logAudit("demo_data_generated", "ApprovalRequest", "demo", {});
     revalidatePath("/");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+  } catch (e: unknown) { return { success: false, error: (e as Error)?.message || "Unknown error" }; }
 }
 
 export async function seedDemoCalendar() {
@@ -85,9 +79,7 @@ export async function seedDemoCalendar() {
     await logAudit("demo_data_generated", "CalendarEvent", "demo", {});
     revalidatePath("/");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+  } catch (e: unknown) { return { success: false, error: (e as Error)?.message || "Unknown error" }; }
 }
 
 export async function seedDemoWorkflow() {
@@ -119,9 +111,7 @@ export async function seedDemoWorkflow() {
      await logAudit("demo_data_generated", "Document", doc.id, {});
      revalidatePath("/");
      return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+  } catch (e: unknown) { return { success: false, error: (e as Error)?.message || "Unknown error" }; }
 }
 
 export async function generateDemoStockBrief() {
@@ -135,9 +125,7 @@ export async function generateDemoStockBrief() {
     await logAudit("demo_data_generated", "Brief", brief.id, {});
     revalidatePath("/");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+  } catch (e: unknown) { return { success: false, error: (e as Error)?.message || "Unknown error" }; }
 }
 
 export async function generateDemoDocumentScenario() {
@@ -155,7 +143,7 @@ export async function generateDemoDocumentScenario() {
     });
 
     const fourDaysAgo = new Date(Date.now() - 4 * 86400000);
-    const signer = await prisma.documentSigner.create({
+    await prisma.documentSigner.create({
       data: {
         documentId: doc.id,
         name: "Client Corp CEO",
@@ -180,9 +168,7 @@ export async function generateDemoDocumentScenario() {
     revalidatePath("/");
     revalidatePath("/documents");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+  } catch (e: unknown) { return { success: false, error: (e as Error)?.message || "Unknown error" }; }
 }
 
 export async function generateDemoTravelScenario() {
@@ -216,9 +202,7 @@ export async function generateDemoTravelScenario() {
     revalidatePath("/");
     revalidatePath("/wallet");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+  } catch (e: unknown) { return { success: false, error: (e as Error)?.message || "Unknown error" }; }
 }
 
 export async function generateDemoStockScenario() {
@@ -234,9 +218,7 @@ export async function generateDemoStockScenario() {
     revalidatePath("/");
     revalidatePath("/stocks");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+  } catch (e: unknown) { return { success: false, error: (e as Error)?.message || "Unknown error" }; }
 }
 
 export async function generateDemoInboxScenario() {
@@ -266,7 +248,5 @@ export async function generateDemoInboxScenario() {
     revalidatePath("/");
     revalidatePath("/inbox");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+  } catch (e: unknown) { return { success: false, error: (e as Error)?.message || "Unknown error" }; }
 }

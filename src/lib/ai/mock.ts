@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { AIProvider } from "./provider";
 
 export class MockAIProvider implements AIProvider {
   name = "mock";
 
-  async classifyText(text: string) {
+  async classifyText(_text: string) {
     return {
       category: "General",
       confidence: 0.95,
@@ -11,23 +12,23 @@ export class MockAIProvider implements AIProvider {
     };
   }
 
-  async extractEntities(text: string) {
+  async extractEntities(_text: string) {
     return {
       mockEntity: "Detected by MockProvider",
     };
   }
 
-  async summarizeDocument(text: string) {
+  async summarizeDocument(_text: string) {
     return "This is a deterministic mock summary from the Mock AI Provider.";
   }
 
-  async detectFollowUps(text: string) {
+  async detectFollowUps(_text: string) {
     return {
       detected: false,
     };
   }
 
-  async generateBrief(type: string, context: any) {
+  async generateBrief(type: string, _context: unknown) {
     if (type.includes("stock")) {
       return "Mock Stock Brief: Informational only. Market looks volatile.";
     }
@@ -38,34 +39,34 @@ export class MockAIProvider implements AIProvider {
     return `[MOCK EDITED VERSION]\nInstructions applied: ${instructions}\n\nOriginal excerpt:\n${text.substring(0, 150)}...`;
   }
 
-  async extractActionItems(text: string): Promise<string[]> {
+  async extractActionItems(_text: string): Promise<string[]> {
     return ["Mock Action 1: Review document", "Mock Action 2: Approve the draft"];
   }
 
-  async extractDeadlines(text: string): Promise<{ date: string; description: string }[]> {
+  async extractDeadlines(_text: string): Promise<{ date: string; description: string }[]> {
     return [{ date: "Next Friday", description: "Deadline for mock document review" }];
   }
 
-  async extractParties(text: string): Promise<{ name: string; role: string }[]> {
+  async extractParties(_text: string): Promise<{ name: string; role: string }[]> {
     return [
       { name: "John Doe", role: "Sender" },
       { name: "Jane Smith", role: "Recipient" }
     ];
   }
 
-  async extractPaymentTerms(text: string): Promise<string> {
+  async extractPaymentTerms(_text: string): Promise<string> {
     return "Net 30 days. Mock payment terms detected.";
   }
 
-  async extractSignatureRequirements(text: string): Promise<string> {
+  async extractSignatureRequirements(_text: string): Promise<string> {
     return "Signature required by John Doe at the bottom of page 2.";
   }
 
-  async identifyRisks(text: string): Promise<string[]> {
+  async identifyRisks(_text: string): Promise<string[]> {
     return ["Mock Risk: The timeline is extremely aggressive.", "Mock Risk: Penalty clause found."];
   }
 
-  async generateDraftFromDocument(text: string, draftType: string): Promise<{ subject: string; body: string }> {
+  async generateDraftFromDocument(_text: string, draftType: string): Promise<{ subject: string; body: string }> {
     let subject = "Document Draft";
     let body = `This is a mock local draft for type: ${draftType}.`;
 

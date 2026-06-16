@@ -13,12 +13,10 @@ import {
 } from "lucide-react";
 
 export function GmailDraftConnectorCard() {
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStatus();
-  }, []);
+
 
   async function fetchStatus() {
     try {
@@ -31,6 +29,11 @@ export function GmailDraftConnectorCard() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchStatus();
+  }, []);
 
   async function handleDisconnect() {
     setLoading(true);
