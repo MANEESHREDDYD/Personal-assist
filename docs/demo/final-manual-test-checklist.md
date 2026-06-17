@@ -167,6 +167,22 @@ Booking (Calendly-style):
 - [ ] `npm run test:projects` passes; analytics `projectMetrics`
       `provider_events_written_by_projects = 0` and `emails_sent_by_projects = 0`
 
+## 8f. Local agreement & e-signature workflow (Phase 6F)
+
+> Honest framing: local agreement workflow / audit-friendly signing simulation —
+> **not legally binding, not a DocuSign replacement, not legal advice.**
+
+- [ ] `/agreements/templates` — **Load starter templates**, then **Use template** (or create one with text)
+- [ ] `/agreements/[id]/prepare` — add recipients (routing order) + a signature field; **Prepare & open local signing**
+- [ ] `/agreements/[id]/sign` — second signer is blocked until the first signs (order enforced)
+- [ ] Complete required fields (typed signature, date), then **Sign** → status moves to partially/completed
+- [ ] `/agreements/[id]/risks` — **Extract clauses** (renewal/effective/parties/Net 30) + **Score risks**
+- [ ] `/agreements/[id]/qa` — ask "when does it renew?" → cited answer with "not legal advice"
+- [ ] `/agreements/[id]/certificate` — **Certificate** → SHA-256 original/final hashes + audit timeline (JSON + MD), with disclaimers
+- [ ] Overview — **Reminder draft** is created locally (footer "NOT sent")
+- [ ] `npm run test:agreements` passes; analytics `agreementMetrics`
+      `emails_sent_by_agreements = 0`, `provider_events_written_by_agreements = 0`, `legal_binding_claims_made = 0`
+
 ## 9. Safety checks
 
 ```bash

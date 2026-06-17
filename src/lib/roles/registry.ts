@@ -119,7 +119,7 @@ export const ROLES: Record<RoleId, RoleDefinition> = {
       { name: "Document summary", description: "Summarize a personal document", prompt: "Summarize this document in plain language (no medical/financial advice): {context}" },
       { name: "Travel checklist", description: "Build a trip checklist", prompt: "Create a travel checklist for this trip: {context}" },
     ],
-    commandSuggestions: ["Plan my day", "Plan my week", "Schedule my overdue tasks", "Protect 10 hours of focus time", "Create a weekly review", "Summarize this document", "Draft a polite email"],
+    commandSuggestions: ["Plan my day", "Plan my week", "Schedule my overdue tasks", "Protect 10 hours of focus time", "Summarize this agreement", "Extract renewal dates", "Create agreement reminder", "Summarize this document"],
   },
   engineer: {
     id: "engineer",
@@ -386,7 +386,7 @@ export const ROLES: Record<RoleId, RoleDefinition> = {
       { name: "Founder follow-up", description: "Post-meeting follow-up", prompt: "Draft a founder follow-up with specific questions and next steps from: {context}. Draft only; do not send." },
       { name: "IC memo outline", description: "Investment committee outline", prompt: "Create an IC memo outline (thesis fit, recommendation framing, key risks, diligence gaps) for: {context}. Informational only." },
     ],
-    commandSuggestions: ["Create investment memo", "Summarize founder meeting", "Generate diligence checklist", "Draft founder follow-up", "Compare companies", "Generate IC memo outline"],
+    commandSuggestions: ["Create investment memo", "Summarize founder meeting", "Generate diligence checklist", "Summarize this agreement", "Summarize obligations", "Find missing signatures", "Draft founder follow-up", "Generate IC memo outline"],
   },
 };
 

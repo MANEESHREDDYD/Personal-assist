@@ -1216,3 +1216,191 @@ model ProjectDocument {
 
   @@index([projectId])
 }
+
+// ---------------------------------------------------------------------------
+// Phase 6F — Local agreement & e-signature workflow.
+// LOCAL ONLY. This is an audit-friendly signing SIMULATION — NOT legally binding,
+// NOT a DocuSign legal/compliance replacement, NOT legal advice. No email is sent
+// and no provider is contacted. Field types (signature/initials/text/date/checkbox)
+// are represented via AgreementField.type.
+// ---------------------------------------------------------------------------
+
+model Agreement {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  content       String?  // agreement body text (local)
+  category      String?
+  owner         String?
+  documentId    String?  // optional link to a local Document
+  templateId    String?
+  status        String   @default("draft") // draft, prepared, sent_for_local_signing, partially_signed, completed, voided
+  originalHash  String?
+  finalHash     String?
+  targetDate    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  recipients    AgreementRecipient[]
+  fields        AgreementField[]
+  sessions      SigningSession[]
+  certificates  SigningCertificate[]
+  auditEvents   AgreementAuditEvent[]
+  versions      AgreementVersion[]
+  clauses       AgreementClause[]
+  risks         AgreementRisk[]
+  reminders     AgreementReminder[]
+
+  @@index([status])
+}
+
+model AgreementTemplate {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  content       String?
+  // JSON: { recipients: [{role, order}], fields: [{type, page, x, y, w, h, recipientRole, required}] }
+  defaultsJson  String?
+  createdAt     DateTime @default(now())
+}
+
+model AgreementRecipient {
+  id            String   @id @default(cuid())
+  agreementId   String
+  name          String
+  email         String?
+  role          String?
+  routingOrder  Int      @default(1)
+  required      Boolean  @default(true)
+  status        String   @default("pending") // pending, viewed, signed, declined, skipped
+  signedAt      DateTime?
+  createdAt     DateTime @default(now())
+
+  agreement     Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  fields        AgreementField[]
+
+  @@index([agreementId])
+}
+
+model AgreementField {
+  id            String   @id @default(cuid())
+  agreementId   String
+  recipientId   String?
+  type          String   // signature, initials, text, date, checkbox
+  label         String?
+  page          Int      @default(1)
+  x             Float    @default(0)
+  y             Float    @default(0)
+  width         Float    @default(20)
+  height        Float    @default(5)
+  required      Boolean  @default(true)
+  value         String?
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+
+  agreement     Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  recipient     AgreementRecipient? @relation(fields: [recipientId], references: [id], onDelete: SetNull)
+
+  @@index([agreementId])
+  @@index([recipientId])
+}
+
+model SigningSession {
+  id            String   @id @default(cuid())
+  agreementId   String
+  recipientId   String
+  token         String   @unique
+  status        String   @default("open") // open, completed, declined
+  openedAt      DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+
+  agreement     Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+
+  @@index([agreementId])
+}
+
+model SigningCertificate {
+  id            String   @id @default(cuid())
+  agreementId   String
+  originalHash  String
+  finalHash     String
+  json          String   // full certificate JSON
+  markdown      String   // human-readable certificate
+  createdAt     DateTime @default(now())
+
+  agreement     Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+
+  @@index([agreementId])
+}
+
+model AgreementAuditEvent {
+  id            String   @id @default(cuid())
+  agreementId   String
+  action        String   // created, template_applied, recipient_added, field_added, prepared, signing_opened, field_completed, recipient_signed, recipient_declined, completed, voided, certificate_generated, reminder_drafted
+  actor         String?  // recipient name or "owner"/"system"
+  detail        String?
+  createdAt     DateTime @default(now())
+
+  agreement     Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+
+  @@index([agreementId])
+}
+
+model AgreementVersion {
+  id            String   @id @default(cuid())
+  agreementId   String
+  versionNumber Int
+  hash          String
+  reason        String?
+  createdAt     DateTime @default(now())
+
+  agreement     Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+
+  @@unique([agreementId, versionNumber])
+  @@index([agreementId])
+}
+
+model AgreementClause {
+  id            String   @id @default(cuid())
+  agreementId   String
+  kind          String   // payment_terms, renewal_date, termination_date, notice_period, effective_date, expiration_date, party, obligation, confidentiality, governing_law, signature_requirement
+  value         String
+  confidence    Float    @default(0.5)
+  createdAt     DateTime @default(now())
+
+  agreement     Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+
+  @@index([agreementId])
+}
+
+model AgreementRisk {
+  id            String   @id @default(cuid())
+  agreementId   String
+  kind          String   // missing_signature, unsigned_recipient, approaching_renewal, approaching_expiration, missing_effective_date, missing_party, high_risk_keyword, long_notice_period, termination_clause, missing_governing_law
+  level         String   @default("low") // low, medium, high, critical
+  detail        String
+  resolved      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  agreement     Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+
+  @@index([agreementId])
+}
+
+model AgreementReminder {
+  id            String   @id @default(cuid())
+  agreementId   String
+  recipientId   String?
+  kind          String   @default("signing") // signing, renewal, expiration
+  dueAt         DateTime
+  draftSubject  String?
+  draftBody     String?
+  status        String   @default("pending") // pending, drafted, done
+  // Local only: never sent. Surfaces as a local notification/draft.
+  createdAt     DateTime @default(now())
+
+  agreement     Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+
+  @@index([agreementId])
+}

@@ -33,7 +33,8 @@ import {
   Bot,
   Wand2,
   ListChecks,
-  FolderKanban
+  FolderKanban,
+  FileSignature
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -47,6 +48,7 @@ const NAV_ITEMS = [
   { name: "Smart Planner", href: "/planner", icon: CalendarRange },
   { name: "Tasks", href: "/tasks", icon: ListChecks },
   { name: "Projects", href: "/projects", icon: FolderKanban },
+  { name: "Agreements", href: "/agreements", icon: FileSignature },
   { name: "Optimizer", href: "/optimizer", icon: Wand2 },
   { name: "Calendar Holds", href: "/calendar/planner", icon: Clock },
   { name: "Life Wallet", href: "/wallet", icon: Wallet },

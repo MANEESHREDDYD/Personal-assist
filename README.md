@@ -71,6 +71,17 @@ A local-first scheduling platform on the lines of Calendly / Howie / Reclaim:
   gated), and generates local status/brief/blocker/decision-memo/stakeholder drafts (never sent).
   Risk is **heuristic decision-support only**. Tested: `npm run test:projects`.
 
+- **Local agreement & e-signature workflow** (`/agreements`, Phase 6F) — an
+  **audit-friendly signing simulation** (honestly **not legally binding, not a DocuSign
+  legal/compliance replacement, not legal advice**). Create agreements (or from local
+  templates), add recipients with **routing order**, place signature/initials/text/date/
+  checkbox fields, run a **local signing session** (typed signatures, validation, order
+  enforcement), and generate a **signing certificate** with SHA-256 original/final hashes
+  and a full audit timeline (JSON + Markdown). Includes deterministic **clause/obligation/
+  renewal extraction**, **heuristic risk** scoring (decision-support only), and a cautious
+  **Q&A** that cites sources or says it can't. Reminders are **local drafts** (never sent).
+  Tested: `npm run test:agreements`.
+
 ## Technical Skills Demonstrated
 
 | Domain | Implementation |

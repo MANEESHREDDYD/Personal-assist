@@ -139,9 +139,14 @@ const PHASES = [
     items: ["Deterministic goal decomposition into stages/tasks/dependencies", "Dependency cycle + blocked-task + bottleneck detection", "Heuristic risk scoring (deadline, blocked, owner, time, stale)", "Workload forecast (estimate vs scheduled, delay risk)", "Convert tasks to planner (approval-gated scheduling); local status/brief/memo drafts", "test:projects 37/37; no provider writes, no email"]
   },
   {
-    title: "Phase 6F-6L: Agreements, Meetings, Deep Roles (Planned)",
+    title: "Phase 6F: Local Agreement & E-Signature Workflow (Completed)",
+    status: "completed",
+    items: ["Agreements + templates + recipients with routing order", "Signature/initials/text/date/checkbox fields + local signing session", "SHA-256 hashing + signing certificate (JSON + Markdown) + audit timeline", "Heuristic clause extraction, risk scoring, and cautious Q&A", "Honest framing: not legally binding, not a DocuSign replacement, not legal advice", "test:agreements 46/46; no email, no provider, legal_binding_claims_made=0"]
+  },
+  {
+    title: "Phase 6G-6L: Meetings, Deep Roles, Command Center v2 (Planned)",
     status: "pending",
-    items: ["DocuSign-style local agreement/e-signature workflow", "Meeting intelligence + notetaker workflows", "Deep role workspaces (student/engineer/manager/exec/founder/VC)", "Command Center v2 + trending workflow suite", "Analytics/showcase upgrade + competitor checklist"]
+    items: ["Meeting intelligence + notetaker workflows", "Deep role workspaces (student/engineer/manager/exec/founder/VC)", "Command Center v2 + trending workflow suite", "Analytics/showcase upgrade + competitor checklist"]
   },
   {
     title: "Phase 5B-5H: Role-Mode Deep Sub-Pages (In progress)",
