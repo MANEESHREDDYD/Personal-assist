@@ -62,6 +62,15 @@ A local-first scheduling platform on the lines of Calendly / Howie / Reclaim:
   execute). Weekly review surfaces meeting load, focus coverage, and a workload/burnout heuristic.
   Tested: `npm run test:planner`.
 
+- **AI project manager** (`/projects`, Phase 6E) — Motion-style. Describe a goal
+  (*"Build a portfolio website in two weeks"*) and a deterministic decomposer produces stages,
+  tasks (estimates, spread due dates), and a cross-stage dependency chain. Tracks dependency
+  cycles/blocked tasks, scores heuristic risks (deadline, blocked, missing owner, bottleneck,
+  insufficient scheduled time, stale status), forecasts workload (estimated vs scheduled hours,
+  delay risk), converts tasks into planner tasks (then schedule via the optimizer, approval-
+  gated), and generates local status/brief/blocker/decision-memo/stakeholder drafts (never sent).
+  Risk is **heuristic decision-support only**. Tested: `npm run test:projects`.
+
 ## Technical Skills Demonstrated
 
 | Domain | Implementation |

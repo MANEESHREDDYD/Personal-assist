@@ -154,6 +154,19 @@ Booking (Calendly-style):
 - [ ] `npm run test:planner` passes; analytics `plannerMetrics`
       `provider_events_written_by_planner = 0` and `emails_sent_by_planner = 0`
 
+## 8e. AI project manager (Phase 6E)
+
+- [ ] `/projects` — create from a goal (e.g. "Build a portfolio website in two weeks")
+- [ ] Project decomposes into stages + tasks with estimates, due dates, dependencies
+- [ ] `/projects/[id]/tasks` — add a task; change status; add a dependency (cycle is rejected)
+- [ ] **Send open tasks to planner** → tasks become PlannerTasks; schedule them in `/optimizer` (approval-gated)
+- [ ] `/projects/[id]/risks` — **Re-score risks** → deadline/blocked/owner/coverage findings
+- [ ] `/projects/[id]/workload` — **Run forecast** → estimate vs scheduled hours + delay risk
+- [ ] `/projects/[id]/status` — generate a status / brief / decision-memo draft (footer says "not sent")
+- [ ] `/projects/[id]/documents` — link a local document/note
+- [ ] `npm run test:projects` passes; analytics `projectMetrics`
+      `provider_events_written_by_projects = 0` and `emails_sent_by_projects = 0`
+
 ## 9. Safety checks
 
 ```bash

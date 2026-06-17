@@ -32,7 +32,8 @@ import {
   CalendarCheck,
   Bot,
   Wand2,
-  ListChecks
+  ListChecks,
+  FolderKanban
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -45,6 +46,7 @@ const NAV_ITEMS = [
   { name: "Booking", href: "/booking", icon: CalendarCheck },
   { name: "Smart Planner", href: "/planner", icon: CalendarRange },
   { name: "Tasks", href: "/tasks", icon: ListChecks },
+  { name: "Projects", href: "/projects", icon: FolderKanban },
   { name: "Optimizer", href: "/optimizer", icon: Wand2 },
   { name: "Calendar Holds", href: "/calendar/planner", icon: Clock },
   { name: "Life Wallet", href: "/wallet", icon: Wallet },

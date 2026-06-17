@@ -1046,3 +1046,173 @@ model WeeklyReview {
 
   @@index([createdAt])
 }
+
+// ---------------------------------------------------------------------------
+// Phase 6E — AI Project Manager (Motion-style)
+// Decomposes goals into stages/tasks, tracks dependencies + risk, forecasts
+// workload, and converts tasks into PlannerTasks. Risk is heuristic decision
+// support only. No provider writes, no email, no silent actions.
+// ---------------------------------------------------------------------------
+
+model Project {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  owner         String?
+  role          String?
+  category      String?
+  priority      Int      @default(3) // 1 highest .. 5 lowest
+  targetDate    DateTime?
+  status        String   @default("active") // active, on_hold, completed, canceled
+  tagsJson      String?
+  source        String   @default("manual") // manual, text, command
+  sourceText    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  stages        ProjectStage[]
+  tasks         ProjectTask[]
+  risks         ProjectRisk[]
+  planRuns      ProjectPlanRun[]
+  forecasts     WorkloadForecast[]
+  statusUpdates ProjectStatusUpdate[]
+  decisions     ProjectDecision[]
+  documents     ProjectDocument[]
+
+  @@index([status])
+}
+
+model ProjectStage {
+  id          String   @id @default(cuid())
+  projectId   String
+  name        String
+  orderIndex  Int      @default(0)
+  status      String   @default("todo") // todo, in_progress, done
+  createdAt   DateTime @default(now())
+
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks       ProjectTask[]
+
+  @@index([projectId])
+}
+
+model ProjectTask {
+  id            String   @id @default(cuid())
+  projectId     String
+  stageId       String?
+  title         String
+  description   String?
+  status        String   @default("todo") // todo, in_progress, blocked, done, canceled
+  priority      Int      @default(3)
+  dueDate       DateTime?
+  estimateMins  Int      @default(60)
+  ownerName     String?
+  plannerTaskId String?  // link to PlannerTask when converted/scheduled
+  orderIndex    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  project       Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  stage         ProjectStage? @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  dependsOn     TaskDependency[] @relation("DependentTask")
+  requiredBy    TaskDependency[] @relation("PrerequisiteTask")
+
+  @@index([projectId])
+  @@index([status])
+}
+
+model TaskDependency {
+  id              String   @id @default(cuid())
+  dependentTaskId String   // this task depends on...
+  prerequisiteTaskId String // ...this task being done first
+  createdAt       DateTime @default(now())
+
+  dependent       ProjectTask @relation("DependentTask", fields: [dependentTaskId], references: [id], onDelete: Cascade)
+  prerequisite    ProjectTask @relation("PrerequisiteTask", fields: [prerequisiteTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([dependentTaskId, prerequisiteTaskId])
+  @@index([dependentTaskId])
+  @@index([prerequisiteTaskId])
+}
+
+model ProjectRisk {
+  id          String   @id @default(cuid())
+  projectId   String
+  kind        String   // deadline, overload, missing_owner, blocked_task, stale_status, dependency_bottleneck, too_many_high_priority, insufficient_time, approaching_due
+  level       String   @default("low") // low, medium, high, critical
+  detail      String
+  resolved    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([level])
+}
+
+model ProjectPlanRun {
+  id          String   @id @default(cuid())
+  projectId   String
+  summaryJson String?
+  stageCount  Int      @default(0)
+  taskCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model WorkloadForecast {
+  id              String   @id @default(cuid())
+  projectId       String
+  totalEstimateHrs Float   @default(0)
+  scheduledHrs    Float    @default(0)
+  unscheduledHrs  Float    @default(0)
+  overloadedDays  Int      @default(0)
+  delayRisk       String   @default("low") // low, medium, high
+  metricsJson     String?
+  createdAt       DateTime @default(now())
+
+  project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ProjectStatusUpdate {
+  id          String   @id @default(cuid())
+  projectId   String
+  kind        String   @default("status") // status, brief, blocker, decision_memo, stakeholder, next_actions
+  title       String
+  body        String
+  createdAt   DateTime @default(now())
+
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ProjectDecision {
+  id          String   @id @default(cuid())
+  projectId   String
+  decision    String
+  detail      String?
+  createdAt   DateTime @default(now())
+
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ProjectDocument {
+  id          String   @id @default(cuid())
+  projectId   String
+  documentId  String?  // link to local Document
+  title       String
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}

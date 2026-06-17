@@ -150,7 +150,7 @@ export const ROLES: Record<RoleId, RoleDefinition> = {
       { name: "Deployment checklist", description: "Pre/post deploy steps", prompt: "Create a deployment checklist (pre-deploy, deploy, rollback, verify) for: {context}" },
       { name: "Bug triage", description: "Prioritize a list of bugs", prompt: "Prioritize these bugs by severity and impact and propose tasks: {context}" },
     ],
-    commandSuggestions: ["Turn this incident into a postmortem", "Create deployment checklist", "Generate standup update", "Create a runbook", "Prioritize bugs", "Summarize this technical doc"],
+    commandSuggestions: ["Turn this incident into a postmortem", "Create deployment checklist", "Generate standup update", "Create project plan", "Decompose this project", "Forecast project workload", "Find blocked tasks", "Summarize this technical doc"],
   },
   it_professional: {
     id: "it_professional",
@@ -355,7 +355,7 @@ export const ROLES: Record<RoleId, RoleDefinition> = {
       { name: "Board update", description: "Board communication", prompt: "Prepare a board update (highlights, lowlights, metrics, asks) from: {context}" },
       { name: "Stakeholder note", description: "External stakeholder comms", prompt: "Draft a stakeholder communication from: {context}. Draft only; do not send." },
     ],
-    commandSuggestions: ["Prepare board update", "Prepare a company operating review", "Find top priorities", "Draft stakeholder update", "Create founder daily plan"],
+    commandSuggestions: ["Prepare board update", "Prepare a company operating review", "Turn this goal into tasks", "Generate project status update", "Prepare stakeholder update", "Find top priorities", "Create founder daily plan"],
   },
   vc_investor: {
     id: "vc_investor",

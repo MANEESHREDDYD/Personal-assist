@@ -134,9 +134,14 @@ const PHASES = [
     items: ["Tasks/habits/focus models + local optimization engine", "Schedules tasks into open time (due-date + priority), protects focus", "Detects fragmented/overloaded days + context-switch + burnout heuristic", "Proposes flexible-meeting moves (never automatic)", "Approving a proposal creates an approval-gated calendar write request", "test:planner 19/19; no provider writes, no email"]
   },
   {
-    title: "Phase 6E-6L: Projects, Agreements, Meetings (Planned)",
+    title: "Phase 6E: AI Project Manager (Completed)",
+    status: "completed",
+    items: ["Deterministic goal decomposition into stages/tasks/dependencies", "Dependency cycle + blocked-task + bottleneck detection", "Heuristic risk scoring (deadline, blocked, owner, time, stale)", "Workload forecast (estimate vs scheduled, delay risk)", "Convert tasks to planner (approval-gated scheduling); local status/brief/memo drafts", "test:projects 37/37; no provider writes, no email"]
+  },
+  {
+    title: "Phase 6F-6L: Agreements, Meetings, Deep Roles (Planned)",
     status: "pending",
-    items: ["AI project manager + workload forecasting", "DocuSign-style local agreement/e-signature workflow", "Meeting intelligence + deep role workspaces", "Command Center v2 + trending workflow suite", "Analytics/showcase upgrade + competitor checklist"]
+    items: ["DocuSign-style local agreement/e-signature workflow", "Meeting intelligence + notetaker workflows", "Deep role workspaces (student/engineer/manager/exec/founder/VC)", "Command Center v2 + trending workflow suite", "Analytics/showcase upgrade + competitor checklist"]
   },
   {
     title: "Phase 5B-5H: Role-Mode Deep Sub-Pages (In progress)",

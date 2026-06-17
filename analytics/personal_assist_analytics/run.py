@@ -20,6 +20,7 @@ from personal_assist_analytics.scheduling_metrics import analyze_scheduling
 from personal_assist_analytics.booking_metrics import analyze_booking
 from personal_assist_analytics.scheduling_secretary_metrics import analyze_scheduling_secretary
 from personal_assist_analytics.planner_metrics import analyze_planner
+from personal_assist_analytics.project_metrics import analyze_projects
 from personal_assist_analytics.export import (
     export_metrics,
     generate_recommendations,
@@ -85,6 +86,10 @@ def main():
     print(f"[+] Analyzed planner ({planner['tasks_count']} tasks, "
           f"{planner['provider_events_written_by_planner']} provider events by planner)")
 
+    projects = analyze_projects()
+    print(f"[+] Analyzed projects ({projects['projects_count']} projects, "
+          f"{projects['provider_events_written_by_projects']} provider events by projects)")
+
     showcase = build_skill_showcase_summary(agentic, ai_eval, ml, contracts, lineage, marts)
 
     report = {
@@ -104,6 +109,7 @@ def main():
         "bookingMetrics": booking,
         "schedulingSecretaryMetrics": secretary,
         "plannerMetrics": planner,
+        "projectMetrics": projects,
         "skillShowcaseSummary": showcase,
         "recommendations": generate_recommendations(counts, quality, risk, contracts, agentic),
     }

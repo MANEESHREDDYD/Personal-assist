@@ -26,7 +26,8 @@
     "test:scheduling": "tsx scripts/test-scheduling.ts",
     "test:booking": "tsx scripts/test-booking.ts",
     "test:scheduling-secretary": "tsx scripts/test-scheduling-secretary.ts",
-    "test:planner": "tsx scripts/test-planner.ts"
+    "test:planner": "tsx scripts/test-planner.ts",
+    "test:projects": "tsx scripts/test-projects.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
